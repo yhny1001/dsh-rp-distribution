@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-面向已安装 DSH `0.1.0-rc.6` Web Profile 的本地优先 RP 产品插件。一个自包含 Bundle 同时注册 Node API、`rp-studio` 原生 Agent Preset、中文优先的创作工作区、角色专属对话页、会话标题栏入口和 Composer 上方的 Prompt Stack。
+面向已安装 DSH `0.1.0-rc.6` Web Profile 的本地优先 RP 产品插件。一个自包含 Bundle 同时注册 Node API、`rp-tavern`/`rp-agent` 两个原生 Agent Preset、中文优先的创作工作区、角色专属对话页、会话标题栏入口和 Composer 上方的 Prompt Stack。升级会移除旧 `rp-studio` Agent Preset；“RP 创作室”只保留为管理界面名称。
 
 ## 酒馆式产品模型
 

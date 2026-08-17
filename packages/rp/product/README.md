@@ -2,7 +2,7 @@
 
 English | [中文](README.zh.md)
 
-Local-first RP product plugin for an installed DSH `0.1.0-rc.6` Web profile. One self-contained Bundle registers the Node API, an `rp-studio` native Agent preset, a Chinese-first authoring workspace, a character-oriented conversation view, a Session header control, and an additive Prompt Stack above the composer.
+Local-first RP product plugin for an installed DSH `0.1.0-rc.6` Web profile. One self-contained Bundle registers the Node API, separate `rp-tavern` and `rp-agent` native Agent presets, a Chinese-first authoring workspace, a character-oriented conversation view, a Session header control, and an additive Prompt Stack above the composer. Upgrade removes the old `rp-studio` Agent preset; **RP Studio** remains only the management-surface name.
 
 ## Tavern-style product model
 

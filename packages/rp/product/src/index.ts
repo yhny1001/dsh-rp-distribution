@@ -3,7 +3,7 @@
 import { Buffer } from 'node:buffer'
 import { randomUUID } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -23,7 +23,6 @@ export const name = 'dsh-rp-product'
 export const inject = ['webServer', 'commands', 'agentPresets']
 
 const API = '/api/dsh-rp/product'
-const LEGACY_PRESET_ID = 'rp-studio'
 const TAVERN_PRESET_ID = 'rp-tavern'
 const AGENT_PRESET_ID = 'rp-agent'
 const MAX_BODY_BYTES = 64 * 1024 * 1024
@@ -111,7 +110,7 @@ export async function apply(ctx: ProductContext): Promise<void> {
         if (request.sessionId !== agent.id) throw new Error('composition Session must match the receiving Agent')
         const currentPreset = ctx.agentPresets.composedPreset(agent.ctx)
         const targetPreset = request.mode === 'agent' ? AGENT_PRESET_ID : TAVERN_PRESET_ID
-        const rpPresets = new Set([LEGACY_PRESET_ID, TAVERN_PRESET_ID, AGENT_PRESET_ID])
+        const rpPresets = new Set([TAVERN_PRESET_ID, AGENT_PRESET_ID])
         if (currentPreset !== targetPreset && agent.session.events.some(event => event.type === 'turn/start')) {
           throw new Error('Tavern Chat / Agent RP mode can only change on a blank Session; create a new Session to switch runtime mode')
         }
@@ -434,7 +433,8 @@ function compositionSummary(state: ProductState, binding: SessionComposition): s
 }
 
 async function installAgentPreset(): Promise<void> {
-  for (const presetId of [LEGACY_PRESET_ID, TAVERN_PRESET_ID, AGENT_PRESET_ID]) {
+  await rm(resolve(productDataRoot(), '..', '.agent-presets', 'rp-studio'), { recursive: true, force: true })
+  for (const presetId of [TAVERN_PRESET_ID, AGENT_PRESET_ID]) {
     const source = fileURLToPath(new URL(`../agent-presets/${presetId}/`, import.meta.url))
     const target = resolve(productDataRoot(), '..', '.agent-presets', presetId)
     await mkdir(target, { recursive: true, mode: 0o700 })
