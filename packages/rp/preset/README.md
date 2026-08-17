@@ -2,7 +2,7 @@
 
 English | [中文](README.zh.md)
 
-`ctx.rpPresets` durably saves prompt presets, binds one preset to an exact RP scope, resolves the nearest binding through the scope ancestry, and freezes a content-addressed snapshot before a Turn executes. The immutable snapshot includes every definition and order profile, the selected profile, effective sections, generation data, compatibility provenance, and the exact binding scope. The Storage Domain route selects the persistence backend.
+`ctx.rpPresets` durably saves prompt presets, binds one preset to an exact RP scope, resolves the nearest binding through the scope ancestry, and freezes a content-addressed snapshot before a Turn executes. The immutable snapshot includes every definition and order profile, the selected profile, effective sections, generation data, compatibility provenance, and the exact binding scope. The Storage Domain route selects the persistence backend. A core Prompt Definition owns only `schemaVersion`, `id`, `name`, `role`, `content`, and `marker`; callers must project adapter-specific fields before entering this service or retain them in compatibility provenance, and the strict schema rejects every undeclared key.
 
 ## Model Experience
 

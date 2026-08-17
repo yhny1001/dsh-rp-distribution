@@ -13,6 +13,14 @@ const source = JSON.stringify({
     role: 'system',
     content: `content-${index}`,
     marker: index === 1,
+    ...(index === 0 ? {
+      system_prompt: true,
+      forbid_overrides: true,
+      injection_position: 1,
+      injection_depth: 4,
+      injection_order: 9,
+      injection_trigger: ['scene-start'],
+    } : {}),
   })),
   prompt_order: [
     { character_id: 100000, order: identifiers.slice(0, 11).map((identifier, index) => ({ identifier, enabled: index !== 5 })) },
@@ -50,6 +58,18 @@ describe('RP Web durable preset API', () => {
       presets: [{ promptDefinitionCount: 18, promptOrderCount: 2, selectedPromptOrderId: '100001' }],
     })
     expect(saved.presets[0]?.enabledPromptIds).toHaveLength(16)
+    const savedDetail = presetDetail(first, saved.presetId)
+    expect(savedDetail.preset.promptDefinitions[0]).toEqual({
+      schemaVersion: 1,
+      id: 'main',
+      name: 'Prompt 0',
+      role: 'system',
+      content: 'content-0',
+      marker: false,
+    })
+    expect(Object.hasOwn(savedDetail.preset.promptDefinitions[0]!, 'systemPrompt')).toBe(false)
+    expect(Object.hasOwn(savedDetail.preset.promptDefinitions[0]!, 'forbidOverrides')).toBe(false)
+    expect(Object.hasOwn(savedDetail.preset.promptDefinitions[0]!, 'injectionPosition')).toBe(false)
     const activated = await mutatePreset(first, {
       action: 'activate', sessionId, presetId: saved.presetId,
     })

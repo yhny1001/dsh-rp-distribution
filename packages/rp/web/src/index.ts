@@ -981,7 +981,14 @@ function toPresetRecord(imported: SillyTavernPresetIR): RpPromptPresetRecord {
     schemaVersion: 1,
     id: imported.id,
     name: imported.name,
-    promptDefinitions: imported.promptDefinitions,
+    promptDefinitions: Object.freeze(imported.promptDefinitions.map(definition => Object.freeze({
+      schemaVersion: 1 as const,
+      id: definition.id,
+      name: definition.name,
+      role: definition.role,
+      content: definition.content,
+      marker: definition.marker,
+    }))),
     promptOrders: imported.promptOrders.map(order => Object.freeze({
       id: order.id,
       entries: order.entries,

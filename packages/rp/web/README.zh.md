@@ -4,7 +4,7 @@
 
 `@dsh-rp/web` 提供 DSH Web RP Studio 以及 Web 与 Headless 共用的 Host API。Studio 包含 Experience 清单、Pipeline 与授权检查器、事务化插件管理器、由事件回放支撑的实时 Session Timeline，以及 Character Card JSON/PNG/CHARX、World Info、Preset 和 Chat JSONL 的 Creator 导入预览。
 
-插件管理器调用 Host Registry，不在浏览器内加载软件包。安装、精确依赖图更新和确认卸载会展示来源、版本锁、Owner、Lifecycle、Trust、权限、内容哈希、签名撤销、SBOM 和证据策略。Creator 导入会保留未知字段和兼容性警告，但导入脚本与远程资源始终保持惰性。Creator 的预设流程与 Headless Client 使用同一个 Host Runtime：先预览 JSON 源，再持久化服务端规范记录，随后为当前实时 RP Session 激活，并在刷新或 Host 重启后恢复精确绑定。
+插件管理器调用 Host Registry，不在浏览器内加载软件包。安装、精确依赖图更新和确认卸载会展示来源、版本锁、Owner、Lifecycle、Trust、权限、内容哈希、签名撤销、SBOM 和证据策略。Creator 导入会保留未知字段和兼容性警告，但导入脚本与远程资源始终保持惰性。Creator 的预设流程与 Headless Client 使用同一个 Host Runtime：先预览 JSON 源，再把 SillyTavern 定义显式投影为核心 Preset 拥有的 `schemaVersion`、`id`、`name`、`role`、`content` 与 `marker`，持久化服务端规范记录，随后为当前实时 RP Session 激活，并在刷新或 Host 重启后恢复精确绑定。`systemPrompt`、`forbidOverrides` 与 Injection 元数据保持在兼容来源中，不会作为未声明字段越过核心包边界。
 
 可安装包的 UI 只从 `ctx.rpUiSlots` 投影，绝不会进入主 React 同源环境。包资产使用严格 MIME、`nosniff` 和限制性 CSP；包 iframe 不具备脚本、同源权限、Session props 或 Host Bridge。
 
