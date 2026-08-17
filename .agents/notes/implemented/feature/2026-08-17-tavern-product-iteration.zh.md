@@ -22,8 +22,12 @@ Preset 导入明确采用双轨。无损源文档挂在立即可选的 `sillytav
 
 产品现在在 Agent Preset 层区分 Tavern Chat 与 Agent RP。`rp-tavern` 挂载 Prompt 组装但不提供领域工具；`rp-agent` 在同一导入 Prompt Preset 上增加 `rp_update_state` 与 `rp_propose_choices`。前者提交带修订号的世界/时间/场景/角色/Persona/关系/记忆 Effect，后者提交稳定可点击选项。原生 Tool Call/Result 保持持久证据，产品状态作为 Projection 进入后续 Request Header 与领域卡片。World Info Entry 在编辑器保留主/次关键词、常驻、开关和优先级。模型遵从性尚不是硬 Invariant：加强后的 Agent Prompt 要求正文隐含变化全部使用工具，但最终仍需 State Keeper Sidecar 在 Turn boundary 审计。
 
+新会话首页尚无 Session 时，原生 Agent Preset Seat 只在组件内部暂存选择，其他插件无法读取，RP Binding 也没有可接收 Command 的 Agent。产品因此以更高优先级提供兼容的 Preset Seat，保留部署中的全部健康 Preset，同时把选择公开给 RP 快速设置。Tavern 与 Agent 共同显示 Prompt Preset、角色卡、Persona、世界书和场景，只有 Agent 显示 Experience。应用操作通过 Workspace Runtime 复用或创建空白 Session，等待客户端 Binding 可用，落实暂存 Preset，再提交原有 `rp-studio-bind` Command；标准编码 Preset 不产生 RP Surface。
+
 ## 验证
 
 聚焦测试覆盖 Prompt Manager 顺序与 Marker、210 个定义/177 个开关/56 个启用项的 Preset、无损源保留与非破坏式适配、生成参数、安全宏、PNG Asset 持久化、混合导入、修订串行化、激活回滚、说话者捕获和具有完整来源的 Surface 编辑。实际 Tarball 安装到隔离 DSH `0.1.0-rc.6` Web Profile；Codex 内置 Browser 先验证导入两张 Character Card、一套 Preset 与一个无效文件，再导入用户提供的 3.4 MiB CCv3 PNG 和 453 KiB、210 定义 Preset。真实 Preset 显示 177 个独立开关、56 个源文件默认启用项、33 个未编排定义、maxTokens 30000 与两条禁用行为警告；真实 Request Header 记录 temperature 1、maxTokens 30000、10511 字符 System Prompt 且没有未解析双花括号宏。导入结果会询问是否适配；接受后保留 `[ST COMPAT] Izumi 0814.json`，创建 `[Harness] Izumi 0814.json · Harness` 并自动选择副本，随后又完成一次真实模型调用。真实模型调用以 PNG 角色卡名称回复。此前验证还编辑回复、证明下一次模型调用使用编辑正文、切换主要角色，并证明新旧回复保留不同说话者名称。
 
 Agent RP 浏览器验收选择 `rp-adaptive`、真实角色卡与 Harness 适配 Izumi Preset。模型实际调用三次状态工具（时间、场景、记忆）、一次选项工具，再生成角色回复；RP 视图显示 TIME、SCENE、MEMORY 卡片和三个按钮。点击“调查港口”会把保存的 Prompt 作为下一条原生用户消息提交，并产生第二轮模型回复。另一次 World Info 导入验证三条 Entry、两条启用、搜索与逐条编辑。
+
+空白首页验收分别选择 Tavern Chat 与 Agent RP：两者都显示 Prompt Preset、角色卡、Persona、世界书和场景，Tavern 不显示 Experience，Agent 显示五个 Experience 选项，模式标签和应用按钮随选择同步。随后选择真实的 Izumi Harness Preset、卡提希娅、`user` Persona、黎那汐塔世界书和场景文本并应用；Workspace Runtime 建立空白 Session，界面改为 Prompt Stack，完整编排重新读取到相同的模式与五项资源。

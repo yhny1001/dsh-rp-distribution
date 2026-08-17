@@ -29,7 +29,7 @@ import type {
 import { PRODUCT_PROMPT_SEAT_COUNT, resolvePromptLayers } from '../model.ts'
 
 export const name = '@dsh-rp/product'
-export const inject = ['slots', 'sessions']
+export const inject = ['slots', 'sessions', 'connection', 'workspaces']
 
 const API = '/api/dsh-rp/product'
 const STYLE_ID = 'dsh-rp-product-styles'
@@ -44,6 +44,22 @@ interface CommandReceipt {
 }
 interface PromptReceipt { readonly ok: boolean; readonly error?: { readonly message?: string } }
 
+interface AgentPresetOption {
+  readonly id: string
+  readonly name: string
+  readonly description: string
+  readonly isDefault: boolean
+}
+
+interface AgentPresetSeatState {
+  readonly options: readonly AgentPresetOption[]
+  readonly current: string
+  readonly busy: boolean
+  readonly error: string
+}
+
+type WireResult<T> = { readonly ok: true; readonly value: T } | { readonly ok: false; readonly error: { readonly message: string } }
+
 interface ClientContext {
   readonly slots: {
     inject(name: string, factory: () => unknown): unknown
@@ -51,11 +67,25 @@ interface ClientContext {
   }
   readonly sessions: {
     readonly list: { getSnapshot(): SessionListSnapshot; subscribe(listener: () => void): () => void }
+    noteAgentPreset(sessionId: string, agentPreset: string): void
     binding(sessionId: string): { readonly session: {
       command(line: string): Promise<CommandReceipt>
       prompt(content: readonly { readonly type: 'text'; readonly text: string }[], mode: 'queue'): Promise<PromptReceipt>
     } } | undefined
   }
+  readonly workspaces: { startSession(): void }
+  readonly connection: { readonly api: { readonly agentPresets: {
+    list(payload: Record<string, never>): Promise<{ readonly result: WireResult<{ readonly presets: readonly {
+      readonly id: string
+      readonly name?: string
+      readonly description?: string
+      readonly isDefault: boolean
+      readonly broken?: string
+    }[] }> }>
+    select(payload: { readonly sessionId: string; readonly agentPreset: string }): Promise<{
+      readonly result: WireResult<{ readonly agentPreset: string }>
+    }>
+  } } }
   effect(factory: () => (() => void) | void, label?: string): unknown
 }
 
@@ -103,6 +133,11 @@ let snapshot: ProductClientState = Object.freeze({
   error: '', notice: '', preferredPresetId: '', response: undefined,
 })
 const listeners = new Set<() => void>()
+const agentPresetListeners = new Set<() => void>()
+let agentPresetSnapshot: AgentPresetSeatState = Object.freeze({ options: [], current: '', busy: false, error: '' })
+let stagedAgentPreset: string | undefined
+let fallbackAgentPreset = ''
+let applyingAgentPreset: Promise<void> | undefined
 
 /** Register product management, context surfaces, and the RP conversation view. */
 export function apply(ctx: ClientContext): void {
@@ -115,6 +150,7 @@ export function apply(ctx: ClientContext): void {
         update({ sessionId, response: undefined, error: '', notice: '', preferredPresetId: '' })
         void loadProduct(sessionId)
       }
+      void applyStagedAgentPreset()
     })
     return () => { dispose(); context = undefined; removeStyles() }
   }, 'dsh-rp-product: client lifetime')
@@ -125,6 +161,9 @@ export function apply(ctx: ClientContext): void {
   ctx.slots.inject('conversation.session.header.actions', () => ctx.slots.register({
     name: 'conversation.session.header.actions', id: 'dsh-rp-product-context', order: -40, label: 'RP Context',
   }, props => <ConversationContextButton sessionId={sessionIdFromProps(props)} />))
+  ctx.slots.inject('conversation.hero.agentPreset', () => ctx.slots.register({
+    name: 'conversation.hero.agentPreset', priority: -40,
+  }, () => <RpAgentPresetSeat />))
   ctx.slots.inject('conversation.input.dock', () => ctx.slots.register({
     name: 'conversation.input.dock', id: 'dsh-rp-product-stack', order: -40,
   }, props => <ConversationContextDock sessionId={sessionIdFromProps(props)} />))
@@ -140,6 +179,7 @@ export function apply(ctx: ClientContext): void {
 
   const sessionId = currentSessionId(ctx)
   update({ sessionId })
+  void loadAgentPresetOptions()
   void loadProduct(sessionId)
 }
 
@@ -160,6 +200,32 @@ function SidebarAction({ wide }: { readonly wide: boolean }): ReactNode {
   </button>
 }
 
+function RpAgentPresetSeat(): ReactNode {
+  const state = useAgentPresetSeat()
+  const [open, setOpen] = useState(false)
+  const root = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    const close = (event: PointerEvent): void => {
+      if (event.target instanceof Node && root.current?.contains(event.target) !== true) setOpen(false)
+    }
+    document.addEventListener('pointerdown', close)
+    return () => document.removeEventListener('pointerdown', close)
+  }, [open])
+  const selected = state.options.find(option => option.id === state.current)
+  if (selected === undefined) return null
+  return <div className="rpp-agent-seat" ref={root}>
+    <button type="button" className="rpp-agent-seat-button" aria-haspopup="menu" aria-expanded={open}
+      disabled={state.busy} title={state.error || '选择新会话使用的 Agent Preset'} onClick={() => setOpen(value => !value)}>
+      <span aria-hidden="true" className="rpp-agent-seat-icon">◌</span><span>{selected.name}</span><span aria-hidden="true" className="rpp-agent-seat-chevron">⌄</span>
+    </button>
+    {open ? <div className="rpp-agent-seat-menu" role="menu">{state.options.map(option => <button type="button" role="menuitem"
+      key={option.id} className={option.id === state.current ? 'rpp-agent-seat-selected' : ''} onClick={() => {
+        setOpen(false); void selectAgentPreset(option.id)
+      }}><span><b>{option.name}</b><small>{option.description || '没有说明'}</small></span>{option.id === state.current ? <i>✓</i> : null}</button>)}</div> : null}
+  </div>
+}
+
 function ConversationContextButton({ sessionId }: { readonly sessionId: string }): ReactNode {
   const state = useProductState()
   useLoadSession(sessionId)
@@ -175,8 +241,13 @@ function ConversationContextButton({ sessionId }: { readonly sessionId: string }
 
 function ConversationContextDock({ sessionId }: { readonly sessionId: string }): ReactNode {
   const state = useProductState()
+  const agentPreset = useAgentPreset(sessionId)
   useLoadSession(sessionId)
-  const layers = state.sessionId === sessionId ? state.response?.layers ?? [] : []
+  const response = state.sessionId === sessionId ? state.response : undefined
+  const layers = response?.layers ?? []
+  if (response?.binding === undefined && (agentPreset === 'rp-tavern' || agentPreset === 'rp-agent')) {
+    return <QuickSetup response={response} sessionId={sessionId} mode={agentPreset === 'rp-agent' ? 'agent' : 'tavern'} />
+  }
   if (layers.length === 0) return null
   return <button type="button" className="rpp-context-dock" onClick={() => openProduct('compose', sessionId)}>
     <span className="rpp-context-dock-label">Prompt Stack</span>
@@ -186,6 +257,47 @@ function ConversationContextDock({ sessionId }: { readonly sessionId: string }):
     </span>)}</span>
     <span className="rpp-context-edit">编辑</span>
   </button>
+}
+
+function QuickSetup({ response, sessionId, mode }: {
+  readonly response: ProductResponse | undefined
+  readonly sessionId: string
+  readonly mode: CompositionDraft['mode']
+}): ReactNode {
+  const initial = useMemo<CompositionDraft>(() => ({
+    mode,
+    experienceId: 'rp-adaptive',
+    presetId: response?.state.presets.find(preset => preset.mode === 'harness')?.id ?? response?.state.presets[0]?.id ?? '',
+    systemId: response?.state.systems[0]?.id ?? '',
+    characterIds: [], primaryCharacterId: '', personaId: '', worldId: '', scene: '',
+  }), [mode, response?.state.revision, sessionId])
+  const [draft, setDraft] = useState(initial)
+  useEffect(() => setDraft(initial), [initial])
+  if (response === undefined) return <section className="rpp-quick-setup"><div className="rpp-loading-orb" /><span>正在加载 RP 资源…</span></section>
+  const primary = response.state.characters.find(character => character.id === draft.primaryCharacterId)
+  return <section className="rpp-quick-setup" data-rp-quick-setup={mode}>
+    <header><span className="rpp-quick-mode">{mode === 'agent' ? 'AGENT RP' : 'TAVERN CHAT'}</span><div><h3>开始前选择本次 RP 资源</h3>
+      <p>{mode === 'agent' ? '导入 Preset + 角色资源，并启用世界、时间、状态、记忆与选项工具。' : '使用导入 Preset、角色卡、Persona、世界书与原生历史进行传统酒馆生成。'}</p></div>
+      <button type="button" onClick={() => openProduct('compose', sessionId)}>完整设置</button></header>
+    <div className="rpp-quick-grid">
+      <label>Prompt Preset<select value={draft.presetId} onChange={event => setDraft({ ...draft, presetId: event.target.value })}>
+        {response.state.presets.map(preset => <option key={preset.id} value={preset.id}>{preset.mode === 'sillytavern' ? '[ST]' : '[Harness]'} {preset.name}</option>)}</select></label>
+      <label>角色卡<select value={draft.primaryCharacterId} onChange={event => {
+        const id = event.target.value; setDraft({ ...draft, primaryCharacterId: id, characterIds: id === '' ? [] : [id] })
+      }}><option value="">选择主要角色</option>{response.state.characters.map(character => <option key={character.id} value={character.id}>{character.name}</option>)}</select></label>
+      <label>Persona<select value={draft.personaId} onChange={event => setDraft({ ...draft, personaId: event.target.value })}><option value="">不使用 Persona</option>
+        {response.state.personas.map(persona => <option key={persona.id} value={persona.id}>{persona.name}</option>)}</select></label>
+      <label>世界书<select value={draft.worldId} onChange={event => setDraft({ ...draft, worldId: event.target.value })}><option value="">不使用世界书</option>
+        {response.state.worlds.map(world => <option key={world.id} value={world.id}>{world.name} · {world.entries.filter(entry => entry.enabled).length}/{world.entries.length}</option>)}</select></label>
+      {mode === 'agent' ? <label>Experience<select value={draft.experienceId} onChange={event => setDraft({ ...draft, experienceId: event.target.value })}>
+        <option value="rp-adaptive">Adaptive · 状态/记忆/场景/关系</option><option value="rp-world-sim">World Simulation</option>
+        <option value="rp-multi-character">Multi-character</option><option value="rp-trpg">TRPG</option><option value="rp-companion">Companion</option></select></label> : null}
+      <label className="rpp-quick-scene">当前场景<input value={draft.scene} placeholder="地点、时间和当前事实" onChange={event => setDraft({ ...draft, scene: event.target.value })} /></label>
+    </div>
+    <footer>{primary === undefined ? <span>请选择一个主要角色后开始。</span> : <span><AvatarFace character={primary} className="rpp-quick-avatar" fallback={primary.name.slice(0, 1)} />{primary.name}</span>}
+      <button type="button" className="rpp-primary-action" disabled={primary === undefined || draft.presetId === '' || snapshot.saving}
+        onClick={() => { void applyComposition(response, draft) }}>{snapshot.saving ? '正在应用…' : `应用并开始 ${mode === 'agent' ? 'Agent RP' : 'Tavern Chat'}`}</button></footer>
+  </section>
 }
 
 function ProductPanel({ close, embedded = false }: { readonly close?: () => void; readonly embedded?: boolean }): ReactNode {
@@ -723,6 +835,21 @@ function Select({ value, onChange, items, empty, allowEmpty = false }: {
 function LoadingState(): ReactNode { return <div className="rpp-loading"><span className="rpp-loading-orb" /><b>正在读取 RP 工作区</b><small>从本地 Harness 加载预设、角色卡、Persona 与世界书</small></div> }
 function useProductState(): ProductClientState { return useSyncExternalStore(subscribe, () => snapshot, () => snapshot) }
 
+function useAgentPreset(sessionId: string): string {
+  const sessions = context?.sessions.list
+  const applied = useSyncExternalStore(
+    listener => sessions?.subscribe(listener) ?? (() => undefined),
+    () => agentPresetForSession(sessionId),
+    () => '',
+  )
+  const selected = useAgentPresetSeat().current
+  return selected || applied
+}
+
+function useAgentPresetSeat(): AgentPresetSeatState {
+  return useSyncExternalStore(subscribeAgentPreset, () => agentPresetSnapshot, () => agentPresetSnapshot)
+}
+
 function useLoadSession(sessionId: string): void {
   useEffect(() => {
     if (sessionId !== '' && (snapshot.sessionId !== sessionId || snapshot.response === undefined)) {
@@ -733,6 +860,100 @@ function useLoadSession(sessionId: string): void {
 
 function subscribe(listener: () => void): () => void { listeners.add(listener); return () => listeners.delete(listener) }
 function update(patch: Partial<ProductClientState>): void { snapshot = Object.freeze({ ...snapshot, ...patch }); for (const listener of listeners) listener() }
+function subscribeAgentPreset(listener: () => void): () => void { agentPresetListeners.add(listener); return () => agentPresetListeners.delete(listener) }
+function updateAgentPreset(patch: Partial<AgentPresetSeatState>): void {
+  agentPresetSnapshot = Object.freeze({ ...agentPresetSnapshot, ...patch })
+  for (const listener of agentPresetListeners) listener()
+}
+
+async function loadAgentPresetOptions(): Promise<void> {
+  const ctx = context
+  if (ctx === undefined) return
+  try {
+    const receipt = await ctx.connection.api.agentPresets.list({})
+    if (!receipt.result.ok) throw new Error(receipt.result.error.message)
+    const options = receipt.result.value.presets.filter(preset => preset.broken === undefined).map(preset => ({
+      id: preset.id,
+      name: preset.name?.trim() || preset.id,
+      description: preset.description?.trim() || '',
+      isDefault: preset.isDefault,
+    }))
+    fallbackAgentPreset = options.find(option => option.isDefault)?.id ?? options[0]?.id ?? ''
+    const sessionPreset = agentPresetForSession(currentSessionId(ctx))
+    const retained = stagedAgentPreset ?? (sessionPreset || fallbackAgentPreset)
+    updateAgentPreset({ options, current: options.some(option => option.id === retained) ? retained : fallbackAgentPreset, error: '' })
+  } catch (error: unknown) {
+    updateAgentPreset({ error: publicError(error) })
+  }
+}
+
+async function selectAgentPreset(id: string): Promise<void> {
+  if (agentPresetSnapshot.busy || !agentPresetSnapshot.options.some(option => option.id === id)) return
+  stagedAgentPreset = id
+  updateAgentPreset({ current: id, error: '' })
+  await applyStagedAgentPreset()
+}
+
+function applyStagedAgentPreset(): Promise<void> {
+  if (applyingAgentPreset !== undefined) return applyingAgentPreset
+  const ctx = context
+  const sessionId = ctx === undefined ? '' : currentSessionId(ctx)
+  const staged = stagedAgentPreset
+  if (ctx === undefined || sessionId === '' || staged === undefined) return Promise.resolve()
+  const row = ctx.sessions.list.getSnapshot().byId[sessionId]
+  if (typeof row !== 'object' || row === null) return Promise.resolve()
+  const summary = row as { readonly blank?: unknown; readonly agentPreset?: unknown }
+  if (summary.blank !== true || summary.agentPreset === staged) {
+    stagedAgentPreset = undefined
+    return Promise.resolve()
+  }
+  updateAgentPreset({ busy: true, error: '' })
+  applyingAgentPreset = (async () => {
+    try {
+      const receipt = await ctx.connection.api.agentPresets.select({ sessionId, agentPreset: staged })
+      if (!receipt.result.ok) throw new Error(receipt.result.error.message)
+      stagedAgentPreset = undefined
+      ctx.sessions.noteAgentPreset(sessionId, receipt.result.value.agentPreset)
+      updateAgentPreset({ current: receipt.result.value.agentPreset, busy: false, error: '' })
+    } catch (error: unknown) {
+      stagedAgentPreset = undefined
+      updateAgentPreset({ current: fallbackAgentPreset, busy: false, error: publicError(error) })
+    } finally {
+      applyingAgentPreset = undefined
+    }
+  })()
+  return applyingAgentPreset
+}
+
+async function ensureCurrentSession(): Promise<string> {
+  const ctx = context
+  if (ctx === undefined) throw new Error('DSH 客户端尚未加载')
+  const current = currentSessionId(ctx)
+  if (current !== '') return current
+  ctx.workspaces.startSession()
+  return await new Promise<string>((resolve, reject) => {
+    let settled = false
+    const finish = (sessionId: string): void => {
+      if (settled) return
+      settled = true
+      window.clearTimeout(timeout)
+      dispose()
+      resolve(sessionId)
+    }
+    const dispose = ctx.sessions.list.subscribe(() => {
+      const sessionId = currentSessionId(ctx)
+      if (sessionId !== '') finish(sessionId)
+    })
+    const timeout = window.setTimeout(() => {
+      if (settled) return
+      settled = true
+      dispose()
+      reject(new Error('未能建立空白 Session；请先选择一个工作区'))
+    }, 10_000)
+    const immediate = currentSessionId(ctx)
+    if (immediate !== '') finish(immediate)
+  })
+}
 
 async function loadProduct(sessionId = snapshot.sessionId): Promise<void> {
   update({ loading: true, error: '' })
@@ -753,9 +974,12 @@ async function request(path: string, init?: RequestInit): Promise<ProductRespons
 async function applyComposition(response: ProductResponse, draft: CompositionDraft): Promise<void> {
   update({ saving: true, error: '', notice: '' })
   try {
-    const receipt = await sendCommand(response.sessionId, 'rp-studio-bind', { sessionId: response.sessionId, baseRevision: response.state.revision, ...draft })
+    const sessionId = response.sessionId || await ensureCurrentSession()
+    await applyStagedAgentPreset()
+    const target = response.sessionId === sessionId ? response : await request(`state?sessionId=${encodeURIComponent(sessionId)}`)
+    const receipt = await sendCommand(sessionId, 'rp-studio-bind', { sessionId, baseRevision: target.state.revision, ...draft })
     update({ saving: false, notice: receipt, preferredPresetId: '' })
-    await loadProduct(response.sessionId)
+    await loadProduct(sessionId)
   } catch (error: unknown) { update({ saving: false, error: publicError(error) }) }
 }
 
@@ -885,7 +1109,7 @@ function compositionDraft(response: ProductResponse): CompositionDraft {
     ? snapshot.preferredPresetId
     : undefined
   return Object.freeze({
-    mode: response.binding?.mode ?? 'tavern',
+    mode: response.binding?.mode ?? (agentPresetSnapshot.current === 'rp-agent' ? 'agent' : 'tavern'),
     experienceId: response.binding?.experienceId ?? 'rp-adaptive',
     presetId: preferred ?? response.binding?.presetId ?? response.state.presets[0]?.id ?? '',
     systemId: response.binding?.systemId ?? response.state.systems[0]?.id ?? '',
@@ -1033,6 +1257,12 @@ function sectionDescription(section: ProductSection): string {
 }
 
 function currentSessionId(ctx: ClientContext): string { return ctx.sessions.list.getSnapshot().current ?? '' }
+function agentPresetForSession(sessionId: string): string {
+  const row = context?.sessions.list.getSnapshot().byId[sessionId]
+  if (typeof row !== 'object' || row === null || !('agentPreset' in row)) return ''
+  const value = (row as { readonly agentPreset?: unknown }).agentPreset
+  return typeof value === 'string' ? value : ''
+}
 function sessionIdFromProps(props: Record<string, unknown>): string {
   if (typeof props.sessionId === 'string') return props.sessionId
   if (typeof props.session === 'object' && props.session !== null && 'id' in props.session && typeof (props.session as { id?: unknown }).id === 'string') return (props.session as { id: string }).id
@@ -1082,10 +1312,13 @@ const PRODUCT_CSS = String.raw`
 .rpp-prompt-filters{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:7px;padding:7px;border-bottom:1px solid var(--rpp-line)}.rpp-prompt-filters input{height:29px}.rpp-prompt-filters label{display:flex;align-items:center;gap:4px;color:var(--rpp-muted);font-size:7px;white-space:nowrap}.rpp-prompt-filters label input{width:13px;height:13px}.rpp-unassigned{margin-top:7px;border-top:1px solid var(--rpp-line);padding-top:6px}.rpp-unassigned summary{padding:7px;color:#d8b4fe;font-size:8px;cursor:pointer}.rpp-unassigned>button{display:grid;grid-template-columns:18px minmax(0,1fr);gap:6px;width:100%;padding:6px 7px;border:0;border-radius:8px;color:var(--rpp-muted);background:transparent;text-align:left;cursor:pointer}.rpp-unassigned>button:hover{background:rgba(192,132,252,.08)}.rpp-unassigned>button>span:last-child{display:flex;flex-direction:column;min-width:0}.rpp-unassigned b{font-size:8px}.rpp-unassigned small{overflow:hidden;font-size:7px;text-overflow:ellipsis;white-space:nowrap}.rpp-prompt-meta{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px}.rpp-prompt-meta span{padding:4px 6px;border:1px solid var(--rpp-line);border-radius:6px;color:var(--rpp-muted);background:rgba(255,255,255,.025);font-size:7px}
 .rpp-import-page{max-width:900px;margin:0 auto}.rpp-dropzone{display:flex;min-height:280px;flex-direction:column;align-items:center;justify-content:center;padding:30px;border:1px dashed rgba(192,132,252,.42);border-radius:20px;background:radial-gradient(circle at 50% 20%,rgba(192,132,252,.12),transparent 46%),rgba(255,255,255,.018);text-align:center;transition:.18s}.rpp-dropzone-active{border-color:#c084fc;background:rgba(192,132,252,.1);transform:scale(.995)}.rpp-import-glyph{display:grid;place-items:center;width:58px;height:58px;border:1px solid rgba(192,132,252,.32);border-radius:19px;color:#d8b4fe;background:rgba(192,132,252,.11);font-size:28px}.rpp-dropzone h3{margin:15px 0 7px;font-family:Georgia,'Noto Serif SC',serif;font-size:22px;font-weight:500}.rpp-dropzone p{max-width:610px;margin:0 0 18px;color:var(--rpp-muted);font-size:10px;line-height:1.7}.rpp-import-queue,.rpp-import-results{margin-top:18px;padding:16px;border:1px solid var(--rpp-line);border-radius:16px;background:rgba(255,255,255,.018)}.rpp-file-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.rpp-file-grid article{display:grid;grid-template-columns:42px minmax(0,1fr);align-items:center;gap:9px;padding:9px;border:1px solid var(--rpp-line);border-radius:10px}.rpp-file-grid article>span{display:grid;place-items:center;height:34px;border-radius:8px;color:#d8b4fe;background:rgba(192,132,252,.1);font-size:7px}.rpp-file-grid article div{display:flex;flex-direction:column;min-width:0}.rpp-file-grid b{overflow:hidden;font-size:9px;text-overflow:ellipsis;white-space:nowrap}.rpp-file-grid small{color:var(--rpp-muted);font-size:7px}.rpp-import-results article{display:grid;grid-template-columns:24px 1fr;gap:9px;padding:9px;border-top:1px solid var(--rpp-line);color:#79dca9}.rpp-import-results article>span{font-size:15px}.rpp-import-results article div{display:flex;flex-direction:column}.rpp-import-results b{color:var(--rpp-text);font-size:9px}.rpp-import-results p{margin:2px 0;color:var(--rpp-muted);font-size:8px}.rpp-import-results small{color:#d1a7ff;font-size:7px}.rpp-import-results .rpp-import-error{color:#ff909c}.rpp-empty{text-align:center;color:var(--rpp-muted)}
 .rpp-import-preset-actions{display:flex;flex-direction:row!important;align-items:center;gap:7px;margin-top:9px;padding:9px;border:1px solid rgba(192,132,252,.2);border-radius:9px;background:rgba(192,132,252,.055)}.rpp-import-preset-actions>span{min-width:0;flex:1;color:var(--rpp-muted);font-size:8px}.rpp-import-preset-actions button{min-height:30px;padding:0 9px;border:1px solid var(--rpp-line);border-radius:8px;color:var(--rpp-text);background:rgba(255,255,255,.035);font:inherit;font-size:8px;white-space:nowrap;cursor:pointer}.rpp-import-preset-actions .rpp-primary-action{border-color:rgba(192,132,252,.28);background:linear-gradient(135deg,#8b7cf6,#6657d2)}
+.rpp-agent-seat{position:relative}.rpp-agent-seat-button{display:inline-flex;overflow:hidden;max-width:min(100%,240px);min-height:28px;align-items:center;gap:5px;padding:0 8px;border:0;border-radius:16px;color:var(--dsw-alias-label-primary,#222733);background:transparent;font:inherit;font-size:13px;font-weight:500;line-height:20px;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}.rpp-agent-seat-button:hover,.rpp-agent-seat-button[aria-expanded=true]{background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.1))}.rpp-agent-seat-button:disabled{cursor:default;opacity:.55}.rpp-agent-seat-icon{display:grid;place-items:center;width:16px;height:16px;border:1.5px solid currentColor;border-radius:50%;font-size:0}.rpp-agent-seat-icon:after{width:5px;height:5px;border-radius:50%;background:currentColor;content:''}.rpp-agent-seat-chevron{color:var(--dsw-alias-label-caption,#8f98aa);font-size:14px}.rpp-agent-seat-menu{position:absolute;z-index:80;top:34px;left:0;display:flex;width:min(340px,calc(100vw - 32px));max-height:min(460px,70vh);flex-direction:column;gap:3px;overflow:auto;padding:6px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.18));border-radius:14px;background:var(--dsw-alias-bg-raised,#fff);box-shadow:0 18px 48px rgba(22,22,36,.2)}.rpp-agent-seat-menu>button{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;width:100%;padding:9px 10px;border:0;border-radius:9px;color:var(--dsw-alias-label-primary,#222733);background:transparent;text-align:left;cursor:pointer}.rpp-agent-seat-menu>button:hover,.rpp-agent-seat-selected{background:color-mix(in srgb,#8b7cf6 10%,transparent)!important}.rpp-agent-seat-menu>button>span{display:flex;min-width:0;flex-direction:column;gap:1px}.rpp-agent-seat-menu b{font-size:12px}.rpp-agent-seat-menu small{color:var(--dsw-alias-label-caption,#8f98aa);font-size:10px;line-height:1.45;white-space:normal}.rpp-agent-seat-menu i{color:#786adc;font-style:normal}
+.rpp-quick-setup{box-sizing:border-box;width:100%;padding:14px;border:1px solid color-mix(in srgb,#8b7cf6 32%,var(--dsw-alias-border-l2,rgba(127,127,127,.18)));border-radius:16px;color:var(--dsw-alias-label-primary,#222733);background:linear-gradient(145deg,color-mix(in srgb,var(--dsw-alias-bg-raised,#fff) 94%,#8b7cf6 6%),var(--dsw-alias-bg-raised,#fff));box-shadow:0 12px 32px rgba(44,37,100,.08)}.rpp-quick-setup>header{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;margin-bottom:12px}.rpp-quick-mode{padding:5px 7px;border-radius:7px;color:#7567dd;background:rgba(139,124,246,.11);font-size:8px;font-weight:800;letter-spacing:.1em}.rpp-quick-setup h3{margin:0;font-size:13px}.rpp-quick-setup p{margin:2px 0 0;color:var(--dsw-alias-label-tertiary,#8f98aa);font-size:8px}.rpp-quick-setup>header button{border:0;color:#776ad9;background:transparent;font:inherit;font-size:8px;cursor:pointer}.rpp-quick-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.rpp-quick-grid label{display:flex;min-width:0;flex-direction:column;gap:4px;color:var(--dsw-alias-label-tertiary,#8f98aa);font-size:7px}.rpp-quick-grid select,.rpp-quick-grid input{box-sizing:border-box;width:100%;height:33px;padding:0 8px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.18));border-radius:8px;outline:none;color:var(--dsw-alias-label-primary,#222733);background:var(--dsw-alias-bg-base,#fff);font:inherit;font-size:9px}.rpp-quick-grid select:focus,.rpp-quick-grid input:focus{border-color:rgba(139,124,246,.55);box-shadow:0 0 0 3px rgba(139,124,246,.09)}.rpp-quick-scene{grid-column:span 2}.rpp-quick-setup>footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:11px}.rpp-quick-setup>footer>span{display:flex;align-items:center;gap:7px;color:var(--dsw-alias-label-tertiary,#8f98aa);font-size:8px}.rpp-quick-avatar{display:grid;place-items:center;width:25px;height:25px;border-radius:8px;color:white;background:var(--rpp-accent);font-size:9px}.rpp-quick-setup .rpp-loading-orb{display:inline-block;width:18px;height:18px;margin:0 8px 0 0;vertical-align:middle}
 .rpp-header-context,.rpp-context-dock,.rpp-sidebar-action{font:inherit}.rpp-header-context{display:flex;align-items:center;gap:7px;height:27px;padding:0 9px;border:1px solid rgba(139,124,246,.2);border-radius:8px;color:#c9c4ff;background:rgba(139,124,246,.08);font-size:9px;cursor:pointer}.rpp-header-context-empty{color:var(--dsw-alias-label-tertiary,#9299a8);border-color:var(--dsw-alias-border-l2,rgba(127,127,127,.18));background:transparent}.rpp-stack-icon{position:relative;display:block;width:13px;height:13px}.rpp-stack-icon i{position:absolute;left:1px;width:10px;height:5px;border:1px solid currentColor;border-radius:2px}.rpp-stack-icon i:nth-child(1){top:1px}.rpp-stack-icon i:nth-child(2){top:4px}.rpp-stack-icon i:nth-child(3){top:7px}.rpp-context-dock{box-sizing:border-box;display:flex;align-items:center;gap:8px;width:100%;padding:7px 9px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.18));border-radius:11px;color:var(--dsw-alias-label-primary,#e8eaf0);background:color-mix(in srgb,var(--dsw-alias-bg-raised,#171a22) 88%,#8b7cf6 12%);text-align:left;cursor:pointer}.rpp-context-dock-label{flex:none;color:var(--dsw-alias-label-tertiary,#9299a8);font-size:8px;text-transform:uppercase}.rpp-context-dock-layers{display:flex;align-items:center;gap:4px;min-width:0;flex:1;overflow:hidden}.rpp-mini-layer{display:flex;align-items:center;gap:3px;min-width:0;padding:3px 5px;border-left:2px solid var(--rpp-accent);border-radius:5px;background:color-mix(in srgb,var(--rpp-accent) 8%,transparent);font-size:7px}.rpp-mini-layer b{color:var(--rpp-accent)}.rpp-mini-layer span{overflow:hidden;max-width:66px;color:var(--dsw-alias-label-secondary,#babfca);text-overflow:ellipsis;white-space:nowrap}.rpp-mini-layer-empty{opacity:.45}.rpp-context-edit{flex:none;color:#aaa1ff;font-size:8px}.rpp-sidebar-action{box-sizing:border-box;display:flex;align-items:center;border:0;color:var(--dsw-alias-label-primary,#e8eaf0);background:transparent;cursor:pointer}.rpp-sidebar-action-wide{width:calc(100% + 8px);height:34px;gap:8px;margin:4px -4px;padding:5px 4px 5px 9px;border-radius:12px;font-size:13px}.rpp-sidebar-action-wide:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.1))}.rpp-sidebar-action-rail{width:36px;height:36px;justify-content:center;margin:6px 0;border-radius:50%}.rpp-mark{width:22px;height:22px;border-radius:8px;font-family:serif;font-size:11px}
 .rpp-story{box-sizing:border-box;display:flex;min-height:100%;flex-direction:column;color:var(--dsw-alias-label-primary,#edf0f7);background:radial-gradient(circle at 85% 0,rgba(139,124,246,.085),transparent 28%)}.rpp-story-header{position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:17px max(22px,calc((100% - 920px)/2));border-bottom:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.14));background:color-mix(in srgb,var(--dsw-alias-bg-base,#10131a) 88%,transparent);backdrop-filter:blur(16px)}.rpp-story-identity{display:flex;align-items:center;gap:12px}.rpp-story-avatar{display:grid;place-items:center;width:46px;height:46px;border-radius:15px;color:white;background:radial-gradient(circle at 30% 20%,color-mix(in srgb,var(--rpp-accent) 72%,white),var(--rpp-accent));box-shadow:0 10px 28px color-mix(in srgb,var(--rpp-accent) 22%,transparent);font-family:Georgia,serif;font-size:19px}.rpp-story-identity h2{margin:2px 0;font-family:Georgia,'Noto Serif SC',serif;font-size:20px;font-weight:500}.rpp-story-identity p{margin:0;color:var(--dsw-alias-label-tertiary,#8f98aa);font-size:9px}.rpp-story-actions{display:flex;gap:7px}.rpp-story-actions button,.rpp-story-foot button{height:31px;padding:0 10px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.18));border-radius:9px;color:inherit;background:rgba(255,255,255,.035);font:inherit;font-size:8px;cursor:pointer}.rpp-story-thread{display:flex;width:min(920px,calc(100% - 34px));flex:1;flex-direction:column;gap:18px;margin:0 auto;padding:28px 0 120px}.rpp-message{width:min(76%,720px)}.rpp-message-assistant{align-self:flex-start}.rpp-message-user{align-self:flex-end}.rpp-message-head{display:flex;align-items:center;gap:8px;margin-bottom:7px}.rpp-message-avatar{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;color:white;background:var(--rpp-accent);font-family:Georgia,serif;font-size:11px}.rpp-message-head>span:nth-child(2){display:flex;flex:1;flex-direction:column}.rpp-message-head b{font-size:10px}.rpp-message-head small{color:var(--dsw-alias-label-tertiary,#8f98aa);font-size:7px}.rpp-message-head button{border:0;color:var(--dsw-alias-label-tertiary,#8f98aa);background:transparent;font:inherit;font-size:7px;cursor:pointer;opacity:0}.rpp-message:hover .rpp-message-head button,.rpp-message:focus-within .rpp-message-head button{opacity:1}.rpp-message-body{padding:14px 16px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.14));border-radius:4px 16px 16px 16px;background:rgba(255,255,255,.032);font-family:Georgia,'Noto Serif SC',serif;font-size:13px;line-height:1.8;white-space:pre-wrap;box-shadow:0 8px 26px rgba(0,0,0,.08)}.rpp-message-user .rpp-message-head{flex-direction:row-reverse}.rpp-message-user .rpp-message-head>span:nth-child(2){text-align:right}.rpp-message-user .rpp-message-body{border-radius:16px 4px 16px 16px;background:rgba(54,184,212,.065)}.rpp-message-editor{padding:10px;border:1px solid rgba(139,124,246,.28);border-radius:13px;background:rgba(139,124,246,.06)}.rpp-message-editor textarea{box-sizing:border-box;width:100%;padding:10px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.18));border-radius:9px;outline:none;color:inherit;background:rgba(0,0,0,.2);font:inherit;font-size:11px;line-height:1.6;resize:vertical}.rpp-message-editor>div{display:flex;justify-content:flex-end;gap:7px;margin-top:7px}.rpp-message-editor button{height:31px;padding:0 10px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.18));border-radius:8px;color:inherit;background:transparent;font:inherit;font-size:8px;cursor:pointer}.rpp-message-streaming{opacity:.8}.rpp-caret{display:inline-block;width:2px;height:1em;margin-left:3px;background:#9c90ff;vertical-align:-2px;animation:rpp-blink .75s steps(2) infinite}.rpp-story-foot{display:flex;justify-content:space-between;gap:12px;width:min(920px,calc(100% - 34px));margin:auto;padding:12px 0 26px;color:var(--dsw-alias-label-tertiary,#8f98aa);font-size:8px}.rpp-story-empty{display:flex;min-height:420px;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center}.rpp-story-empty>span{font-size:32px;color:#9c90ff}.rpp-story-empty h3{margin:10px 0 5px;font-family:Georgia,'Noto Serif SC',serif;font-size:20px;font-weight:500}.rpp-story-empty p{max-width:500px;margin:0 0 15px;color:var(--dsw-alias-label-tertiary,#8f98aa);font-size:10px}.rpp-story-empty-compact{min-height:300px}.rpp-loading{display:flex;min-height:380px;flex-direction:column;align-items:center;justify-content:center;color:var(--rpp-muted);gap:6px}.rpp-loading-orb{width:34px;height:34px;margin-bottom:8px;border:2px solid rgba(139,124,246,.2);border-top-color:#8b7cf6;border-radius:50%;animation:rpp-spin .8s linear infinite}.rpp-loading b{color:var(--rpp-text);font-size:11px}.rpp-loading small{font-size:8px}
 .rpp-runtime-projection{display:flex;flex-direction:column;gap:9px;width:min(84%,760px);align-self:center}.rpp-effect-card{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;padding:11px 13px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.16));border-left:3px solid var(--effect,#8b7cf6);border-radius:12px;background:rgba(255,255,255,.025)}.rpp-effect-world{--effect:#42b883}.rpp-effect-time{--effect:#e7a84f}.rpp-effect-scene{--effect:#36b8d4}.rpp-effect-character{--effect:#f47f6b}.rpp-effect-persona{--effect:#8b7cf6}.rpp-effect-relationship{--effect:#ec6fb1}.rpp-effect-memory{--effect:#7ca7f6}.rpp-effect-icon{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;color:white;background:var(--effect);font-family:Georgia,serif;font-size:11px}.rpp-effect-card>div>span{color:var(--effect);font-size:7px;font-weight:700;letter-spacing:.12em}.rpp-effect-card h3{margin:2px 0;font-size:11px}.rpp-effect-card p{margin:0;color:var(--dsw-alias-label-secondary,#aeb6c5);font-size:9px;line-height:1.5}.rpp-effect-card details{margin-top:6px;color:var(--dsw-alias-label-tertiary,#8f98aa);font-size:7px}.rpp-effect-card pre{overflow:auto;max-height:160px;padding:7px;border-radius:7px;background:rgba(0,0,0,.15);font-size:7px}.rpp-choices{padding:13px;border:1px solid rgba(139,124,246,.2);border-radius:13px;background:rgba(139,124,246,.055)}.rpp-choices h3{margin:0 0 9px;font-family:Georgia,'Noto Serif SC',serif;font-size:12px;font-weight:500}.rpp-choices>div{display:flex;flex-wrap:wrap;gap:7px}.rpp-choices button{min-height:34px;padding:0 11px;border:1px solid rgba(139,124,246,.28);border-radius:9px;color:inherit;background:rgba(139,124,246,.09);font:inherit;font-size:9px;cursor:pointer}.rpp-choices button:hover{background:rgba(139,124,246,.17)}.rpp-choices button:disabled{cursor:not-allowed;opacity:.5}.rpp-choices button.rpp-choice-picked{border-color:#55d89a;color:#9de7bf}
 @keyframes rpp-spin{to{transform:rotate(360deg)}}@keyframes rpp-fade{from{opacity:0}to{opacity:1}}@keyframes rpp-blink{50%{opacity:0}}
 @media(max-width:900px){.rpp-shell{grid-template-columns:72px minmax(0,1fr)}.rpp-brand{justify-content:center;padding-inline:0}.rpp-brand>span:last-child,.rpp-nav nav button>span:last-child,.rpp-nav-foot span:last-child{display:none}.rpp-nav nav button{display:flex;justify-content:center;padding:5px}.rpp-compose-grid{grid-template-columns:1fr}.rpp-preview{position:static}.rpp-field{grid-template-columns:1fr}.rpp-manager,.rpp-preset-layout{grid-template-columns:1fr}.rpp-entity-list{max-height:210px;border-right:0;border-bottom:1px solid var(--rpp-line)}.rpp-prompt-workbench{grid-template-columns:1fr}.rpp-preset-header{grid-template-columns:1fr}.rpp-editor-fields{grid-template-columns:1fr}.rpp-editor-field-wide{grid-column:auto}.rpp-generation{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:600px){.rpp-overlay{padding:8px}.rpp-modal{width:calc(100vw - 16px);height:calc(100vh - 16px);border-radius:15px}.rpp-shell{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}.rpp-nav{padding:8px;border-right:0;border-bottom:1px solid var(--rpp-line)}.rpp-brand{display:none}.rpp-nav nav{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}.rpp-nav nav button{min-height:38px}.rpp-nav-foot{display:none}.rpp-main-header{padding:15px}.rpp-main-header p{display:none}.rpp-content{padding:12px}.rpp-choice-grid,.rpp-file-grid{grid-template-columns:1fr}.rpp-story-header{padding:12px 15px}.rpp-story-actions button:first-child{display:none}.rpp-message{width:92%}.rpp-story-thread{width:calc(100% - 24px)}.rpp-story-foot{width:calc(100% - 24px)}.rpp-generation{grid-template-columns:1fr}.rpp-preset-main{padding:12px}}
+@media(max-width:720px){.rpp-quick-setup>header{grid-template-columns:auto minmax(0,1fr)}.rpp-quick-setup>header button{grid-column:1/-1;text-align:right}.rpp-quick-grid{grid-template-columns:1fr 1fr}.rpp-quick-scene{grid-column:1/-1}.rpp-quick-setup>footer{align-items:stretch;flex-direction:column}.rpp-quick-setup>footer button{width:100%}}
 `

@@ -28,6 +28,8 @@ Standalone World Info and Character Card lore retain individual World Entries in
 
 Every Session explicitly selects `Tavern Chat` or `Agent RP`. Tavern Chat uses the separate `rp-tavern` Agent preset: it still reuses native DSH AgentLoop for Session semantics but registers no RP state tools, preserving the traditional single-generation Tavern experience. Agent RP uses `rp-agent` and registers domain tools around the same imported Prompt preset, Character Card, persona, and lorebook. Its Experience field retains product intent for adaptive, world simulation, multi-character, TRPG, and companion profiles.
 
+The new-session Agent-preset selector and the RP quick setup above the composer share one selection state. Tavern Chat immediately exposes Prompt preset, Character Card, persona, lorebook, and scene controls; Agent RP adds Experience to the same resource controls. When the landing page has no Session yet, applying the setup asks the DSH Workspace Runtime to reuse or create a blank Session, applies the selected Agent preset, and then binds the complete RP composition. Standard coding presets do not render the RP quick setup.
+
 Agent RP currently exposes `rp_update_state` and `rp_propose_choices`. The former commits world, time, scene, character, persona, relationship, or memory Effects; the latter commits 1–8 choices carrying stable ids, visible labels, and exact submitted prompts. Native tool calls/results stay in the Session log, product state holds a rebuildable projection, and the next request reads committed facts through `<rp-dynamic-state>`. The RP view renders character dialogue beside world/time/scene/relationship/memory cards and clickable choices; selecting one submits its prompt to the same native Agent Session.
 
 ## Local installation
