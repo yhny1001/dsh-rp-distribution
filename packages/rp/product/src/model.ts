@@ -156,6 +156,8 @@ export interface SessionComposition {
   readonly updatedAt: number
 }
 
+export type CompositionRecommendation = Omit<SessionComposition, 'sessionId' | 'updatedAt'>
+
 export interface TranscriptMessage {
   readonly sourceSeq: number
   readonly currentSurfaceSeq: number
@@ -174,7 +176,7 @@ export interface SessionTranscript {
   readonly messages: readonly TranscriptMessage[]
 }
 
-export type RuntimeEffectKind = 'world' | 'time' | 'scene' | 'character' | 'persona' | 'relationship' | 'memory'
+export type RuntimeEffectKind = 'world' | 'time' | 'scene' | 'character' | 'persona' | 'relationship' | 'memory' | 'npc' | 'objective' | 'inventory'
 
 export interface RuntimeEffect {
   readonly id: string
@@ -274,6 +276,32 @@ export function defaultProductState(): ProductState {
       accent: '#42b883', updatedAt: 0,
     })]),
     presets: Object.freeze([defaultPromptPreset()]), bindings: Object.freeze({}), transcripts: Object.freeze({}), runtimes: Object.freeze({}),
+  })
+}
+
+/** Recommend a complete import-first composition that can start without manual field-by-field setup. */
+export function recommendComposition(state: ProductState, mode: ProductSessionMode): CompositionRecommendation {
+  const importedPresets = state.presets.filter(preset => preset.source !== undefined)
+  const importedHarnessPresets = importedPresets.filter(preset => preset.mode === 'harness')
+  const harnessPresets = state.presets.filter(preset => preset.mode === 'harness')
+  const preset = newest(importedHarnessPresets.length > 0 ? importedHarnessPresets
+    : importedPresets.length > 0 ? importedPresets : harnessPresets.length > 0 ? harnessPresets : state.presets)
+  const character = newest(importedOrAll(state.characters))
+  const persona = newest(importedOrAll(state.personas))
+  const world = newest(importedOrAll(state.worlds))
+  const system = newest(state.systems)
+  if (preset === undefined || system === undefined) throw new Error('RP recommendation requires a Prompt preset and system profile')
+  const primaryCharacterId = character?.id ?? ''
+  return Object.freeze({
+    mode,
+    experienceId: 'rp-adaptive',
+    presetId: preset.id,
+    systemId: system.id,
+    characterIds: Object.freeze(primaryCharacterId === '' ? [] : [primaryCharacterId]),
+    primaryCharacterId,
+    personaId: persona?.id ?? '',
+    worldId: world?.id ?? '',
+    scene: character?.scenario.trim() || world?.overview.trim() || '',
   })
 }
 
@@ -411,6 +439,20 @@ export function bindSession(state: ProductState, value: unknown, baseRevision: n
   return normalizeProductState({ ...state, revision: state.revision + 1, bindings: { ...state.bindings, [binding.sessionId]: binding } })
 }
 
+/** Select the speaker for the next Agent RP reply from the Session's configured cast. */
+export function selectPrimaryCharacter(state: ProductState, sessionId: string, characterId: string, now = Date.now()): ProductState {
+  const binding = state.bindings[sessionId]
+  if (binding?.mode !== 'agent') throw new Error('speaker selection requires Agent RP mode')
+  const id = normalizedId(characterId, 'speaker characterId')
+  if (!binding.characterIds.includes(id)) throw new Error('speaker must belong to the Session character cast')
+  if (!state.characters.some(character => character.id === id)) throw new Error('speaker character does not exist')
+  return normalizeProductState({
+    ...state,
+    revision: state.revision + 1,
+    bindings: { ...state.bindings, [sessionId]: { ...binding, primaryCharacterId: id, updatedAt: now } },
+  })
+}
+
 /** Record the selected speaker for one append-origin message. */
 export function recordTranscriptMessage(state: ProductState, sessionId: string, sourceSeq: number, role: TranscriptRole, createdAt: number): ProductState {
   const binding = state.bindings[sessionId]
@@ -477,24 +519,53 @@ export function applyRuntimeEffect(
   value: unknown,
   now = Date.now(),
 ): ProductState {
+  return commitRuntimeTurn(state, sessionId, callId, { updates: [value] }, now)
+}
+
+/** Atomically commit one turn's N→N+1 world ledger and optional user choices. */
+export function commitRuntimeTurn(
+  state: ProductState,
+  sessionId: string,
+  callIdValue: string,
+  value: unknown,
+  now = Date.now(),
+): ProductState {
   const binding = state.bindings[sessionId]
   if (binding?.mode !== 'agent') throw new Error('RP domain effects require Agent RP mode')
-  const item = record(value, 'runtime effect')
+  const item = record(value, 'runtime turn')
+  const updates = array(item.updates ?? [], 'runtime turn updates')
+  if (updates.length > 32) throw new Error('runtime turn accepts at most 32 state updates')
+  const hasChoices = item.choices !== undefined
+  if (updates.length === 0 && !hasChoices) throw new Error('runtime turn requires state updates or choices')
+  const callId = text(callIdValue, 'turn callId', 512)
   const runtime = state.runtimes[sessionId] ?? emptyRuntime(sessionId)
-  const effect: RuntimeEffect = Object.freeze({
-    id: `effect-${callId}`,
-    callId: text(callId, 'effect callId', 512),
-    kind: runtimeEffectKind(item.kind),
-    title: text(item.title, 'effect title', 240),
-    summary: text(item.summary, 'effect summary', 8_000),
-    data: jsonObject(item.data ?? {}, 'effect data'),
-    createdAt: now,
+  const committed = updates.map((value, index): RuntimeEffect => {
+    const update = record(value, `runtime turn updates[${index}]`)
+    return Object.freeze({
+      id: promptId(`effect-${callId.slice(0, 218)}-${String(index)}`, 'effect id'),
+      callId,
+      kind: runtimeEffectKind(update.kind),
+      title: text(update.title, `runtime turn updates[${index}].title`, 240),
+      summary: text(update.summary, `runtime turn updates[${index}].summary`, 8_000),
+      data: jsonObject(update.data ?? {}, `runtime turn updates[${index}].data`),
+      createdAt: now,
+    })
   })
-  const effects = [...runtime.effects.filter(existing => existing.callId !== callId), effect].slice(-500)
+  const effects = [...runtime.effects.filter(existing => existing.callId !== callId), ...committed].slice(-500)
+  const choices = hasChoices ? runtimeChoices(item.choices, true) : runtime.choices
   return normalizeProductState({
     ...state,
     revision: state.revision + 1,
-    runtimes: { ...state.runtimes, [sessionId]: { ...runtime, revision: runtime.revision + 1, effects } },
+    runtimes: { ...state.runtimes, [sessionId]: {
+      ...runtime,
+      revision: runtime.revision + 1,
+      effects,
+      ...(hasChoices ? {
+        choicesTitle: choices.length === 0 ? '' : text(item.choicesTitle ?? '接下来做什么？', 'choices title', 240),
+        choices,
+        selectedChoiceId: '',
+      } : {}),
+    } },
   })
 }
 
@@ -508,16 +579,7 @@ export function replaceRuntimeChoices(
 ): ProductState {
   const binding = state.bindings[sessionId]
   if (binding?.mode !== 'agent') throw new Error('RP choices require Agent RP mode')
-  const choices = array(choicesValue, 'choices').map((value, index) => {
-    const item = record(value, `choices[${index}]`)
-    return Object.freeze({
-      id: promptId(item.id, `choices[${index}].id`),
-      label: text(item.label, `choices[${index}].label`, 240),
-      prompt: text(item.prompt, `choices[${index}].prompt`, 4_000),
-    })
-  })
-  if (choices.length === 0 || choices.length > 8) throw new Error('choices must contain 1-8 options')
-  if (new Set(choices.map(choice => choice.id)).size !== choices.length) throw new Error('choices repeat an id')
+  const choices = runtimeChoices(choicesValue, false)
   const runtime = state.runtimes[sessionId] ?? emptyRuntime(sessionId)
   return normalizeProductState({
     ...state,
@@ -532,6 +594,18 @@ export function replaceRuntimeChoices(
       lastChoiceCallId: callId,
     } },
   })
+}
+
+/** Project the last committed value for each stable state key. */
+export function currentRuntimeEffects(runtime: SessionRuntimeState): readonly RuntimeEffect[] {
+  const current = new Map<string, RuntimeEffect>()
+  for (const effect of runtime.effects) {
+    const keyValue = effect.data.key ?? effect.data.target ?? effect.data.id ?? effect.data.name
+    const key = `${effect.kind}:${typeof keyValue === 'string' && keyValue.trim() !== '' ? keyValue : effect.title}`
+    current.delete(key)
+    current.set(key, effect)
+  }
+  return Object.freeze([...current.values()])
 }
 
 /** Mark one proposed option selected before its prompt enters the native Session. */
@@ -549,7 +623,7 @@ export function selectRuntimeChoice(state: ProductState, sessionId: string, choi
 export function renderRuntimeContext(state: ProductState, sessionId: string): string {
   const runtime = state.runtimes[sessionId]
   if (runtime === undefined || runtime.effects.length === 0) return ''
-  return `<rp-dynamic-state revision="${String(runtime.revision)}">\n${runtime.effects.slice(-80).map(effect =>
+  return `<rp-dynamic-state revision="${String(runtime.revision)}">\n${currentRuntimeEffects(runtime).slice(-80).map(effect =>
     `[${effect.kind}] ${effect.title}: ${effect.summary}\n${JSON.stringify(effect.data)}`).join('\n')}\n</rp-dynamic-state>`
 }
 
@@ -881,8 +955,23 @@ function emptyRuntime(sessionId: string): SessionRuntimeState {
 
 function runtimeEffectKind(value: unknown): RuntimeEffectKind {
   if (value === 'world' || value === 'time' || value === 'scene' || value === 'character'
-    || value === 'persona' || value === 'relationship' || value === 'memory') return value
+    || value === 'persona' || value === 'relationship' || value === 'memory' || value === 'npc'
+    || value === 'objective' || value === 'inventory') return value
   throw new Error('runtime effect kind is invalid')
+}
+
+function runtimeChoices(value: unknown, allowEmpty: boolean): readonly RuntimeChoice[] {
+  const choices = array(value, 'choices').map((value, index) => {
+    const item = record(value, `choices[${index}]`)
+    return Object.freeze({
+      id: promptId(item.id, `choices[${index}].id`),
+      label: text(item.label, `choices[${index}].label`, 240),
+      prompt: text(item.prompt, `choices[${index}].prompt`, 4_000),
+    })
+  })
+  if (choices.length > 8 || !allowEmpty && choices.length === 0) throw new Error(`choices must contain ${allowEmpty ? '0-8' : '1-8'} options`)
+  if (new Set(choices.map(choice => choice.id)).size !== choices.length) throw new Error('choices repeat an id')
+  return Object.freeze(choices)
 }
 
 function normalizeGeneration(value: unknown): GenerationSettings {
@@ -942,6 +1031,15 @@ function optionalAvatar(value: unknown): { readonly avatar?: CharacterAvatar } {
     width: integer(item.width, 'avatar width', 1, 32_768),
     height: integer(item.height, 'avatar height', 1, 32_768),
   }) }
+}
+
+function importedOrAll<T extends { readonly source?: ImportSource }>(items: readonly T[]): readonly T[] {
+  const imported = items.filter(item => item.source !== undefined)
+  return imported.length > 0 ? imported : items
+}
+
+function newest<T extends { readonly updatedAt: number }>(items: readonly T[]): T | undefined {
+  return items.reduce<T | undefined>((selected, item) => selected === undefined || item.updatedAt >= selected.updatedAt ? item : selected, undefined)
 }
 
 function mergeById<T extends { readonly id: string }>(current: readonly T[], added: readonly T[]): readonly T[] {

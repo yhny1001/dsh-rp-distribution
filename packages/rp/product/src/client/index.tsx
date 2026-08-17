@@ -26,7 +26,7 @@ import type {
   WorldEntry,
   WorldProfile,
 } from '../model.ts'
-import { PRODUCT_PROMPT_SEAT_COUNT, resolvePromptLayers } from '../model.ts'
+import { currentRuntimeEffects, PRODUCT_PROMPT_SEAT_COUNT, recommendComposition, resolvePromptLayers } from '../model.ts'
 
 export const name = '@dsh-rp/product'
 export const inject = ['slots', 'sessions', 'connection', 'workspaces']
@@ -272,22 +272,28 @@ function QuickSetup({ response, sessionId, mode }: {
   readonly sessionId: string
   readonly mode: CompositionDraft['mode']
 }): ReactNode {
-  const initial = useMemo<CompositionDraft>(() => ({
-    mode,
-    experienceId: 'rp-adaptive',
-    presetId: response?.state.presets.find(preset => preset.mode === 'harness')?.id ?? response?.state.presets[0]?.id ?? '',
-    systemId: response?.state.systems[0]?.id ?? '',
-    characterIds: [], primaryCharacterId: '', personaId: '', worldId: '', scene: '',
-  }), [mode, response?.state.revision, sessionId])
+  const initial = useMemo<CompositionDraft>(() => response === undefined ? {
+    mode, experienceId: 'rp-adaptive', presetId: '', systemId: '', characterIds: [], primaryCharacterId: '', personaId: '', worldId: '', scene: '',
+  } : recommendComposition(response.state, mode), [mode, response?.state.revision, sessionId])
   const [draft, setDraft] = useState(initial)
   useEffect(() => setDraft(initial), [initial])
   if (response === undefined) return <section className="rpp-quick-setup"><div className="rpp-loading-orb" /><span>正在加载 RP 资源…</span></section>
   const primary = response.state.characters.find(character => character.id === draft.primaryCharacterId)
+  const preset = response.state.presets.find(item => item.id === draft.presetId)
+  const persona = response.state.personas.find(item => item.id === draft.personaId)
+  const world = response.state.worlds.find(item => item.id === draft.worldId)
+  const imported = [primary?.source, preset?.source, persona?.source, world?.source]
+    .filter(source => source !== undefined).length
   return <section className="rpp-quick-setup" data-rp-quick-setup={mode}>
-    <header><span className="rpp-quick-mode">{mode === 'agent' ? 'AGENT RP' : 'TAVERN CHAT'}</span><div><h3>开始前选择本次 RP 资源</h3>
-      <p>{mode === 'agent' ? '导入 Preset + 角色资源，并启用世界、时间、状态、记忆与选项工具。' : '使用导入 Preset、角色卡、Persona、世界书与原生历史进行传统酒馆生成。'}</p></div>
+    <header><span className="rpp-quick-mode">{mode === 'agent' ? 'AGENT RP' : 'TAVERN CHAT'}</span><div><h3>内容已就绪</h3>
+      <p>{imported > 0 ? `已按最近导入内容自动组装 ${String(imported)} 项，可直接开始或手动调整。`
+        : mode === 'agent' ? '已准备内置示例，并启用世界、时间、状态、记忆与选项工具。' : '已准备内置示例，可直接开始传统酒馆生成。'}</p></div>
       <button type="button" onClick={() => openProduct('compose', sessionId)}>完整设置</button></header>
-    <div className="rpp-quick-grid">
+    <div className="rpp-ready-composition"><AvatarFace character={primary} className="rpp-ready-avatar" fallback={primary?.name.slice(0, 1) ?? '角'} />
+      <span><small>{mode === 'agent' ? '世界模拟 · 自动维护状态' : '传统酒馆 · 单次角色生成'}</small><b>{primary?.name ?? '尚未选择角色'}</b>
+        <p>{preset?.name ?? '未选择 Preset'}{persona === undefined ? '' : ` · ${persona.name}`}{world === undefined ? '' : ` · ${world.name}`}</p></span>
+      <i>{imported > 0 ? `${String(imported)} 项导入资源` : '内置示例'}</i></div>
+    <details className="rpp-quick-customize"><summary>更改自动选择与开局场景</summary><div className="rpp-quick-grid">
       <label>Prompt Preset<select value={draft.presetId} onChange={event => setDraft({ ...draft, presetId: event.target.value })}>
         {response.state.presets.map(preset => <option key={preset.id} value={preset.id}>{preset.mode === 'sillytavern' ? '[ST]' : '[Harness]'} {preset.name}</option>)}</select></label>
       <label>角色卡<select value={draft.primaryCharacterId} onChange={event => {
@@ -298,11 +304,12 @@ function QuickSetup({ response, sessionId, mode }: {
       <label>世界书<select value={draft.worldId} onChange={event => setDraft({ ...draft, worldId: event.target.value })}><option value="">不使用世界书</option>
         {response.state.worlds.map(world => <option key={world.id} value={world.id}>{world.name} · {world.entries.filter(entry => entry.enabled).length}/{world.entries.length}</option>)}</select></label>
       {mode === 'agent' ? <label>Experience<select value={draft.experienceId} onChange={event => setDraft({ ...draft, experienceId: event.target.value })}>
-        <option value="rp-adaptive">Adaptive · 状态/记忆/场景/关系</option><option value="rp-world-sim">World Simulation</option>
-        <option value="rp-multi-character">Multi-character</option><option value="rp-trpg">TRPG</option><option value="rp-companion">Companion</option></select></label> : null}
+        <option value="rp-adaptive">Adaptive · 自动平衡状态与选项</option><option value="rp-world-sim">World Simulation · NPC/时间/目标自主推进</option>
+        <option value="rp-multi-character">Multi-character · 独立发言者与角色声音</option><option value="rp-trpg">TRPG · 骰子/目标/物品</option>
+        <option value="rp-companion">Companion · 关系与长期记忆</option></select></label> : null}
       <label className="rpp-quick-scene">当前场景<input value={draft.scene} placeholder="地点、时间和当前事实" onChange={event => setDraft({ ...draft, scene: event.target.value })} /></label>
-    </div>
-    <footer>{primary === undefined ? <span>请选择一个主要角色后开始。</span> : <span><AvatarFace character={primary} className="rpp-quick-avatar" fallback={primary.name.slice(0, 1)} />{primary.name}</span>}
+    </div></details>
+    <footer>{primary === undefined ? <span>请选择一个主要角色后开始。</span> : <span>开始后仍可随时更改角色、世界书和状态模式。</span>}
       <button type="button" className="rpp-primary-action" disabled={primary === undefined || draft.presetId === '' || snapshot.saving}
         onClick={() => { void applyComposition(response, draft) }}>{snapshot.saving ? '正在应用…' : `应用并开始 ${mode === 'agent' ? 'Agent RP' : 'Tavern Chat'}`}</button></footer>
   </section>
@@ -383,7 +390,7 @@ function CompositionEditor({ response }: { readonly response: ProductResponse })
           { id: 'rp-adaptive', name: 'Adaptive · 状态/记忆/场景/关系' },
           { id: 'rp-world-sim', name: 'World Simulation · 世界模拟' },
           { id: 'rp-multi-character', name: 'Multi-character · 多角色调度' },
-          { id: 'rp-trpg', name: 'TRPG · 世界与规则' },
+          { id: 'rp-trpg', name: 'TRPG · 骰子、目标与物品' },
           { id: 'rp-companion', name: 'Companion · 关系与长期记忆' },
         ]} empty="选择 Experience" />
       </Field> : null}
@@ -551,6 +558,8 @@ function ImportHub({ response }: { readonly response: ProductResponse }): ReactN
   const [files, setFiles] = useState<readonly File[]>([])
   const [dragging, setDragging] = useState(false)
   const input = useRef<HTMLInputElement>(null)
+  const importedCount = [...response.state.characters, ...response.state.personas, ...response.state.worlds, ...response.state.presets]
+    .filter(item => item.source !== undefined).length
   const accept = (incoming: FileList | readonly File[]): void => {
     const next = Array.from(incoming).slice(0, MAX_IMPORT_FILES)
     const oversized = next.find(file => file.size > MAX_IMPORT_FILE_BYTES)
@@ -559,6 +568,9 @@ function ImportHub({ response }: { readonly response: ProductResponse }): ReactN
     update({ error: '', notice: '' })
   }
   return <div className="rpp-import-page">
+    {importedCount === 0 ? null : <section className="rpp-import-launch"><span><b>已识别 {importedCount} 份导入资源，可以直接开始</b><small>自动选择最近导入的角色、Harness Preset、Persona 与世界书，并从角色卡场景生成开局。</small></span>
+      <div><button type="button" disabled={snapshot.saving} onClick={() => { void startRecommendedComposition('tavern') }}>直接开始 Tavern</button>
+        <button type="button" className="rpp-primary-action" disabled={snapshot.saving} onClick={() => { void startRecommendedComposition('agent') }}>直接开始 Agent RP</button></div></section>}
     <section className={`rpp-dropzone ${dragging ? 'rpp-dropzone-active' : ''}`}
       onDragOver={(event: DragEvent) => { event.preventDefault(); setDragging(true) }}
       onDragLeave={() => setDragging(false)} onDrop={(event: DragEvent) => { event.preventDefault(); setDragging(false); accept(event.dataTransfer.files) }}>
@@ -755,20 +767,30 @@ function RuntimeProjection({ runtime, sessionId, running }: {
   readonly sessionId: string
   readonly running: boolean
 }): ReactNode {
-  return <div className="rpp-runtime-projection">
-    {runtime.effects.map(effect => <article key={effect.id} className={`rpp-effect-card rpp-effect-${effect.kind}`}>
-      <span className="rpp-effect-icon">{effectIcon(effect.kind)}</span><div><span>{effect.kind.toUpperCase()}</span><h3>{effect.title}</h3><p>{effect.summary}</p>
-        {Object.keys(effect.data).length === 0 ? null : <details><summary>结构化数据</summary><pre>{JSON.stringify(effect.data, null, 2)}</pre></details>}</div>
-    </article>)}
+  const current = currentRuntimeEffects(runtime)
+  return <section className="rpp-runtime-projection">
+    {current.length === 0 ? null : <div className="rpp-state-board"><header><span><small>WORLD LEDGER</small><b>当前世界状态</b></span>
+      <i>REV {runtime.revision}</i></header><div className="rpp-state-grid">{current.slice(-12).map(effect => <article key={effect.id} className={`rpp-state-cell rpp-effect-${effect.kind}`}>
+        <span className="rpp-effect-icon">{effectIcon(effect.kind)}</span><div><small>{effectKindLabel(effect.kind)}</small><b>{effect.title}</b><p>{effect.summary}</p></div>
+      </article>)}</div>{runtime.effects.length <= 1 ? null : <details className="rpp-state-history"><summary>查看状态履历 · {runtime.effects.length} 次提交</summary>
+        <div>{runtime.effects.slice(-20).reverse().map(effect => <article key={`history-${effect.id}`}><span>{effectKindLabel(effect.kind)}</span><b>{effect.title}</b><p>{effect.summary}</p>
+          {Object.keys(effect.data).length === 0 ? null : <pre>{JSON.stringify(effect.data, null, 2)}</pre>}</article>)}</div></details>}</div>}
     {runtime.choices.length === 0 ? null : <section className="rpp-choices"><h3>{runtime.choicesTitle}</h3><div>{runtime.choices.map(choice => <button type="button" key={choice.id}
       disabled={running || runtime.selectedChoiceId !== ''} className={runtime.selectedChoiceId === choice.id ? 'rpp-choice-picked' : ''}
       onClick={() => { void chooseRuntimeOption(sessionId, choice.id, choice.prompt) }}>{choice.label}</button>)}</div></section>}
-  </div>
+  </section>
 }
 
 function effectIcon(kind: string): string {
   return kind === 'world' ? '界' : kind === 'time' ? '时' : kind === 'scene' ? '景' : kind === 'character' ? '角'
-    : kind === 'persona' ? '我' : kind === 'relationship' ? '缘' : '忆'
+    : kind === 'persona' ? '我' : kind === 'npc' ? '众' : kind === 'relationship' ? '缘' : kind === 'memory' ? '忆'
+      : kind === 'objective' ? '标' : '物'
+}
+
+function effectKindLabel(kind: string): string {
+  return kind === 'world' ? '世界' : kind === 'time' ? '时间' : kind === 'scene' ? '场景' : kind === 'character' ? '角色'
+    : kind === 'persona' ? 'Persona' : kind === 'npc' ? 'NPC' : kind === 'relationship' ? '关系' : kind === 'memory' ? '记忆'
+      : kind === 'objective' ? '目标' : '物品'
 }
 
 interface StoryMessage {
@@ -804,7 +826,7 @@ function blocksText(blocks: readonly unknown[]): string {
   return blocks.flatMap(block => {
     if (typeof block !== 'object' || block === null) return []
     const value = block as Record<string, unknown>
-    if ((value.kind === 'text' || value.kind === 'reasoning' || value.type === 'text') && typeof value.text === 'string') return [value.text]
+    if ((value.kind === 'text' || value.type === 'text') && typeof value.text === 'string') return [value.text]
     return []
   }).join('\n')
 }
@@ -963,6 +985,36 @@ async function ensureCurrentSession(): Promise<string> {
   })
 }
 
+async function waitForBlankSession(ctx: ClientContext): Promise<string> {
+  const resolveCurrent = (): string => {
+    const sessionId = currentSessionId(ctx)
+    const row = ctx.sessions.list.getSnapshot().byId[sessionId]
+    return typeof row === 'object' && row !== null && 'blank' in row && (row as { readonly blank?: unknown }).blank === true ? sessionId : ''
+  }
+  const current = resolveCurrent()
+  if (current !== '') return current
+  return await new Promise<string>((resolve, reject) => {
+    let settled = false
+    const finish = (sessionId: string): void => {
+      if (settled) return
+      settled = true
+      window.clearTimeout(timeout)
+      dispose()
+      resolve(sessionId)
+    }
+    const dispose = ctx.sessions.list.subscribe(() => {
+      const sessionId = resolveCurrent()
+      if (sessionId !== '') finish(sessionId)
+    })
+    const timeout = window.setTimeout(() => {
+      if (settled) return
+      settled = true
+      dispose()
+      reject(new Error('未能建立空白 Session；请先选择一个工作区'))
+    }, 10_000)
+  })
+}
+
 async function loadProduct(sessionId = snapshot.sessionId): Promise<void> {
   update({ loading: true, error: '' })
   try { update({ loading: false, response: await request(`state${sessionId === '' ? '' : `?sessionId=${encodeURIComponent(sessionId)}`}`), sessionId, error: '' }) }
@@ -1052,6 +1104,24 @@ async function importFiles(files: readonly File[], response: ProductResponse): P
   } catch (error: unknown) { update({ saving: false, error: publicError(error) }) }
 }
 
+async function startRecommendedComposition(mode: CompositionDraft['mode']): Promise<void> {
+  const ctx = context
+  if (ctx === undefined) { update({ error: 'DSH 客户端尚未加载' }); return }
+  update({ saving: true, error: '', notice: '' })
+  try {
+    ctx.workspaces.startSession()
+    const sessionId = await waitForBlankSession(ctx)
+    await selectAgentPreset(mode === 'agent' ? 'rp-agent' : 'rp-tavern')
+    await applyStagedAgentPreset()
+    const response = await request(`state?sessionId=${encodeURIComponent(sessionId)}`)
+    const draft = recommendComposition(response.state, mode)
+    if (draft.primaryCharacterId === '') throw new Error('没有可用角色；请先导入一张角色卡')
+    const receipt = await sendCommand(sessionId, 'rp-studio-bind', { sessionId, baseRevision: response.state.revision, ...draft })
+    update({ saving: false, open: false, response: undefined, sessionId, notice: receipt, preferredPresetId: '' })
+    await loadProduct(sessionId)
+  } catch (error: unknown) { update({ saving: false, error: publicError(error) }) }
+}
+
 function chooseImportedPreset(presetId: string): void {
   update({ section: 'compose', preferredPresetId: presetId, error: '', notice: '已选择导入的 ST 兼容 Preset；源文件保持不变。' })
 }
@@ -1116,14 +1186,9 @@ function compositionDraft(response: ProductResponse): CompositionDraft {
   const preferred = snapshot.preferredPresetId !== '' && response.state.presets.some(preset => preset.id === snapshot.preferredPresetId)
     ? snapshot.preferredPresetId
     : undefined
-  return Object.freeze({
-    mode: response.binding?.mode ?? (agentPresetSnapshot.current === 'rp-agent' ? 'agent' : 'tavern'),
-    experienceId: response.binding?.experienceId ?? 'rp-adaptive',
-    presetId: preferred ?? response.binding?.presetId ?? response.state.presets[0]?.id ?? '',
-    systemId: response.binding?.systemId ?? response.state.systems[0]?.id ?? '',
-    characterIds: response.binding?.characterIds ?? [], primaryCharacterId: response.binding?.primaryCharacterId ?? '',
-    personaId: response.binding?.personaId ?? '', worldId: response.binding?.worldId ?? '', scene: response.binding?.scene ?? '',
-  })
+  if (response.binding !== undefined) return Object.freeze({ ...response.binding, ...(preferred === undefined ? {} : { presetId: preferred }) })
+  const recommended = recommendComposition(response.state, agentPresetSnapshot.current === 'rp-agent' ? 'agent' : 'tavern')
+  return Object.freeze({ ...recommended, ...(preferred === undefined ? {} : { presetId: preferred }) })
 }
 
 function previewLayers(response: ProductResponse, draft: CompositionDraft): readonly PromptLayer[] {
@@ -1319,14 +1384,16 @@ const PRODUCT_CSS = String.raw`
 .rpp-preset-main{display:flex;flex-direction:column;min-width:0;padding:19px}.rpp-preset-header{display:grid;grid-template-columns:minmax(180px,1fr) auto;gap:18px;align-items:end;padding-bottom:16px;border-bottom:1px solid var(--rpp-line)}.rpp-preset-header>div:first-child input{height:39px;margin-top:5px;font-family:Georgia,serif;font-size:19px}.rpp-generation{display:grid;grid-template-columns:110px 110px 110px;gap:8px}.rpp-generation label,.rpp-editor-row label{display:flex;flex-direction:column;gap:4px;color:var(--rpp-muted);font-size:7px}.rpp-prompt-workbench{display:grid;grid-template-columns:minmax(260px,.8fr) minmax(300px,1.2fr);gap:15px;min-height:0;flex:1;padding-top:15px}.rpp-prompt-order,.rpp-prompt-editor{min-width:0;border:1px solid var(--rpp-line);border-radius:13px;background:rgba(0,0,0,.11);overflow:hidden}.rpp-subheading{display:flex;align-items:center;justify-content:space-between;padding:10px;border-bottom:1px solid var(--rpp-line);font-size:9px}.rpp-subheading select{width:125px;height:27px}.rpp-order-list{max-height:430px;overflow:auto;padding:6px}.rpp-order-list>button{display:grid;grid-template-columns:17px 55px minmax(0,1fr) 34px;align-items:center;gap:6px;width:100%;padding:7px;border:1px solid transparent;border-radius:9px;color:var(--rpp-muted);background:transparent;text-align:left;cursor:pointer}.rpp-order-list>button:hover,.rpp-order-list>button.rpp-order-active{color:var(--rpp-text);border-color:var(--rpp-line);background:rgba(139,124,246,.08)}.rpp-order-list input{width:13px;height:13px}.rpp-order-list button>span:nth-child(3){display:flex;flex-direction:column;min-width:0}.rpp-order-list b{font-size:9px}.rpp-order-list small{overflow:hidden;font-size:7px;text-overflow:ellipsis}.rpp-role{padding:3px 4px;border-radius:5px;text-align:center;font-size:6px;text-transform:uppercase}.rpp-role-system{color:#beb6ff;background:rgba(139,124,246,.13)}.rpp-role-user{color:#8be3f3;background:rgba(54,184,212,.13)}.rpp-role-assistant{color:#ffb6a9;background:rgba(244,127,107,.13)}.rpp-order-arrows{display:flex;gap:2px}.rpp-order-arrows i{padding:3px;font-style:normal}.rpp-prompt-editor{padding:14px}.rpp-editor-row{display:grid;grid-template-columns:1fr 110px;gap:10px;margin-bottom:11px}.rpp-marker-switch{display:flex;align-items:center;gap:6px;margin-bottom:10px;color:var(--rpp-muted);font-size:8px}.rpp-marker-switch input{width:14px;height:14px}.rpp-source-note{display:flex;align-items:center;gap:7px;margin-top:10px;padding:8px;border-radius:8px;color:var(--rpp-muted);background:rgba(192,132,252,.07);font-size:7px}.rpp-source-note b{color:#d7b2ff}.rpp-source-note span{overflow:hidden;flex:1;text-overflow:ellipsis;white-space:nowrap}
 .rpp-prompt-filters{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:7px;padding:7px;border-bottom:1px solid var(--rpp-line)}.rpp-prompt-filters input{height:29px}.rpp-prompt-filters label{display:flex;align-items:center;gap:4px;color:var(--rpp-muted);font-size:7px;white-space:nowrap}.rpp-prompt-filters label input{width:13px;height:13px}.rpp-unassigned{margin-top:7px;border-top:1px solid var(--rpp-line);padding-top:6px}.rpp-unassigned summary{padding:7px;color:#d8b4fe;font-size:8px;cursor:pointer}.rpp-unassigned>button{display:grid;grid-template-columns:18px minmax(0,1fr);gap:6px;width:100%;padding:6px 7px;border:0;border-radius:8px;color:var(--rpp-muted);background:transparent;text-align:left;cursor:pointer}.rpp-unassigned>button:hover{background:rgba(192,132,252,.08)}.rpp-unassigned>button>span:last-child{display:flex;flex-direction:column;min-width:0}.rpp-unassigned b{font-size:8px}.rpp-unassigned small{overflow:hidden;font-size:7px;text-overflow:ellipsis;white-space:nowrap}.rpp-prompt-meta{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px}.rpp-prompt-meta span{padding:4px 6px;border:1px solid var(--rpp-line);border-radius:6px;color:var(--rpp-muted);background:rgba(255,255,255,.025);font-size:7px}
 .rpp-import-page{max-width:900px;margin:0 auto}.rpp-dropzone{display:flex;min-height:280px;flex-direction:column;align-items:center;justify-content:center;padding:30px;border:1px dashed rgba(192,132,252,.42);border-radius:20px;background:radial-gradient(circle at 50% 20%,rgba(192,132,252,.12),transparent 46%),rgba(255,255,255,.018);text-align:center;transition:.18s}.rpp-dropzone-active{border-color:#c084fc;background:rgba(192,132,252,.1);transform:scale(.995)}.rpp-import-glyph{display:grid;place-items:center;width:58px;height:58px;border:1px solid rgba(192,132,252,.32);border-radius:19px;color:#d8b4fe;background:rgba(192,132,252,.11);font-size:28px}.rpp-dropzone h3{margin:15px 0 7px;font-family:Georgia,'Noto Serif SC',serif;font-size:22px;font-weight:500}.rpp-dropzone p{max-width:610px;margin:0 0 18px;color:var(--rpp-muted);font-size:10px;line-height:1.7}.rpp-import-queue,.rpp-import-results{margin-top:18px;padding:16px;border:1px solid var(--rpp-line);border-radius:16px;background:rgba(255,255,255,.018)}.rpp-file-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.rpp-file-grid article{display:grid;grid-template-columns:42px minmax(0,1fr);align-items:center;gap:9px;padding:9px;border:1px solid var(--rpp-line);border-radius:10px}.rpp-file-grid article>span{display:grid;place-items:center;height:34px;border-radius:8px;color:#d8b4fe;background:rgba(192,132,252,.1);font-size:7px}.rpp-file-grid article div{display:flex;flex-direction:column;min-width:0}.rpp-file-grid b{overflow:hidden;font-size:9px;text-overflow:ellipsis;white-space:nowrap}.rpp-file-grid small{color:var(--rpp-muted);font-size:7px}.rpp-import-results article{display:grid;grid-template-columns:24px 1fr;gap:9px;padding:9px;border-top:1px solid var(--rpp-line);color:#79dca9}.rpp-import-results article>span{font-size:15px}.rpp-import-results article div{display:flex;flex-direction:column}.rpp-import-results b{color:var(--rpp-text);font-size:9px}.rpp-import-results p{margin:2px 0;color:var(--rpp-muted);font-size:8px}.rpp-import-results small{color:#d1a7ff;font-size:7px}.rpp-import-results .rpp-import-error{color:#ff909c}.rpp-empty{text-align:center;color:var(--rpp-muted)}
+.rpp-import-launch{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:10px 0 14px;padding:14px;border:1px solid rgba(85,216,154,.22);border-radius:13px;background:linear-gradient(135deg,rgba(85,216,154,.09),rgba(139,124,246,.065))}.rpp-import-launch>span{display:flex;min-width:0;flex-direction:column;gap:3px}.rpp-import-launch b{color:#b8f3d1;font-size:11px}.rpp-import-launch small{color:var(--rpp-muted);font-size:8px;line-height:1.5}.rpp-import-launch>div{display:flex;flex:none;gap:7px}.rpp-import-launch button{min-height:35px;padding:0 12px;border:1px solid var(--rpp-line);border-radius:9px;color:var(--rpp-text);background:rgba(255,255,255,.035);font:inherit;font-size:9px;white-space:nowrap;cursor:pointer}.rpp-import-launch .rpp-primary-action{border-color:rgba(139,124,246,.3);background:linear-gradient(135deg,#8b7cf6,#6657d2)}
 .rpp-import-preset-actions{display:flex;flex-direction:row!important;align-items:center;gap:7px;margin-top:9px;padding:9px;border:1px solid rgba(192,132,252,.2);border-radius:9px;background:rgba(192,132,252,.055)}.rpp-import-preset-actions>span{min-width:0;flex:1;color:var(--rpp-muted);font-size:8px}.rpp-import-preset-actions button{min-height:30px;padding:0 9px;border:1px solid var(--rpp-line);border-radius:8px;color:var(--rpp-text);background:rgba(255,255,255,.035);font:inherit;font-size:8px;white-space:nowrap;cursor:pointer}.rpp-import-preset-actions .rpp-primary-action{border-color:rgba(192,132,252,.28);background:linear-gradient(135deg,#8b7cf6,#6657d2)}
 .rpp-agent-seat{position:relative}.rpp-agent-seat-button{display:inline-flex;overflow:hidden;max-width:min(100%,240px);min-height:28px;align-items:center;gap:5px;padding:0 8px;border:0;border-radius:16px;color:var(--dsw-alias-label-primary,#222733);background:transparent;font:inherit;font-size:13px;font-weight:500;line-height:20px;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}.rpp-agent-seat-button:hover,.rpp-agent-seat-button[aria-expanded=true]{background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.1))}.rpp-agent-seat-button:disabled{cursor:default;opacity:.55}.rpp-agent-seat-icon{display:grid;place-items:center;width:16px;height:16px;border:1.5px solid currentColor;border-radius:50%;font-size:0}.rpp-agent-seat-icon:after{width:5px;height:5px;border-radius:50%;background:currentColor;content:''}.rpp-agent-seat-chevron{color:var(--dsw-alias-label-caption,#8f98aa);font-size:14px}.rpp-agent-seat-menu{position:absolute;z-index:80;top:34px;left:0;display:flex;width:min(340px,calc(100vw - 32px));max-height:min(460px,70vh);flex-direction:column;gap:3px;overflow:auto;padding:6px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.18));border-radius:14px;background:var(--dsw-alias-bg-raised,#fff);box-shadow:0 18px 48px rgba(22,22,36,.2)}.rpp-agent-seat-menu>button{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;width:100%;padding:9px 10px;border:0;border-radius:9px;color:var(--dsw-alias-label-primary,#222733);background:transparent;text-align:left;cursor:pointer}.rpp-agent-seat-menu>button:hover,.rpp-agent-seat-selected{background:color-mix(in srgb,#8b7cf6 10%,transparent)!important}.rpp-agent-seat-menu>button>span{display:flex;min-width:0;flex-direction:column;gap:1px}.rpp-agent-seat-menu b{font-size:12px}.rpp-agent-seat-menu small{color:var(--dsw-alias-label-caption,#8f98aa);font-size:10px;line-height:1.45;white-space:normal}.rpp-agent-seat-menu i{color:#786adc;font-style:normal}
 .rpp-quick-setup{box-sizing:border-box;width:100%;padding:14px;border:1px solid color-mix(in srgb,#8b7cf6 32%,var(--dsw-alias-border-l2,rgba(127,127,127,.18)));border-radius:16px;color:var(--dsw-alias-label-primary,#222733);background:linear-gradient(145deg,color-mix(in srgb,var(--dsw-alias-bg-raised,#fff) 94%,#8b7cf6 6%),var(--dsw-alias-bg-raised,#fff));box-shadow:0 12px 32px rgba(44,37,100,.08)}.rpp-quick-setup>header{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;margin-bottom:12px}.rpp-quick-mode{padding:5px 7px;border-radius:7px;color:#7567dd;background:rgba(139,124,246,.11);font-size:8px;font-weight:800;letter-spacing:.1em}.rpp-quick-setup h3{margin:0;font-size:13px}.rpp-quick-setup p{margin:2px 0 0;color:var(--dsw-alias-label-tertiary,#8f98aa);font-size:8px}.rpp-quick-setup>header button{border:0;color:#776ad9;background:transparent;font:inherit;font-size:8px;cursor:pointer}.rpp-quick-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.rpp-quick-grid label{display:flex;min-width:0;flex-direction:column;gap:4px;color:var(--dsw-alias-label-tertiary,#8f98aa);font-size:7px}.rpp-quick-grid select,.rpp-quick-grid input{box-sizing:border-box;width:100%;height:33px;padding:0 8px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.18));border-radius:8px;outline:none;color:var(--dsw-alias-label-primary,#222733);background:var(--dsw-alias-bg-base,#fff);font:inherit;font-size:9px}.rpp-quick-grid select:focus,.rpp-quick-grid input:focus{border-color:rgba(139,124,246,.55);box-shadow:0 0 0 3px rgba(139,124,246,.09)}.rpp-quick-scene{grid-column:span 2}.rpp-quick-setup>footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:11px}.rpp-quick-setup>footer>span{display:flex;align-items:center;gap:7px;color:var(--dsw-alias-label-tertiary,#8f98aa);font-size:8px}.rpp-quick-avatar{display:grid;place-items:center;width:25px;height:25px;border-radius:8px;color:white;background:var(--rpp-accent);font-size:9px}.rpp-quick-setup .rpp-loading-orb{display:inline-block;width:18px;height:18px;margin:0 8px 0 0;vertical-align:middle}
+.rpp-ready-composition{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px;border:1px solid color-mix(in srgb,#8b7cf6 22%,var(--dsw-alias-border-l2,rgba(127,127,127,.16)));border-radius:12px;background:color-mix(in srgb,var(--dsw-alias-bg-base,#fff) 95%,#8b7cf6 5%)}.rpp-ready-avatar{display:grid;place-items:center;width:46px;height:46px;border-radius:14px;color:white;background:var(--rpp-accent);font-family:Georgia,serif;font-size:17px}.rpp-ready-composition>span{display:flex;min-width:0;flex-direction:column}.rpp-ready-composition small{color:#8175db;font-size:7px;font-weight:700}.rpp-ready-composition b{margin:2px 0;font-family:Georgia,'Noto Serif SC',serif;font-size:14px}.rpp-ready-composition p{overflow:hidden;margin:0;color:var(--dsw-alias-label-tertiary,#8f98aa);font-size:8px;text-overflow:ellipsis;white-space:nowrap}.rpp-ready-composition>i{padding:5px 7px;border-radius:7px;color:#4f9d73;background:rgba(85,216,154,.11);font-size:7px;font-style:normal;white-space:nowrap}.rpp-quick-customize{margin-top:8px;border-top:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.12));border-bottom:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.12))}.rpp-quick-customize>summary{padding:8px 2px;color:var(--dsw-alias-label-tertiary,#8f98aa);font-size:8px;cursor:pointer}.rpp-quick-customize>.rpp-quick-grid{padding:0 0 9px}
 .rpp-header-context,.rpp-context-dock,.rpp-sidebar-action{font:inherit}.rpp-header-context{display:flex;align-items:center;gap:7px;height:27px;padding:0 9px;border:1px solid rgba(139,124,246,.2);border-radius:8px;color:#c9c4ff;background:rgba(139,124,246,.08);font-size:9px;cursor:pointer}.rpp-header-context-empty{color:var(--dsw-alias-label-tertiary,#9299a8);border-color:var(--dsw-alias-border-l2,rgba(127,127,127,.18));background:transparent}.rpp-stack-icon{position:relative;display:block;width:13px;height:13px}.rpp-stack-icon i{position:absolute;left:1px;width:10px;height:5px;border:1px solid currentColor;border-radius:2px}.rpp-stack-icon i:nth-child(1){top:1px}.rpp-stack-icon i:nth-child(2){top:4px}.rpp-stack-icon i:nth-child(3){top:7px}.rpp-context-dock{box-sizing:border-box;display:flex;align-items:center;gap:8px;width:max-content;max-width:min(100%,560px);min-height:40px;padding:5px 7px 5px 6px;border:1px solid color-mix(in srgb,#8b7cf6 22%,var(--dsw-alias-border-l2,rgba(127,127,127,.18)));border-radius:13px;color:var(--dsw-alias-label-primary,#e8eaf0);background:color-mix(in srgb,var(--dsw-alias-bg-raised,#fff) 95%,#8b7cf6 5%);box-shadow:0 5px 18px rgba(44,37,100,.055);text-align:left;cursor:pointer;transition:border-color .16s,background .16s}.rpp-context-dock:hover{border-color:color-mix(in srgb,#8b7cf6 45%,var(--dsw-alias-border-l2,rgba(127,127,127,.18)));background:color-mix(in srgb,var(--dsw-alias-bg-raised,#fff) 91%,#8b7cf6 9%)}.rpp-context-selected{flex:none;padding:4px 6px;border-radius:7px;color:#6e62ca;background:rgba(139,124,246,.1);font-size:8px;font-weight:700}.rpp-context-avatar{display:grid;place-items:center;width:28px;height:28px;flex:none;border-radius:9px;color:white;background:var(--rpp-accent);font-size:10px}.rpp-context-copy{display:flex;min-width:0;max-width:310px;flex-direction:column;gap:1px}.rpp-context-copy b{overflow:hidden;font-size:10px;text-overflow:ellipsis;white-space:nowrap}.rpp-context-copy small{overflow:hidden;color:var(--dsw-alias-label-tertiary,#9299a8);font-size:8px;text-overflow:ellipsis;white-space:nowrap}.rpp-context-extra{flex:none;padding:3px 5px;border-radius:6px;color:var(--dsw-alias-label-tertiary,#9299a8);background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.08));font-size:8px}.rpp-context-edit{flex:none;padding:0 3px;color:#8175db;font-size:8px}.rpp-sidebar-action{box-sizing:border-box;display:flex;align-items:center;border:0;color:var(--dsw-alias-label-primary,#e8eaf0);background:transparent;cursor:pointer}.rpp-sidebar-action-wide{width:calc(100% + 8px);height:34px;gap:8px;margin:4px -4px;padding:5px 4px 5px 9px;border-radius:12px;font-size:13px}.rpp-sidebar-action-wide:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.1))}.rpp-sidebar-action-rail{width:36px;height:36px;justify-content:center;margin:6px 0;border-radius:50%}.rpp-mark{width:22px;height:22px;border-radius:8px;font-family:serif;font-size:11px}
 .rpp-story{box-sizing:border-box;display:flex;min-height:100%;flex-direction:column;color:var(--dsw-alias-label-primary,#edf0f7);background:radial-gradient(circle at 85% 0,rgba(139,124,246,.085),transparent 28%)}.rpp-story-header{position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:17px max(22px,calc((100% - 920px)/2));border-bottom:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.14));background:color-mix(in srgb,var(--dsw-alias-bg-base,#10131a) 88%,transparent);backdrop-filter:blur(16px)}.rpp-story-identity{display:flex;align-items:center;gap:12px}.rpp-story-avatar{display:grid;place-items:center;width:46px;height:46px;border-radius:15px;color:white;background:radial-gradient(circle at 30% 20%,color-mix(in srgb,var(--rpp-accent) 72%,white),var(--rpp-accent));box-shadow:0 10px 28px color-mix(in srgb,var(--rpp-accent) 22%,transparent);font-family:Georgia,serif;font-size:19px}.rpp-story-identity h2{margin:2px 0;font-family:Georgia,'Noto Serif SC',serif;font-size:20px;font-weight:500}.rpp-story-identity p{margin:0;color:var(--dsw-alias-label-tertiary,#8f98aa);font-size:9px}.rpp-story-actions{display:flex;gap:7px}.rpp-story-actions button,.rpp-story-foot button{height:31px;padding:0 10px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.18));border-radius:9px;color:inherit;background:rgba(255,255,255,.035);font:inherit;font-size:8px;cursor:pointer}.rpp-story-thread{display:flex;width:min(920px,calc(100% - 34px));flex:1;flex-direction:column;gap:18px;margin:0 auto;padding:28px 0 120px}.rpp-message{width:min(76%,720px)}.rpp-message-assistant{align-self:flex-start}.rpp-message-user{align-self:flex-end}.rpp-message-head{display:flex;align-items:center;gap:8px;margin-bottom:7px}.rpp-message-avatar{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;color:white;background:var(--rpp-accent);font-family:Georgia,serif;font-size:11px}.rpp-message-head>span:nth-child(2){display:flex;flex:1;flex-direction:column}.rpp-message-head b{font-size:10px}.rpp-message-head small{color:var(--dsw-alias-label-tertiary,#8f98aa);font-size:7px}.rpp-message-head button{border:0;color:var(--dsw-alias-label-tertiary,#8f98aa);background:transparent;font:inherit;font-size:7px;cursor:pointer;opacity:0}.rpp-message:hover .rpp-message-head button,.rpp-message:focus-within .rpp-message-head button{opacity:1}.rpp-message-body{padding:14px 16px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.14));border-radius:4px 16px 16px 16px;background:rgba(255,255,255,.032);font-family:Georgia,'Noto Serif SC',serif;font-size:13px;line-height:1.8;white-space:pre-wrap;box-shadow:0 8px 26px rgba(0,0,0,.08)}.rpp-message-user .rpp-message-head{flex-direction:row-reverse}.rpp-message-user .rpp-message-head>span:nth-child(2){text-align:right}.rpp-message-user .rpp-message-body{border-radius:16px 4px 16px 16px;background:rgba(54,184,212,.065)}.rpp-message-editor{padding:10px;border:1px solid rgba(139,124,246,.28);border-radius:13px;background:rgba(139,124,246,.06)}.rpp-message-editor textarea{box-sizing:border-box;width:100%;padding:10px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.18));border-radius:9px;outline:none;color:inherit;background:rgba(0,0,0,.2);font:inherit;font-size:11px;line-height:1.6;resize:vertical}.rpp-message-editor>div{display:flex;justify-content:flex-end;gap:7px;margin-top:7px}.rpp-message-editor button{height:31px;padding:0 10px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.18));border-radius:8px;color:inherit;background:transparent;font:inherit;font-size:8px;cursor:pointer}.rpp-message-streaming{opacity:.8}.rpp-caret{display:inline-block;width:2px;height:1em;margin-left:3px;background:#9c90ff;vertical-align:-2px;animation:rpp-blink .75s steps(2) infinite}.rpp-story-foot{display:flex;justify-content:space-between;gap:12px;width:min(920px,calc(100% - 34px));margin:auto;padding:12px 0 26px;color:var(--dsw-alias-label-tertiary,#8f98aa);font-size:8px}.rpp-story-empty{display:flex;min-height:420px;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center}.rpp-story-empty>span{font-size:32px;color:#9c90ff}.rpp-story-empty h3{margin:10px 0 5px;font-family:Georgia,'Noto Serif SC',serif;font-size:20px;font-weight:500}.rpp-story-empty p{max-width:500px;margin:0 0 15px;color:var(--dsw-alias-label-tertiary,#8f98aa);font-size:10px}.rpp-story-empty-compact{min-height:300px}.rpp-loading{display:flex;min-height:380px;flex-direction:column;align-items:center;justify-content:center;color:var(--rpp-muted);gap:6px}.rpp-loading-orb{width:34px;height:34px;margin-bottom:8px;border:2px solid rgba(139,124,246,.2);border-top-color:#8b7cf6;border-radius:50%;animation:rpp-spin .8s linear infinite}.rpp-loading b{color:var(--rpp-text);font-size:11px}.rpp-loading small{font-size:8px}
-.rpp-runtime-projection{display:flex;flex-direction:column;gap:9px;width:min(84%,760px);align-self:center}.rpp-effect-card{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;padding:11px 13px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.16));border-left:3px solid var(--effect,#8b7cf6);border-radius:12px;background:rgba(255,255,255,.025)}.rpp-effect-world{--effect:#42b883}.rpp-effect-time{--effect:#e7a84f}.rpp-effect-scene{--effect:#36b8d4}.rpp-effect-character{--effect:#f47f6b}.rpp-effect-persona{--effect:#8b7cf6}.rpp-effect-relationship{--effect:#ec6fb1}.rpp-effect-memory{--effect:#7ca7f6}.rpp-effect-icon{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;color:white;background:var(--effect);font-family:Georgia,serif;font-size:11px}.rpp-effect-card>div>span{color:var(--effect);font-size:7px;font-weight:700;letter-spacing:.12em}.rpp-effect-card h3{margin:2px 0;font-size:11px}.rpp-effect-card p{margin:0;color:var(--dsw-alias-label-secondary,#aeb6c5);font-size:9px;line-height:1.5}.rpp-effect-card details{margin-top:6px;color:var(--dsw-alias-label-tertiary,#8f98aa);font-size:7px}.rpp-effect-card pre{overflow:auto;max-height:160px;padding:7px;border-radius:7px;background:rgba(0,0,0,.15);font-size:7px}.rpp-choices{padding:13px;border:1px solid rgba(139,124,246,.2);border-radius:13px;background:rgba(139,124,246,.055)}.rpp-choices h3{margin:0 0 9px;font-family:Georgia,'Noto Serif SC',serif;font-size:12px;font-weight:500}.rpp-choices>div{display:flex;flex-wrap:wrap;gap:7px}.rpp-choices button{min-height:34px;padding:0 11px;border:1px solid rgba(139,124,246,.28);border-radius:9px;color:inherit;background:rgba(139,124,246,.09);font:inherit;font-size:9px;cursor:pointer}.rpp-choices button:hover{background:rgba(139,124,246,.17)}.rpp-choices button:disabled{cursor:not-allowed;opacity:.5}.rpp-choices button.rpp-choice-picked{border-color:#55d89a;color:#9de7bf}
+.rpp-runtime-projection{display:flex;flex-direction:column;gap:10px;width:min(92%,880px);align-self:center}.rpp-state-board{overflow:hidden;border:1px solid color-mix(in srgb,#8b7cf6 26%,var(--dsw-alias-border-l2,rgba(127,127,127,.16)));border-radius:16px;background:linear-gradient(145deg,color-mix(in srgb,var(--dsw-alias-bg-raised,#fff) 94%,#8b7cf6 6%),var(--dsw-alias-bg-raised,#fff));box-shadow:0 12px 36px rgba(43,37,92,.07)}.rpp-state-board>header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.12))}.rpp-state-board>header>span{display:flex;flex-direction:column;gap:1px}.rpp-state-board>header small{color:#7f73d8;font-size:7px;font-weight:800;letter-spacing:.13em}.rpp-state-board>header b{font-family:Georgia,'Noto Serif SC',serif;font-size:13px;font-weight:600}.rpp-state-board>header i{padding:4px 6px;border-radius:6px;color:#7e73d4;background:rgba(139,124,246,.1);font-size:7px;font-style:normal}.rpp-state-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1px;background:var(--dsw-alias-border-l2,rgba(127,127,127,.1))}.rpp-state-cell{display:grid;grid-template-columns:30px minmax(0,1fr);gap:8px;min-height:74px;padding:10px;background:var(--dsw-alias-bg-raised,#fff)}.rpp-effect-world{--effect:#42b883}.rpp-effect-time{--effect:#e7a84f}.rpp-effect-scene{--effect:#36b8d4}.rpp-effect-character{--effect:#f47f6b}.rpp-effect-persona{--effect:#8b7cf6}.rpp-effect-npc{--effect:#5bb8a7}.rpp-effect-relationship{--effect:#ec6fb1}.rpp-effect-memory{--effect:#7ca7f6}.rpp-effect-objective{--effect:#d6a542}.rpp-effect-inventory{--effect:#9b7a5a}.rpp-effect-icon{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;color:white;background:var(--effect,#8b7cf6);font-family:Georgia,serif;font-size:10px}.rpp-state-cell>div{display:flex;min-width:0;flex-direction:column}.rpp-state-cell small{color:var(--effect,#8b7cf6);font-size:7px;font-weight:750}.rpp-state-cell b{overflow:hidden;margin:2px 0;font-size:9px;text-overflow:ellipsis;white-space:nowrap}.rpp-state-cell p{display:-webkit-box;overflow:hidden;margin:0;color:var(--dsw-alias-label-secondary,#7d8492);font-size:8px;line-height:1.45;-webkit-box-orient:vertical;-webkit-line-clamp:2}.rpp-state-history{border-top:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.12));padding:0 14px}.rpp-state-history>summary{padding:10px 0;color:var(--dsw-alias-label-tertiary,#8f98aa);font-size:8px;cursor:pointer}.rpp-state-history>div{display:grid;gap:6px;padding:0 0 12px}.rpp-state-history article{display:grid;grid-template-columns:50px 130px minmax(0,1fr);gap:8px;padding:7px;border-radius:8px;background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.06));font-size:8px}.rpp-state-history article>span{color:#8175db}.rpp-state-history article>b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rpp-state-history article>p{margin:0;color:var(--dsw-alias-label-secondary,#7d8492)}.rpp-state-history pre{grid-column:2/-1;overflow:auto;max-height:120px;margin:0;padding:7px;border-radius:6px;background:rgba(0,0,0,.08);font-size:7px}.rpp-choices{padding:13px;border:1px solid rgba(139,124,246,.2);border-radius:13px;background:rgba(139,124,246,.055)}.rpp-choices h3{margin:0 0 9px;font-family:Georgia,'Noto Serif SC',serif;font-size:12px;font-weight:500}.rpp-choices>div{display:flex;flex-wrap:wrap;gap:7px}.rpp-choices button{min-height:34px;padding:0 11px;border:1px solid rgba(139,124,246,.28);border-radius:9px;color:inherit;background:rgba(139,124,246,.09);font:inherit;font-size:9px;cursor:pointer}.rpp-choices button:hover{background:rgba(139,124,246,.17)}.rpp-choices button:disabled{cursor:not-allowed;opacity:.5}.rpp-choices button.rpp-choice-picked{border-color:#55d89a;color:#498b68}
 @keyframes rpp-spin{to{transform:rotate(360deg)}}@keyframes rpp-fade{from{opacity:0}to{opacity:1}}@keyframes rpp-blink{50%{opacity:0}}
-@media(max-width:900px){.rpp-shell{grid-template-columns:72px minmax(0,1fr)}.rpp-brand{justify-content:center;padding-inline:0}.rpp-brand>span:last-child,.rpp-nav nav button>span:last-child,.rpp-nav-foot span:last-child{display:none}.rpp-nav nav button{display:flex;justify-content:center;padding:5px}.rpp-compose-grid{grid-template-columns:1fr}.rpp-preview{position:static}.rpp-field{grid-template-columns:1fr}.rpp-manager,.rpp-preset-layout{grid-template-columns:1fr}.rpp-entity-list{max-height:210px;border-right:0;border-bottom:1px solid var(--rpp-line)}.rpp-prompt-workbench{grid-template-columns:1fr}.rpp-preset-header{grid-template-columns:1fr}.rpp-editor-fields{grid-template-columns:1fr}.rpp-editor-field-wide{grid-column:auto}.rpp-generation{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:600px){.rpp-overlay{padding:8px}.rpp-modal{width:calc(100vw - 16px);height:calc(100vh - 16px);border-radius:15px}.rpp-shell{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}.rpp-nav{padding:8px;border-right:0;border-bottom:1px solid var(--rpp-line)}.rpp-brand{display:none}.rpp-nav nav{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}.rpp-nav nav button{min-height:38px}.rpp-nav-foot{display:none}.rpp-main-header{padding:15px}.rpp-main-header p{display:none}.rpp-content{padding:12px}.rpp-choice-grid,.rpp-file-grid{grid-template-columns:1fr}.rpp-story-header{padding:12px 15px}.rpp-story-actions button:first-child{display:none}.rpp-message{width:92%}.rpp-story-thread{width:calc(100% - 24px)}.rpp-story-foot{width:calc(100% - 24px)}.rpp-generation{grid-template-columns:1fr}.rpp-preset-main{padding:12px}}
+@media(max-width:900px){.rpp-shell{grid-template-columns:72px minmax(0,1fr)}.rpp-brand{justify-content:center;padding-inline:0}.rpp-brand>span:last-child,.rpp-nav nav button>span:last-child,.rpp-nav-foot span:last-child{display:none}.rpp-nav nav button{display:flex;justify-content:center;padding:5px}.rpp-compose-grid{grid-template-columns:1fr}.rpp-preview{position:static}.rpp-field{grid-template-columns:1fr}.rpp-manager,.rpp-preset-layout{grid-template-columns:1fr}.rpp-entity-list{max-height:210px;border-right:0;border-bottom:1px solid var(--rpp-line)}.rpp-prompt-workbench{grid-template-columns:1fr}.rpp-preset-header{grid-template-columns:1fr}.rpp-editor-fields{grid-template-columns:1fr}.rpp-editor-field-wide{grid-column:auto}.rpp-generation{grid-template-columns:repeat(3,1fr)}.rpp-state-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.rpp-overlay{padding:8px}.rpp-modal{width:calc(100vw - 16px);height:calc(100vh - 16px);border-radius:15px}.rpp-shell{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}.rpp-nav{padding:8px;border-right:0;border-bottom:1px solid var(--rpp-line)}.rpp-brand{display:none}.rpp-nav nav{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}.rpp-nav nav button{min-height:38px}.rpp-nav-foot{display:none}.rpp-main-header{padding:15px}.rpp-main-header p{display:none}.rpp-content{padding:12px}.rpp-choice-grid,.rpp-file-grid,.rpp-state-grid{grid-template-columns:1fr}.rpp-import-launch{align-items:stretch;flex-direction:column}.rpp-import-launch>div{display:grid;grid-template-columns:1fr 1fr}.rpp-story-header{padding:12px 15px}.rpp-story-actions button:first-child{display:none}.rpp-message{width:92%}.rpp-story-thread{width:calc(100% - 24px)}.rpp-story-foot{width:calc(100% - 24px)}.rpp-generation{grid-template-columns:1fr}.rpp-preset-main{padding:12px}.rpp-state-history article{grid-template-columns:44px minmax(0,1fr)}.rpp-state-history article>p,.rpp-state-history pre{grid-column:1/-1}}
 @media(max-width:720px){.rpp-quick-setup>header{grid-template-columns:auto minmax(0,1fr)}.rpp-quick-setup>header button{grid-column:1/-1;text-align:right}.rpp-quick-grid{grid-template-columns:1fr 1fr}.rpp-quick-scene{grid-column:1/-1}.rpp-quick-setup>footer{align-items:stretch;flex-direction:column}.rpp-quick-setup>footer button{width:100%}}
 `

@@ -14,6 +14,8 @@
 
 批量导入器直接复用仓库内 Clean-room 的 `@dsh-rp/compat-sillytavern`，支持 Character Card V1/V2/V3 JSON、带 `chara`/`ccv3` 元数据的 PNG、CHARX、World Info、Persona 与 Chat Completion Preset JSON。一次导入逐文件报告结果：一个损坏文件不会丢弃同批有效资源；脚本、Regex、远程资源与未知扩展不会执行。原始 JSON 文档会随 `ST COMPAT` 资源保留，导入 Preset 立即可在会话下拉框中选择。导入完成后界面明确询问是否另外生成 `HARNESS` 适配副本；适配是非破坏式的，源 Preset 与适配副本可独立选择，重新适配只刷新确定性副本。
 
+导入完成后不要求用户理解 Prompt Seat 或逐项配置。推荐器优先选择最近导入的 Harness 适配 Preset、角色卡、Persona 与世界书，并从 Character Card Scenario 生成开局；新会话快速页默认折叠高级字段，只显示已就绪组合和开始按钮。导入结果还提供“直接开始 Tavern”和“直接开始 Agent RP”，自动取得空白 DSH Session、切换原生 Agent Preset 并绑定推荐组合。
+
 角色卡保留首条开场白、备选开场白、场景、示例对话、标签与来源报告。PNG 角色卡的原始图像按内容哈希写入本地产品资产目录，并用于资源列表、编辑器与对话头像；统一头像容器强制方形 `cover` 裁切并把竖版角色图焦点上移到脸部，原图不会投射为聊天背景或越过头像边界。应用会话设定后，可从编排页或角色对话页把角色卡开场白加入 Session；它作为明确标注的角色历史进入模型上下文，不伪造真人来源。
 
 ## 角色对话与正文编辑
@@ -32,7 +34,9 @@ Standalone World Info 与角色卡内嵌 Lore 会保留为逐条 World Entry，�
 
 应用后，Composer 上方只保留一枚“已选”配置按钮，摘要仅显示运行模式、主要角色和 Prompt Preset；Persona、世界书与场景折叠为附加项计数，点击即可重新打开完整设置。内部 Prompt Seat 顺序不再横向铺在聊天入口上，只在 Prompt Manager 与完整编排中维护。
 
-Agent RP 当前提供 `rp_update_state` 与 `rp_propose_choices`。前者提交世界、时间、场景、角色、Persona、关系或记忆 Effect；后者提交 1–8 个带稳定 ID、显示文本与实际 Prompt 的选项。工具调用和结果由原生 Session 记录，产品状态保存可重建 Projection，下一步请求通过 `<rp-dynamic-state>` 读取已提交事实。角色对话页同时显示角色气泡、世界/时间/场景/关系/记忆卡片与可点击选项；点击选项会把其 Prompt 送入同一个原生 Agent Session。
+Agent RP 把每轮视为世界 Ledger 的 N→N+1 提交。首选工具 `rp_commit_turn` 在一次已记录调用中原子提交 0–32 条变化和 0–8 个选项，覆盖世界、时间、场景、角色、Persona、NPC、关系、记忆、目标与物品；`data.key`/`data.target` 提供跨轮稳定身份，当前状态按键 Last-write-wins，完整事件仍留在履历。`rp_read_state` 提供只读结构化检查，`rp_update_state` 与 `rp_propose_choices` 保留为分步兼容工具。下一轮请求通过 `<rp-dynamic-state>` 读取当前 Projection；角色对话页显示世界状态面板、Revision、状态履历和可点击选项，Reasoning Block 不进入角色正文。
+
+Experience 会改变 Agent 行为，而不只是保存标签。World Simulation 强化时间、NPC 与目标的因果推进；Multi-character 要求通过 `rp_select_speaker` 从配置阵容中确定下一位说话者，使 Transcript 在工具提交后按真实角色署名；TRPG 可用已记录的 `rp_roll` 执行有界 `NdM±K` 检定，并把结果造成的目标、物品或世界变化提交到 Ledger；Companion 优先关系、记忆、Persona 与角色状态，并取消强制每轮给选项。
 
 ## 本地安装
 

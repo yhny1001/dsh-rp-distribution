@@ -9,10 +9,13 @@ import {
   adaptPresetToHarness,
   applyRuntimeEffect,
   bindSession,
+  commitRuntimeTurn,
+  currentRuntimeEffects,
   defaultProductState,
   mergeImportedEntities,
   normalizeEntity,
   recordTranscriptMessage,
+  recommendComposition,
   renderRuntimeContext,
   replaceRuntimeChoices,
   removeEntity,
@@ -125,6 +128,12 @@ describe('@dsh-rp/product', () => {
     ], 10)
     expect(result.entities.characters).toMatchObject([{ name: '洛弥', openingMessage: '你还是来了。', alternateGreetings: ['今天比平时更冷。'] }])
     expect(result.entities.presets).toMatchObject([{ name: '夜行预设', generation: { temperature: 0.7, maxTokens: 1024 } }])
+    const merged = mergeImportedEntities(defaultProductState(), result.entities, 0)
+    const adapted = adaptPresetToHarness(merged, result.entities.presets[0]!.id, 1, 11)
+    expect(recommendComposition(adapted.state, 'agent')).toMatchObject({
+      mode: 'agent', presetId: adapted.presetId, primaryCharacterId: result.entities.characters[0]!.id,
+      characterIds: [result.entities.characters[0]!.id], scene: '末班车已经离站', experienceId: 'rp-adaptive',
+    })
     expect(result.reports.map(report => report.kind)).toEqual(['character', 'preset', 'error'])
   })
 
@@ -254,6 +263,31 @@ describe('@dsh-rp/product', () => {
     })).toThrow(/Agent RP mode/u)
   })
 
+  it('atomically advances a multi-state world ledger and projects last values by stable key', () => {
+    const base = bindSession(defaultProductState(), { sessionId: 'world-engine', ...composition, mode: 'agent' }, 0, 1)
+    const first = commitRuntimeTurn(base, 'world-engine', 'turn-1', {
+      updates: [
+        { kind: 'time', title: '深夜', summary: '时钟来到 23:10', data: { key: 'world-clock', time: '23:10' } },
+        { kind: 'scene', title: '黑海岸港口', summary: '卡提希娅抵达栈桥', data: { key: 'active-scene', location: '黑海岸港口' } },
+        { kind: 'npc', title: '港口守卫', summary: '正在检查夜间通行证', data: { key: 'guard-captain', status: 'alert' } },
+      ],
+      choicesTitle: '下一步怎么办？',
+      choices: [{ id: 'ask', label: '询问守卫', prompt: '我上前询问守卫。' }],
+    }, 2)
+    expect(first.runtimes['world-engine']).toMatchObject({ revision: 1, effects: [{ kind: 'time' }, { kind: 'scene' }, { kind: 'npc' }], choices: [{ id: 'ask' }] })
+    const second = commitRuntimeTurn(first, 'world-engine', 'turn-2', {
+      updates: [
+        { kind: 'time', title: '午夜', summary: '时钟推进至 00:00', data: { key: 'world-clock', time: '00:00' } },
+        { kind: 'objective', title: '调查港口', summary: '找到失踪船只的靠泊记录', data: { key: 'main-objective', status: 'active' } },
+      ],
+    }, 3)
+    const current = currentRuntimeEffects(second.runtimes['world-engine']!)
+    expect(current).toHaveLength(4)
+    expect(current.find(effect => effect.kind === 'time')).toMatchObject({ title: '午夜', data: { time: '00:00' } })
+    expect(renderRuntimeContext(second, 'world-engine')).not.toContain('23:10')
+    expect(renderRuntimeContext(second, 'world-engine')).toContain('[objective] 调查港口')
+  })
+
   it('registers 256 ordered Prompt Manager seats and applies supported generation parameters through next()', async () => {
     const home = mkdtempSync(join(tmpdir(), 'dsh-rp-product-agent-'))
     vi.stubEnv('DSH_HOME', home)
@@ -324,12 +358,28 @@ describe('@dsh-rp/product', () => {
       effect: (factory: () => unknown) => factory(),
     }
     applyAgent(base, { mode: 'agent' })
-    expect(definitions.map(tool => tool.name)).toEqual(['rp_update_state', 'rp_propose_choices'])
+    expect(definitions.map(tool => tool.name)).toEqual([
+      'rp_commit_turn', 'rp_update_state', 'rp_propose_choices', 'rp_select_speaker', 'rp_roll', 'rp_read_state',
+    ])
+    const tools = new Map(definitions.map(tool => [tool.name, tool]))
     const execution = { agent: { id: 'agent-tools' }, callId: 'call-1', signal: new AbortController().signal }
-    await definitions[0]!.execute({ kind: 'scene', title: '场景变化', summary: '进入港口', data: { location: '港口' } }, execution)
-    await definitions[1]!.execute({ title: '下一步', options: [{ id: 'ask', label: '询问', prompt: '我询问守卫。' }] }, { ...execution, callId: 'call-2' })
+    await tools.get('rp_commit_turn')!.execute({
+      updates: [{ kind: 'scene', title: '场景变化', summary: '进入港口', data: { key: 'active-scene', location: '港口' } }],
+      choicesTitle: '下一步', choices: [{ id: 'ask', label: '询问', prompt: '我询问守卫。' }],
+    }, execution)
+    const read = await tools.get('rp_read_state')!.execute({}, { ...execution, callId: 'call-read' }) as { state: unknown[]; choices: unknown[] }
+    expect(read).toMatchObject({ state: [{ kind: 'scene', title: '场景变化' }], choices: [{ id: 'ask' }] })
+    expect(await tools.get('rp_select_speaker')!.execute({ characterId: 'lin-yao' }, { ...execution, callId: 'call-speaker' }))
+      .toMatchObject({ selected: true, characterId: 'lin-yao', characterName: '林遥' })
+    await expect(tools.get('rp_select_speaker')!.execute({ characterId: 'not-in-cast' }, { ...execution, callId: 'call-bad-speaker' }))
+      .rejects.toThrow(/character cast/u)
+    const roll = await tools.get('rp_roll')!.execute({ notation: '2d6+3', reason: '潜行检定' }, { ...execution, callId: 'call-roll' }) as { rolls: number[]; total: number }
+    expect(roll.rolls).toHaveLength(2)
+    expect(roll.total).toBeGreaterThanOrEqual(5)
+    expect(roll.total).toBeLessThanOrEqual(15)
+    await tools.get('rp_update_state')!.execute({ kind: 'memory', title: '守卫口供', summary: '旧船昨夜靠港', data: { key: 'guard-testimony' } }, { ...execution, callId: 'call-2' })
     expect(store.snapshot().runtimes['agent-tools']).toMatchObject({
-      effects: [{ kind: 'scene', title: '场景变化' }], choicesTitle: '下一步', choices: [{ id: 'ask' }],
+      effects: [{ kind: 'scene', title: '场景变化' }, { kind: 'memory', title: '守卫口供' }], choicesTitle: '下一步', choices: [{ id: 'ask' }],
     })
     const tavernTools: unknown[] = []
     applyAgent({ ...base, tools: { register: (tool: unknown) => { tavernTools.push(tool); return () => {} } } }, { mode: 'tavern' })
