@@ -5,7 +5,7 @@ import { PRODUCT_PROMPT_SEAT_COUNT, renderPromptLayer, renderRuntimeContext, res
 import { ProductStore, readProductStateSync } from './store.ts'
 
 export const name = 'dsh-rp-product/agent'
-export const inject = ['systemPrompt', 'agents', 'tools']
+export const inject = ['systemPrompt', 'agents', 'tools', 'llm']
 
 interface ProductAgentContext {
   readonly systemPrompt: {
@@ -17,8 +17,13 @@ interface ProductAgentContext {
   }
   readonly agents: { requireInitiator(): { readonly id: string } }
   readonly tools: { register(tool: ReturnType<typeof defineTool>): () => void }
+  readonly llm: {
+    resolveModelInfo(provider: string, model: string, signal?: AbortSignal): Promise<{
+      readonly reasoning?: { readonly efforts: readonly { readonly id: string }[] }
+    }>
+  }
   on(event: 'agent/request', listener: (
-    payload: unknown,
+    payload: { readonly signal: AbortSignal },
     next: () => Promise<RequestConfig>,
   ) => Promise<RequestConfig>): () => void
   effect(factory: () => (() => void) | void, label?: string): unknown
@@ -57,20 +62,32 @@ export function apply(ctx: ProductAgentContext, config: Config = {}): void {
       : '<rp-runtime-mode>Tavern Chat：只生成角色对话与叙事，不主动维护结构化世界状态，也不虚构工具调用。</rp-runtime-mode>',
   }), 'dsh-rp-product: runtime mode prompt')
 
-  ctx.effect(() => ctx.on('agent/request', async (_payload, next) => {
+  ctx.effect(() => ctx.on('agent/request', async (payload, next) => {
     const base = await next()
     const agent = ctx.agents.requireInitiator()
     const generation = resolveGenerationSettings(readProductStateSync(), agent.id)
     if (generation === undefined) return base
+    const reasoningEffort = await supportedReasoningEffort(ctx, base, generation.reasoningEffort, payload.signal)
     return {
       ...base,
       ...(generation.temperature === undefined ? {} : { temperature: generation.temperature }),
       ...(generation.maxTokens === undefined ? {} : { maxTokens: generation.maxTokens }),
-      ...(generation.reasoningEffort === undefined ? {} : { reasoningEffort: generation.reasoningEffort }),
+      ...(reasoningEffort === undefined ? {} : { reasoningEffort }),
     }
   }), 'dsh-rp-product: preset generation settings')
 
   if (config.mode === 'agent') registerAgentTools(ctx)
+}
+
+async function supportedReasoningEffort(
+  ctx: Pick<ProductAgentContext, 'llm'>,
+  request: Pick<RequestConfig, 'provider' | 'model'>,
+  reasoningEffort: string | undefined,
+  signal: AbortSignal,
+): Promise<string | undefined> {
+  if (reasoningEffort === undefined) return undefined
+  const model = await ctx.llm.resolveModelInfo(request.provider, request.model, signal)
+  return model.reasoning?.efforts.some(effort => effort.id === reasoningEffort) === true ? reasoningEffort : undefined
 }
 
 function registerAgentTools(ctx: ProductAgentContext): void {

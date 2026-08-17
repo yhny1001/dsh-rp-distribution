@@ -278,6 +278,38 @@ describe('@dsh-rp/product', () => {
     expect(config).toMatchObject({ provider: 'test', model: 'model', temperature: 0.9, maxTokens: 8192 })
   })
 
+  it('applies an imported reasoning effort only when the selected model route supports it', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'dsh-rp-product-reasoning-'))
+    vi.stubEnv('DSH_HOME', home)
+    const store = await ProductStore.open()
+    const preset = normalizeEntity('presets', {
+      id: 'minimal-preset', name: 'Minimal preset',
+      promptDefinitions: [{ id: 'main', name: 'Main', role: 'system', content: 'Stay in character.', marker: false }],
+      promptOrders: [{ id: 'global', entries: [{ identifier: 'main', enabled: true }] }],
+      selectedPromptOrderId: 'global', generation: { reasoningEffort: 'minimal', retained: { source_reasoning_effort: 'min' } }, updatedAt: 0,
+    }, 1)
+    await store.upsert('presets', preset, 0)
+    await store.bind({ sessionId: 'reasoning-session', ...composition, presetId: preset.id, updatedAt: 2 }, 1)
+    let requestListener: ((payload: { readonly signal: AbortSignal }, next: () => Promise<RequestConfig>) => Promise<RequestConfig>) | undefined
+    let efforts = [{ id: 'high' }]
+    const resolveModelInfo = vi.fn(async () => ({ reasoning: { efforts } }))
+    applyAgent({
+      systemPrompt: { section: () => () => {} },
+      agents: { requireInitiator: () => ({ id: 'reasoning-session' }) },
+      tools: { register: () => () => {} },
+      llm: { resolveModelInfo },
+      on: (_event: string, listener: typeof requestListener) => { requestListener = listener; return () => {} },
+      effect: (factory: () => unknown) => factory(),
+    })
+    const signal = new AbortController().signal
+    const unsupported = await requestListener!({ signal }, async () => ({ provider: 'kaon', model: 'deepseek-v4-flash', reasoningEffort: 'high' }))
+    expect(unsupported.reasoningEffort).toBe('high')
+    expect(resolveModelInfo).toHaveBeenLastCalledWith('kaon', 'deepseek-v4-flash', signal)
+    efforts = [{ id: 'minimal' }, { id: 'high' }]
+    const supported = await requestListener!({ signal }, async () => ({ provider: 'compatible', model: 'reasoner' }))
+    expect(supported.reasoningEffort).toBe('minimal')
+  })
+
   it('registers Agent RP state and choice tools but keeps Tavern Chat tool-free', async () => {
     const home = mkdtempSync(join(tmpdir(), 'dsh-rp-product-agent-tools-'))
     vi.stubEnv('DSH_HOME', home)
@@ -358,7 +390,7 @@ describe('@dsh-rp/product', () => {
   })
 })
 
-interface RequestConfig { readonly provider: string; readonly model: string; readonly temperature?: number; readonly maxTokens?: number }
+interface RequestConfig { readonly provider: string; readonly model: string; readonly reasoningEffort?: string; readonly temperature?: number; readonly maxTokens?: number }
 interface CommandInput { readonly agent: { readonly id: string; readonly status: 'idle'; readonly ctx: object; readonly session: TestSession }; readonly rawInput: string }
 interface TestEvent {
   readonly type: string

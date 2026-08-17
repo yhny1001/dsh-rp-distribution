@@ -6,7 +6,7 @@
 
 `@dsh-rp/product` 负责酒馆式资源与对话体验，但不成为第二套 Harness。产品状态 schema v2 增加 Prompt Manager Preset、导入来源、Character Card 开场白/示例/标签与逐 Session Transcript Annotation。Bundle 复用 `@dsh-rp/compat-sillytavern` 作为 Clean-room Parser，并内联该 Adapter 与二进制依赖，因此安装产品 Tarball 不要求完整 RP 发行族。
 
-Prompt Preset 最多保留一千零二十四个定义，每套顺序使用最多二百五十六个固定 System Prompt Seat；Cordis Registration 是 Effect，而用户顺序是可变数据。未编排定义可在以后加入。常用 Marker 解析为分别所属的系统、世界观、角色、Persona、场景、示例与聊天历史材料。安全的纯文本宏阶段解析角色/Persona 名称和按顺序生效的 `setvar/getvar`，不会获得 TavernHelper 或 Regex 执行权限。`agent/request` Waterfall 先调用 `next()`，再应用受支持的生成参数覆盖；Request Header Event 继续作为模型请求的持久记录。内置默认输出上限为 8192 Token，导入的 `openai_max_tokens` 则原值保留；ST `min` 推理规范化为 DSH `minimal`，最终仍受所选路由声明的档位约束。
+Prompt Preset 最多保留一千零二十四个定义，每套顺序使用最多二百五十六个固定 System Prompt Seat；Cordis Registration 是 Effect，而用户顺序是可变数据。未编排定义可在以后加入。常用 Marker 解析为分别所属的系统、世界观、角色、Persona、场景、示例与聊天历史材料。安全的纯文本宏阶段解析角色/Persona 名称和按顺序生效的 `setvar/getvar`，不会获得 TavernHelper 或 Regex 执行权限。`agent/request` Waterfall 先调用 `next()`，再应用受支持的生成参数覆盖；Request Header Event 继续作为模型请求的持久记录。内置默认输出上限为 8192 Token，导入的 `openai_max_tokens` 则原值保留。ST `min` 推理在资源中规范化为 DSH `minimal`；请求阶段解析当前精确 provider/model 的能力，只有已声明 `minimal` 才覆盖，否则保留 `next()` 给出的模型选择或 Provider 默认值。
 
 ## Transcript 所有权与编辑
 
@@ -27,6 +27,10 @@ Preset 导入明确采用双轨。无损源文档挂在立即可选的 `sillytav
 ## 验证
 
 聚焦测试覆盖 Prompt Manager 顺序与 Marker、210 个定义/177 个开关/56 个启用项的 Preset、无损源保留与非破坏式适配、生成参数、安全宏、PNG Asset 持久化、混合导入、修订串行化、激活回滚、说话者捕获和具有完整来源的 Surface 编辑。实际 Tarball 安装到隔离 DSH `0.1.0-rc.6` Web Profile；Codex 内置 Browser 先验证导入两张 Character Card、一套 Preset 与一个无效文件，再导入用户提供的 3.4 MiB CCv3 PNG 和 453 KiB、210 定义 Preset。真实 Preset 显示 177 个独立开关、56 个源文件默认启用项、33 个未编排定义、maxTokens 30000 与两条禁用行为警告；真实 Request Header 记录 temperature 1、maxTokens 30000、10511 字符 System Prompt 且没有未解析双花括号宏。导入结果会询问是否适配；接受后保留 `[ST COMPAT] Izumi 0814.json`，创建 `[Harness] Izumi 0814.json · Harness` 并自动选择副本，随后又完成一次真实模型调用。真实模型调用以 PNG 角色卡名称回复。此前验证还编辑回复、证明下一次模型调用使用编辑正文、切换主要角色，并证明新旧回复保留不同说话者名称。
+
+Reasoning 回归使用带 `minimal` 的导入 Preset 模拟两条模型路由：只声明 `high` 的 Kaon 类路由保留原有 `high` 或 Provider 默认值，不再提交 `minimal`；明确声明 `minimal` 的路由继续应用导入档位。两条路径都通过同一 `agent/request` Waterfall，并验证精确 provider/model 与 Turn Signal 被传入能力解析。
+
+修复后的实际 Tarball 重新安装到隔离 Web Profile，并在保留历史 `UNSUPPORTED_REASONING_EFFORT` 记录的同一个 Agent RP Session 中再次调用 `kaon/deepseek-v4-flash-0731`。新请求使用 Izumi Harness Preset、卡提希娅和原有世界资源，八秒完成并返回中文场景确认，没有产生新的 reasoning-effort 拒绝。
 
 Agent RP 浏览器验收选择 `rp-adaptive`、真实角色卡与 Harness 适配 Izumi Preset。模型实际调用三次状态工具（时间、场景、记忆）、一次选项工具，再生成角色回复；RP 视图显示 TIME、SCENE、MEMORY 卡片和三个按钮。点击“调查港口”会把保存的 Prompt 作为下一条原生用户消息提交，并产生第二轮模型回复。另一次 World Info 导入验证三条 Entry、两条启用、搜索与逐条编辑。
 
