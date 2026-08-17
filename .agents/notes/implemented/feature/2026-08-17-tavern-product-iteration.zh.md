@@ -16,7 +16,7 @@ DSH Session Log 始终不可变且权威。产品只记录 append-origin User/As
 
 ## 导入行为
 
-本地 API 接受有界的 Character Card JSON/PNG/CHARX、World Info、Persona 与 Chat Completion Preset 批次。每个文件独立解析并明确报告；同批某个文件无效时，有效文件仍作为一次乐观产品状态修订提交。PNG 角色卡字节按内容寻址，写在产品状态旁，只能通过经过校验的同源 Asset ID 提供；CHARX 内嵌原始字节仍保持惰性。Script、Regex、远程资源与未知 Extension 行为继续按兼容 Adapter 报告保持惰性。
+本地 API 接受有界的 Character Card JSON/PNG/CHARX、World Info、Persona 与 Chat Completion Preset 批次。每个文件独立解析并明确报告；同批某个文件无效时，有效文件仍作为一次乐观产品状态修订提交。PNG 角色卡字节按内容寻址，写在产品状态旁，只能通过经过校验的同源 Asset ID 提供；Client 的统一 Avatar Face 基类约束所有图片尺寸、溢出、`cover` 裁切与脸部焦点，业务入口不能把原图尺寸带入布局。CHARX 内嵌原始字节仍保持惰性。Script、Regex、远程资源与未知 Extension 行为继续按兼容 Adapter 报告保持惰性。
 
 Preset 导入明确采用双轨。无损源文档挂在立即可选的 `sillytavern` Preset 上，界面随后询问是否生成独立 `harness` 适配副本；接受后只创建或刷新确定性副本，不覆盖源。适配保留定义、所选顺序、开关、Role、Marker、正文、安全变量与生成参数，只移除当前 Host 无法执行的 ST 注入元数据。两个条目都可按 Session 选择；适配报告记录源 ID、转换时间、归一字段数、惰性扩展数与说明。
 
@@ -31,6 +31,8 @@ Preset 导入明确采用双轨。无损源文档挂在立即可选的 `sillytav
 Reasoning 回归使用带 `minimal` 的导入 Preset 模拟两条模型路由：只声明 `high` 的 Kaon 类路由保留原有 `high` 或 Provider 默认值，不再提交 `minimal`；明确声明 `minimal` 的路由继续应用导入档位。两条路径都通过同一 `agent/request` Waterfall，并验证精确 provider/model 与 Turn Signal 被传入能力解析。
 
 修复后的实际 Tarball 重新安装到隔离 Web Profile，并在保留历史 `UNSUPPORTED_REASONING_EFFORT` 记录的同一个 Agent RP Session 中再次调用 `kaon/deepseek-v4-flash-0731`。新请求使用 Izumi Harness Preset、卡提希娅和原有世界资源，八秒完成并返回中文场景确认，没有产生新的 reasoning-effort 拒绝。
+
+同一真实 PNG 的视觉回归检查原生对话与角色对话两个 Tab：竖版原图不再从新增的已选配置头像溢出到会话背景，只在 28px 已选头像、角色页标题头像和逐条角色消息头像中显示；所有位置均保持方形脸部裁切。
 
 Agent RP 浏览器验收选择 `rp-adaptive`、真实角色卡与 Harness 适配 Izumi Preset。模型实际调用三次状态工具（时间、场景、记忆）、一次选项工具，再生成角色回复；RP 视图显示 TIME、SCENE、MEMORY 卡片和三个按钮。点击“调查港口”会把保存的 Prompt 作为下一条原生用户消息提交，并产生第二轮模型回复。另一次 World Info 导入验证三条 Entry、两条启用、搜索与逐条编辑。
 
