@@ -4,7 +4,7 @@ This repository owns only the independently published `@dsh-rp/*` plugin family 
 
 ## Layout
 
-- `packages/rp/*`: the 55 publishable RP plugins, bundles, and CLIs.
+- `packages/rp/*`: the 56 publishable RP plugins, bundles, and CLIs.
 - `types/`: type-only declarations for generic DSH extensions required by the Web plugin but not yet present in the selected public Host packages.
 - `tests/host/`: unit-test-only implementations of small browser Host contracts; never published.
 - `examples/rp-package-authoring/`: executable RP package examples.

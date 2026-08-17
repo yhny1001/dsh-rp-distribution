@@ -1,0 +1,4 @@
+# Local-first RP product surface: Node API, native Agent preset, and Client UI.
+- insert:
+    - id: dsh-rp-product
+      name: '@dsh-rp/product'

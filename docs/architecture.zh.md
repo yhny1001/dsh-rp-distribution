@@ -8,6 +8,8 @@
 
 RP 服务包负责版本化约定和可逆注册。`distribution-core` 声明与展示无关的挂载顺序；`distribution-web` 只声明 `ui-slot-runtime` 与 `web`；`distribution` 把两个 Patch 层串接为单命令 Web 入口。测试保证聚合 Patch 与两个所属层逐字节一致。
 
+`@dsh-rp/product` 是独立于完整发行族的本地优先产品 Bundle。它把 Node API、Client UI 和 `rp-studio` Agent Preset 打进一个可安装 Tarball，只使用 DSH `0.1.0-rc.6` 已存在的 `webServer`、`commands`、`agentPresets` 与正式 Web Slot。它不启动第二套生成循环；五个独立 System Prompt Section 分别投影系统规则、世界观、角色阵容、用户 Persona 与当前场景，普通对话继续由原生 AgentLoop 执行。
+
 所有 `@deepseek-ai/*` 包都是外部 Peer。`scripts/fetch-host-sdk.ts` 从各包 Manifest 读取精确开发版本，以对应 npm Artifact 生成忽略的 SDK Cache。Cache 可随时删除，绝不会进入 npm Payload。
 
 ## 兼容性所有权
@@ -18,4 +20,4 @@ Core 代码面向公开 Host 服务包编译。Web 插件还需要 RP Studio 与
 
 ## 测试分工
 
-RP 单元测试负责包行为、生命周期回滚、Policy、持久化适配、包兼容、API 验证与浏览器呈现。组件测试使用的少量浏览器 Host 约定位于 `tests/host`，不会发布。完整 Host Boot、DSH Profile 组合、原生平台行为和常驻 Web Shell 继续由 DSH 负责。
+RP 单元测试负责包行为、生命周期回滚、Policy、持久化适配、包兼容、API 验证与浏览器呈现。组件测试使用的少量浏览器 Host 约定位于 `tests/host`，不会发布。产品 Bundle 另外使用一次性 DSH Home、实际 Tarball、真实 Web Profile 与 Codex 内置 Browser 验证；完整发行族的 Host 组合仍独立验收。

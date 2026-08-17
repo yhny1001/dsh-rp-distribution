@@ -59,7 +59,7 @@ for (const path of manifests) {
   }
 }
 
-if (manifests.length !== 55) errors.push(`expected 55 RP packages, found ${String(manifests.length)}`)
+if (manifests.length !== 56) errors.push(`expected 56 RP packages, found ${String(manifests.length)}`)
 if (errors.length > 0) {
   console.error(errors.join('\n'))
   process.exitCode = 1

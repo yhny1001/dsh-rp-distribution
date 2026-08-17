@@ -110,6 +110,9 @@
       "path": "./packages/rp/projection"
     },
     {
+      "path": "./packages/rp/product"
+    },
+    {
       "path": "./packages/rp/prompt"
     },
     {

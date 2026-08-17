@@ -4,6 +4,7 @@
 
 | 插件入口 | Host 要求 |
 |---|---|
+| `@dsh-rp/product` | DSH `0.1.0-rc.6` Web Profile；`webServer`、`commands`、`agentPresets`、原生 AgentLoop，以及 `settings.section`、`conversation.session.header.actions`、`conversation.input.dock`、`shell.overlay`、`sidebar.footer.action`。 |
 | `@dsh-rp/distribution-core` | Cordis 4.0.1，以及叶子包声明的精确 DSH 服务 Peer 版本；不包含 React 或浏览器 API。 |
 | `@dsh-rp/distribution-web` | Core、DSH Web 服务、下列 UI Slot 与会话提交方法。 |
 | `@dsh-rp/distribution` | Core 与 Web 要求的并集。 |
@@ -13,3 +14,5 @@ Web Host 必须提供这些通用 Slot：`settings.plugins.tab`、`sidebar.conve
 浏览器会话服务必须提供 `registerSubmissionHandler()`、`encodeDraftImages()` 与 `resolveImage()`。Host HTTP 服务使用公开的 `ctx.httpServer` API。
 
 这些要求由包 Manifest 声明，并在开发期检查。插件绝不会 Patch 不兼容的 Host。
+
+`@dsh-rp/product` 不依赖下列完整发行族尚需的扩展 Slot，也不使用 `registerSubmissionHandler()`；它通过正式 `conversation.input.dock` 呈现分层上下文，并通过空白 Session 的 Agent Preset 重组进入原生对话。非空 Session 拒绝中途切换 Preset。

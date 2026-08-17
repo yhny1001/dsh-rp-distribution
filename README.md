@@ -6,6 +6,21 @@
 
 ## 安装
 
+### 本地 RP 产品
+
+仓库内的 `@dsh-rp/product` 是可直接安装到 DSH `0.1.0-rc.6` Web Profile 的自包含产品 Bundle：
+
+```sh
+pnpm run build
+pnpm --dir packages/rp/product pack --pack-destination /tmp/dsh-rp-product
+dsh plugin --profile web add /tmp/dsh-rp-product/dsh-rp-product-0.1.0-rc.5.tgz
+dsh --profile web
+```
+
+安装后可从侧栏底部或设置打开“RP 创作室”，分别维护系统规则、世界观、多个角色、多个用户 Persona 与会话场景，再把五层组合应用到当前空白 Session。对话继续使用 DSH 原生 AgentLoop、Composer、模型选择、流式输出、取消、持久化与统计。
+
+### 完整插件发行族
+
 包发布后，可把完整 Web 组合包安装到兼容的 DSH Profile：
 
 ```sh
@@ -26,6 +41,7 @@ dsh --profile headless
 
 | 包 | 职责 |
 |---|---|
+| `@dsh-rp/product` | 可本地安装的中文优先 RP 产品界面，以及系统、世界、角色、用户 Persona、场景五层原生 AgentLoop 组合。 |
 | `@dsh-rp/distribution-core` | Character、Persona、Lore、Memory、Policy、Pipeline、Registry、Outbox、包生命周期及其他 Headless RP 服务。 |
 | `@dsh-rp/distribution-web` | RP Studio、会话路由、Session 资源和可信 UI Slot 集成。 |
 | `@dsh-rp/distribution` | 聚合 Core 与 Web 的轻量完整 Web 入口。 |
@@ -44,15 +60,15 @@ pnpm run check
 
 本仓库不会安装 DSH 应用依赖图。`pnpm run host:sdk` 从插件 Manifest 读取精确的 `@deepseek-ai/*` Peer 版本，只把对应 npm Tarball 下载到 `.cache/host-sdk`，并创建临时开发链接。这个缓存用于插件类型检查和包级测试，不代表已经启动或验证了完整 Harness。
 
-现有检查覆盖 55 个插件包的内部逻辑、构建和发布内容。浏览器组件测试使用 `tests/host` 中的最小 Host 接口实现；这些实现只服务于单元测试，不会发布，也不能替代真实 DSH 集成测试。参见[架构](docs/architecture.zh.md)与 [Host 兼容性](docs/compatibility.zh.md)。
+现有检查覆盖 56 个插件包的内部逻辑、构建和发布内容。浏览器组件测试使用 `tests/host` 中的最小 Host 接口实现；这些实现只服务于单元测试，不会发布，也不能替代真实 DSH 集成测试。参见[架构](docs/architecture.zh.md)与 [Host 兼容性](docs/compatibility.zh.md)。
 
 ## Harness 集成测试
 
-真实 Host 装配测试等本地具备兼容的 DeepSeek Harness 后再接入。届时应使用一次性 DSH Profile 安装实际 Tarball，分别启动 Headless 与 Web 入口，并验证 Loader 装配、服务注入、Session 生命周期、Registry 操作和浏览器 Slot。接入之前，本仓库不会把声明缓存或测试替身表述为 Harness 兼容性证据。
+`@dsh-rp/product` 已在本地 DSH `0.1.0-rc.6` 上使用一次性 Home 和实际 npm Tarball 验证：Profile 初始化、Bundle Patch、Node API、Client ModuleLoader、正式 Web Slot、Agent Preset 重组、Session 事件、五层上下文条、原生 AgentLoop 与真实流式模型回复均已通过。完整 `distribution-core` / `distribution-web` 发行族仍需单独完成 55 个基础包的 Host 组合验证；SDK Cache 与测试替身不作为该验证的替代品。
 
 ## 发布
 
-55 个包共享一个版本，并从 `rp-v<version>` Tag 按依赖顺序发布：
+56 个包共享一个版本，并从 `rp-v<version>` Tag 按依赖顺序发布：
 
 ```sh
 pnpm run release:rp -- 0.1.0

@@ -819,6 +819,15 @@ importers:
         specifier: workspace:^
         version: link:../contracts
 
+  packages/rp/product:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: 4.0.1
+        version: 4.0.1(@deepseek-ai/cordis-plugin-include@1.0.6)(@deepseek-ai/cordis-plugin-loader@1.0.2)
+      react:
+        specifier: ^18.2.0
+        version: 18.3.1
+
   packages/rp/projection:
     devDependencies:
       '@deepseek-ai/cordis':

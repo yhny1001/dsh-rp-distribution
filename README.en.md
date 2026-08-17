@@ -6,6 +6,21 @@
 
 ## Install
 
+### Local RP product
+
+The repository's `@dsh-rp/product` is a self-contained product Bundle that can be installed directly into a DSH `0.1.0-rc.6` Web profile:
+
+```sh
+pnpm run build
+pnpm --dir packages/rp/product pack --pack-destination /tmp/dsh-rp-product
+dsh plugin --profile web add /tmp/dsh-rp-product/dsh-rp-product-0.1.0-rc.5.tgz
+dsh --profile web
+```
+
+Open **RP Studio** from the sidebar footer or Settings. It keeps system rules, world facts, multiple characters, multiple user personas, and the current scene separate, then binds those five layers to the current blank Session. Conversation execution remains on the native DSH AgentLoop, composer, model selector, streaming, cancellation, persistence, and statistics.
+
+### Complete plugin family
+
 After the packages are published, install the complete Web bundle into a compatible DSH profile:
 
 ```sh
@@ -26,6 +41,7 @@ The standalone RP package-authoring CLI is `@dsh-rp/cli` and exposes `dsh-rp`.
 
 | Package | Responsibility |
 |---|---|
+| `@dsh-rp/product` | Locally installable Chinese-first RP product UI and five-layer native AgentLoop composition for system, world, characters, user persona, and scene. |
 | `@dsh-rp/distribution-core` | Character, Persona, Lore, Memory, Policy, Pipeline, Registry, Outbox, package lifecycle, and other Headless RP services. |
 | `@dsh-rp/distribution-web` | RP Studio, conversation routing, Session resources, and trusted UI Slot integration. |
 | `@dsh-rp/distribution` | Thin full-Web aggregate over Core and Web. |
@@ -44,15 +60,15 @@ pnpm run check
 
 The repository does not install a DSH application graph. `pnpm run host:sdk` reads exact `@deepseek-ai/*` Peer versions from plugin Manifests, downloads only their npm Tarballs into `.cache/host-sdk`, and creates temporary development links. This cache supports plugin type checking and package-level tests; it does not start or validate an assembled Harness.
 
-The existing checks cover the internal logic, builds, and publication payloads of 55 plugin packages. Browser component tests use minimal Host interfaces under `tests/host`; those implementations are unit-test-only, are never published, and do not replace real DSH integration tests. See [architecture](docs/architecture.md) and [Host compatibility](docs/compatibility.md).
+The existing checks cover the internal logic, builds, and publication payloads of 56 plugin packages. Browser component tests use minimal Host interfaces under `tests/host`; those implementations are unit-test-only, are never published, and do not replace real DSH integration tests. See [architecture](docs/architecture.md) and [Host compatibility](docs/compatibility.md).
 
 ## Harness integration testing
 
-Real Host assembly tests will be added after a compatible DeepSeek Harness is available locally. They should install the actual Tarballs into a disposable DSH Profile, start both Headless and Web entries, and verify Loader assembly, service injection, Session lifecycles, Registry operations, and browser Slots. Until then, this repository does not present declaration caches or test doubles as evidence of Harness compatibility.
+`@dsh-rp/product` has been verified against a local DSH `0.1.0-rc.6` using a disposable Harness home and its actual npm Tarball: profile initialization, Bundle Patch, Node API, Client ModuleLoader, official Web Slots, Agent Preset recomposition, Session events, the five-layer context strip, the native AgentLoop, and a real streaming model reply all passed. The complete `distribution-core` / `distribution-web` family still needs a separate Host assembly test for its 55 foundation packages; declaration caches and test doubles do not substitute for that evidence.
 
 ## Release
 
-All 55 packages share one version and publish in dependency order from an `rp-v<version>` tag:
+All 56 packages share one version and publish in dependency order from an `rp-v<version>` tag:
 
 ```sh
 pnpm run release:rp -- 0.1.0
