@@ -20,7 +20,7 @@ DSH Session Log 始终不可变且权威。产品只记录 append-origin User/As
 
 Preset 导入明确采用双轨。无损源文档挂在立即可选的 `sillytavern` Preset 上，界面随后询问是否生成独立 `harness` 适配副本；接受后只创建或刷新确定性副本，不覆盖源。适配保留定义、所选顺序、开关、Role、Marker、正文、安全变量与生成参数，只移除当前 Host 无法执行的 ST 注入元数据。两个条目都可按 Session 选择；适配报告记录源 ID、转换时间、归一字段数、惰性扩展数与说明。
 
-产品现在在 Agent Preset 层区分 Tavern Chat 与 Agent RP。`rp-tavern` 挂载 Prompt 组装但不提供领域工具；`rp-agent` 在同一导入 Prompt Preset 上提供原子 `rp_commit_turn`、只读 `rp_read_state` 和兼容的 `rp_update_state`/`rp_propose_choices`。原生 Tool Call/Result 保持持久证据，产品状态作为 Projection 进入后续 Request Header 与世界状态面板。World Info Entry 在编辑器保留主/次关键词、常驻、开关和优先级。模型遵从性尚不是硬 Invariant：加强后的 Agent Prompt 要求先提交 Ledger 再输出正文，但最终仍需 State Keeper Sidecar 在 Turn boundary 审计漏交。
+产品现在在 Agent Preset 层区分 Tavern Chat 与 Agent RP。`rp-tavern` 挂载 Prompt 组装但不提供领域工具；`rp-agent` 在同一导入 Prompt Preset 上提供原子 `rp_commit_turn`、只读 `rp_read_state` 和兼容的 `rp_update_state`/`rp_propose_choices`。原生 Tool Call/Result 保持持久证据，产品状态作为 Projection 进入后续 Request Header 与世界状态面板。World Info Entry 在编辑器保留主/次关键词、常驻、开关和优先级。State Keeper 已在 `agent/turn-stopping` 强制每轮提交存在性；它尚不语义判断正文里的每个变化是否完整进入 Patch。
 
 新会话首页尚无 Session 时，原生 Agent Preset Seat 只在组件内部暂存选择，其他插件无法读取，RP Binding 也没有可接收 Command 的 Agent。产品因此以更高优先级提供兼容的 Preset Seat，保留部署中的全部健康 Preset，同时把选择公开给 RP 快速设置。Tavern 与 Agent 共同显示 Prompt Preset、角色卡、Persona、世界书和场景，只有 Agent 显示 Experience。应用操作通过 Workspace Runtime 复用或创建空白 Session，等待客户端 Binding 可用，落实暂存 Preset，再提交原有 `rp-studio-bind` Command；标准编码 Preset 不产生 RP Surface。
 

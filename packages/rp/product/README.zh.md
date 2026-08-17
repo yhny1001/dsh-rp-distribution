@@ -36,6 +36,8 @@ Standalone World Info 与角色卡内嵌 Lore 会保留为逐条 World Entry，�
 
 Agent RP 把每轮视为世界 Ledger 的 N→N+1 提交。首选工具 `rp_commit_turn` 在一次已记录调用中原子提交 0–32 条变化和 0–8 个选项，覆盖世界、时间、场景、角色、Persona、NPC、关系、记忆、目标与物品；`data.key`/`data.target` 提供跨轮稳定身份，当前状态按键 Last-write-wins，完整事件仍留在履历。`rp_read_state` 提供只读结构化检查，`rp_update_state` 与 `rp_propose_choices` 保留为分步兼容工具。下一轮请求通过 `<rp-dynamic-state>` 读取当前 Projection；角色对话页显示世界状态面板、Revision、状态履历和可点击选项，Reasoning Block 不进入角色正文。
 
+State Keeper 在每轮第一次输入进入时记录 Ledger Revision，并在原生 `agent/turn-stopping` 扩展点审计本轮是否推进。没有提交时会自动 Steering 要求补交；确实没有变化也必须以 `updates: []` 留下无变化审计。连续两次忽略后该轮失败关闭，不能静默产生无 Ledger 的 Agent RP 回复。内部审计消息与 Reasoning 一样不进入角色对话正文。
+
 Experience 会改变 Agent 行为，而不只是保存标签。World Simulation 强化时间、NPC 与目标的因果推进；Multi-character 要求通过 `rp_select_speaker` 从配置阵容中确定下一位说话者，使 Transcript 在工具提交后按真实角色署名；TRPG 可用已记录的 `rp_roll` 执行有界 `NdM±K` 检定，并把结果造成的目标、物品或世界变化提交到 Ledger；Companion 优先关系、记忆、Persona 与角色状态，并取消强制每轮给选项。
 
 ## 本地安装
@@ -55,5 +57,5 @@ dsh --profile web
 - PNG 角色卡原图由产品作为本地头像资产保存；CHARX 内嵌 Asset 原始字节仍按兼容层策略省略，只保留惰性元数据。
 - 已被 Compaction 覆盖而不再位于当前 Surface 的消息不能局部替换；界面会保留正文，但编辑命令会明确失败。
 - Swipe/Regenerate、SillyTavern Chat JSONL 导入导出、自动群聊说话人调度、Regex/STscript 与 Kobold Text Completion 尚未进入本地产品层；多角色会话目前由用户显式切换主要角色。
-- Agent RP 的领域工具已经可用，但严格的每轮自动 State Keeper 审计仍需独立 Sidecar；模型若在正文里隐含状态变化却不调用工具，当前加强提示会要求提交，但尚未在 Turn boundary 强制阻止漏写。
+- State Keeper 强制每轮至少推进一次 Ledger Revision，但当前只证明“发生了提交”，不会语义比较角色正文与状态 Patch 是否完整一致；更深的独立语义审计仍可作为后续 Provider 插件加入。
 - 产品数据原子写入 `$DSH_HOME/rp-product/product-state.json`，schema v2 不读取预发布的 schema v1；外部 Storage Provider 尚不可选。

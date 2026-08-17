@@ -344,6 +344,42 @@ describe('@dsh-rp/product', () => {
     expect(supported.reasoningEffort).toBe('minimal')
   })
 
+  it('steers missing world-ledger audits at the turn boundary and fails closed after two retries', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'dsh-rp-product-state-keeper-'))
+    vi.stubEnv('DSH_HOME', home)
+    const store = await ProductStore.open()
+    await store.bind({ sessionId: 'keeper-session', ...composition, mode: 'agent', updatedAt: 1 }, 0)
+    let claimed: ((payload: { readonly agent: KeeperAgent; readonly turn: number }) => void) | undefined
+    let stopping: ((payload: { readonly agent: KeeperAgent; readonly turn: number }) => Promise<void> | void) | undefined
+    const context = {
+      systemPrompt: { section: () => () => {} },
+      agents: { requireInitiator: () => ({ id: 'keeper-session' }) },
+      tools: { register: () => () => {} },
+      llm: { resolveModelInfo: async () => ({}) },
+      on: (event: string, listener: ((payload: { readonly agent: KeeperAgent; readonly turn: number }) => Promise<void> | void)) => {
+        if (event === 'agent/inbox/claimed') claimed = listener
+        if (event === 'agent/turn-stopping') stopping = listener
+        return () => {}
+      },
+      effect: (factory: () => unknown) => factory(),
+    }
+    applyAgent(context as never, { mode: 'agent' })
+    const steered: unknown[] = []
+    const agent: KeeperAgent = { id: 'keeper-session', steer: message => { steered.push(message) } }
+    claimed!({ agent, turn: 1 })
+    await stopping!({ agent, turn: 1 })
+    expect(steered).toMatchObject([{ role: 'user', source: { plugin: '@dsh-rp/product', form: 'instructions' } }])
+    await store.runtimeTurn('keeper-session', 'audit-1', { updates: [] })
+    await stopping!({ agent, turn: 1 })
+    expect(steered).toHaveLength(1)
+
+    claimed!({ agent, turn: 2 })
+    await stopping!({ agent, turn: 2 })
+    await stopping!({ agent, turn: 2 })
+    expect(steered).toHaveLength(3)
+    expect(() => stopping!({ agent, turn: 2 })).toThrow(/cannot close without a world Ledger audit/u)
+  })
+
   it('registers Agent RP state and choice tools but keeps Tavern Chat tool-free', async () => {
     const home = mkdtempSync(join(tmpdir(), 'dsh-rp-product-agent-tools-'))
     vi.stubEnv('DSH_HOME', home)
@@ -441,6 +477,7 @@ describe('@dsh-rp/product', () => {
 })
 
 interface RequestConfig { readonly provider: string; readonly model: string; readonly reasoningEffort?: string; readonly temperature?: number; readonly maxTokens?: number }
+interface KeeperAgent { readonly id: string; readonly steer: (message: unknown) => void }
 interface CommandInput { readonly agent: { readonly id: string; readonly status: 'idle'; readonly ctx: object; readonly session: TestSession }; readonly rawInput: string }
 interface TestEvent {
   readonly type: string

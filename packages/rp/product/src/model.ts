@@ -536,7 +536,6 @@ export function commitRuntimeTurn(
   const updates = array(item.updates ?? [], 'runtime turn updates')
   if (updates.length > 32) throw new Error('runtime turn accepts at most 32 state updates')
   const hasChoices = item.choices !== undefined
-  if (updates.length === 0 && !hasChoices) throw new Error('runtime turn requires state updates or choices')
   const callId = text(callIdValue, 'turn callId', 512)
   const runtime = state.runtimes[sessionId] ?? emptyRuntime(sessionId)
   const committed = updates.map((value, index): RuntimeEffect => {

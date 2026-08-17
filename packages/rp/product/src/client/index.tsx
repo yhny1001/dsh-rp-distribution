@@ -703,6 +703,9 @@ interface ViewNode {
   readonly time?: number
   readonly content?: readonly unknown[]
   readonly blocks?: readonly unknown[]
+  readonly source?: unknown
+  readonly turn?: number
+  readonly step?: number
 }
 interface ConversationSnapshot { readonly nodes: readonly ViewNode[]; readonly partial?: { readonly blocks: readonly unknown[] } | null; readonly running: boolean }
 type UseSession = <T>(selector: (session: ConversationSnapshot) => T) => T
@@ -804,22 +807,42 @@ interface StoryMessage {
 
 function storyMessages(nodes: readonly ViewNode[], transcript: SessionTranscript | undefined, fallbackCharacter: string, fallbackPersona: string): readonly StoryMessage[] {
   const records = new Map(transcript?.messages.map(message => [message.sourceSeq, message]) ?? [])
-  return nodes.flatMap((node): StoryMessage[] => {
+  const messages: StoryMessage[] = []
+  const visibleAssistantTurns = new Set<number>()
+  let stateKeeperRepair = false
+  for (const node of nodes) {
+    if (node.kind === 'user') stateKeeperRepair = false
+    if (node.kind === 'steering' && isStateKeeperSteering(node.source)) {
+      stateKeeperRepair = true
+      continue
+    }
+    if (node.kind === 'assistant' && stateKeeperRepair) continue
     const record = records.get(node.seq)
-    const ordinaryRole = node.kind === 'assistant' ? 'assistant' : node.kind === 'user' || node.kind === 'steering' ? 'user' : undefined
+    const ordinaryRole = node.kind === 'assistant' ? 'assistant' : node.kind === 'user' ? 'user' : node.kind === 'steering' ? record?.role : undefined
     const role = record?.role ?? ordinaryRole
-    if (role === undefined || ordinaryRole === undefined && record?.synthetic !== true) return []
+    if (role === undefined || ordinaryRole === undefined && record?.synthetic !== true) continue
     const content = record?.editedContent ?? blocksText(node.kind === 'assistant' ? node.blocks ?? [] : node.content ?? [])
-    if (content.trim() === '') return []
-    return [{
+    if (content.trim() === '') continue
+    if (role === 'assistant' && node.turn !== undefined) {
+      if (visibleAssistantTurns.has(node.turn)) continue
+      visibleAssistantTurns.add(node.turn)
+    }
+    messages.push({
       sourceSeq: node.seq,
       role,
       speakerId: record?.speakerId ?? '',
       speakerName: record?.speakerName ?? (role === 'assistant' ? fallbackCharacter : fallbackPersona),
       content,
       editRevision: record?.editRevision ?? 0,
-    }]
-  })
+    })
+  }
+  return messages
+}
+
+function isStateKeeperSteering(source: unknown): boolean {
+  if (typeof source !== 'object' || source === null) return false
+  const value = source as Record<string, unknown>
+  return value.kind === 'plugin' && value.plugin === '@dsh-rp/product' && value.form === 'instructions'
 }
 
 function blocksText(blocks: readonly unknown[]): string {

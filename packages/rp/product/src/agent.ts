@@ -1,6 +1,6 @@
 /** Agent-plane prompt projection for one RP Studio Session composition. */
 
-import { randomInt } from 'node:crypto'
+import { randomInt, randomUUID } from 'node:crypto'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import { currentRuntimeEffects, PRODUCT_PROMPT_SEAT_COUNT, renderPromptLayer, renderRuntimeContext, resolveGenerationSettings, resolvePromptLayers } from './model.ts'
 import type { ProductState } from './model.ts'
@@ -28,7 +28,19 @@ interface ProductAgentContext {
     payload: { readonly signal: AbortSignal },
     next: () => Promise<RequestConfig>,
   ) => Promise<RequestConfig>): () => void
+  on(event: 'agent/inbox/claimed', listener: (payload: { readonly agent: StateKeeperAgent; readonly turn: number }) => void): () => void
+  on(event: 'agent/turn-stopping', listener: (payload: { readonly agent: StateKeeperAgent; readonly turn: number }) => Promise<void> | void): () => void
   effect(factory: () => (() => void) | void, label?: string): unknown
+}
+
+interface StateKeeperAgent {
+  readonly id: string
+  steer(message: {
+    readonly id: string
+    readonly role: 'user'
+    readonly content: readonly { readonly type: 'text'; readonly text: string }[]
+    readonly source: { readonly kind: 'plugin'; readonly plugin: '@dsh-rp/product'; readonly form: 'instructions' }
+  }): void
 }
 
 interface RequestConfig {
@@ -63,7 +75,7 @@ export function apply(ctx: ProductAgentContext, config: Config = {}): void {
       if (config.mode !== 'agent') return '<rp-runtime-mode>Tavern Chat：只生成角色对话与叙事，不主动维护结构化世界状态，也不虚构工具调用。</rp-runtime-mode>'
       const state = readProductStateSync()
       const sessionId = ctx.agents.requireInitiator().id
-      return `${'<rp-runtime-mode>Agent RP：把每轮视为世界 Ledger 的 N→N+1 提交。先规划但不要输出任何用户可见的叙事、对白、进度说明或工具说明；若有变化，第一项可见动作应调用一次 rp_commit_turn，原子提交本轮真实发生的世界、时间、场景、角色、Persona、NPC、关系、记忆、目标、物品与选项变化。工具成功后只生成一条最终角色回复，不复述提交成功，不输出 planning/reasoning。正文、progress、current_event 或其他文本标签不算状态提交。updates 只写变化事实，并给 data.key 或 data.target 一个跨轮稳定键；没有变化时不要伪造。除非模式说明另有要求、用户明确不要选项或场景没有有意义的分支，非终局轮次提供 2-4 个结构化选项。rp_update_state 与 rp_propose_choices 只用于需要分步补交的兼容场景。</rp-runtime-mode>'}\n${experienceGuide(state, sessionId)}\n${renderRuntimeContext(state, sessionId)}`
+      return `${'<rp-runtime-mode>Agent RP：把每轮视为世界 Ledger 的 N→N+1 提交。先规划但不要输出任何用户可见的叙事、对白、进度说明或工具说明；第一项可见动作应调用一次 rp_commit_turn，原子提交本轮真实发生的世界、时间、场景、角色、Persona、NPC、关系、记忆、目标、物品与选项变化；若本轮没有状态或选项变化，也调用 rp_commit_turn 并传 updates:[]，作为无变化审计。工具成功后只生成一条最终角色回复，不复述提交成功，不输出 planning/reasoning。正文、progress、current_event 或其他文本标签不算状态提交。updates 只写变化事实，并给 data.key 或 data.target 一个跨轮稳定键；没有变化时不要伪造。除非模式说明另有要求、用户明确不要选项或场景没有有意义的分支，非终局轮次提供 2-4 个结构化选项。rp_update_state 与 rp_propose_choices 只用于需要分步补交的兼容场景。</rp-runtime-mode>'}\n${experienceGuide(state, sessionId)}\n${renderRuntimeContext(state, sessionId)}`
     },
   }), 'dsh-rp-product: runtime mode prompt')
 
@@ -81,7 +93,10 @@ export function apply(ctx: ProductAgentContext, config: Config = {}): void {
     }
   }), 'dsh-rp-product: preset generation settings')
 
-  if (config.mode === 'agent') registerAgentTools(ctx)
+  if (config.mode === 'agent') {
+    registerStateKeeper(ctx)
+    registerAgentTools(ctx)
+  }
 }
 
 async function supportedReasoningEffort(
@@ -93,6 +108,39 @@ async function supportedReasoningEffort(
   if (reasoningEffort === undefined) return undefined
   const model = await ctx.llm.resolveModelInfo(request.provider, request.model, signal)
   return model.reasoning?.efforts.some(effort => effort.id === reasoningEffort) === true ? reasoningEffort : undefined
+}
+
+function registerStateKeeper(ctx: ProductAgentContext): void {
+  const baselines = new Map<number, number>()
+  const attempts = new Map<number, number>()
+  ctx.effect(() => ctx.on('agent/inbox/claimed', ({ agent, turn }) => {
+    if (!baselines.has(turn)) baselines.set(turn, readProductStateSync().runtimes[agent.id]?.revision ?? 0)
+  }), 'dsh-rp-product: State Keeper turn baseline')
+  ctx.effect(() => ctx.on('agent/turn-stopping', ({ agent, turn }) => {
+    const current = readProductStateSync().runtimes[agent.id]?.revision ?? 0
+    const baseline = baselines.get(turn)
+    if (baseline === undefined || current > baseline) {
+      baselines.delete(turn)
+      attempts.delete(turn)
+      return
+    }
+    const attempt = attempts.get(turn) ?? 0
+    if (attempt >= 2) {
+      baselines.delete(turn)
+      attempts.delete(turn)
+      throw new Error(`Agent RP turn ${String(turn)} cannot close without a world Ledger audit`)
+    }
+    attempts.set(turn, attempt + 1)
+    agent.steer({
+      id: randomUUID(),
+      role: 'user',
+      content: [{
+        type: 'text',
+        text: '<rp-state-keeper-audit>本轮尚无 World Ledger 提交。现在只执行审计：调用 rp_commit_turn 提交真实变化与选项；若确实没有变化，传 updates:[]。不要把本条当作角色台词，不要输出 planning/reasoning，也不要在 Tool 之前继续叙事。</rp-state-keeper-audit>',
+      }],
+      source: { kind: 'plugin', plugin: '@dsh-rp/product', form: 'instructions' },
+    })
+  }), 'dsh-rp-product: State Keeper turn audit')
 }
 
 function registerAgentTools(ctx: ProductAgentContext): void {
