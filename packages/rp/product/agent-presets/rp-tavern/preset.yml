@@ -1,3 +1,3 @@
 name: Tavern Chat
-description: 使用导入 Prompt Preset、角色卡、Persona、世界书与原生 Session 历史的一次生成酒馆模式，不开放自动状态工具。
+description: 把导入 Prompt Preset、角色、Persona、世界书与场景注入 DeepSeek request.system；原生 Session History 承载对话，不开放状态工具。
 order: 11

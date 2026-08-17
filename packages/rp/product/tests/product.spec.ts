@@ -648,7 +648,10 @@ describe('@dsh-rp/product', () => {
     const chatImport = commands.get('rp-studio-chat-import')!
     const forkAdopt = commands.get('rp-studio-fork-adopt')!
     const rawInput = Buffer.from(JSON.stringify({ sessionId: 'session-bind', baseRevision: 0, ...composition })).toString('base64url')
-    expect((await bind({ agent: { id: 'session-bind', status: 'idle', ctx: {}, session }, rawInput })).kind).toBe('success')
+    expect(await bind({ agent: { id: 'session-bind', status: 'idle', ctx: {}, session }, rawInput })).toMatchObject({
+      kind: 'success',
+      text: expect.stringContaining('@deepseek-ai/dsh-system-prompt 把 Prompt Preset「酒馆沉浸预设」注入 request.system'),
+    })
     expect(events[0]).toMatchObject({ type: 'agent-preset/selected', data: { agentPreset: 'rp-tavern' } })
     const assistant: TestEvent = {
       type: 'assistant/message', seq: events.length, time: Date.now(), surfaceOp: 'append', sourceEventSeqs: [],

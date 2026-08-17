@@ -1,3 +1,3 @@
 name: Agent RP
-description: 在导入 Prompt Preset 之上启用世界、时间、场景、角色状态、关系、记忆与选项维护工具。
+description: 把导入 Prompt Preset、角色、Persona、世界书与场景注入 DeepSeek request.system，并启用世界状态、记忆与选项工具。
 order: 12

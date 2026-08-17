@@ -497,7 +497,7 @@ function requireIdle(agent: ProductAgent): void {
 function compositionSummary(state: ProductState, binding: SessionComposition): string {
   const preset = state.presets.find(item => item.id === binding.presetId)?.name ?? binding.presetId
   const layers = resolvePromptLayers(state, binding.sessionId).filter(layer => !layer.empty)
-  return `${binding.mode === 'agent' ? 'Agent RP' : 'Tavern Chat'} 已应用 Prompt Preset「${preset}」：${layers.map(layer => `${layer.title}「${layer.subtitle}」`).join(' · ')}`
+  return `${binding.mode === 'agent' ? 'Agent RP' : 'Tavern Chat'} 已通过 @deepseek-ai/dsh-system-prompt 把 Prompt Preset「${preset}」注入 request.system：${layers.map(layer => `${layer.title}「${layer.subtitle}」`).join(' · ')}；角色开场白与聊天记录继续使用原生 Session History`
 }
 
 async function installAgentPreset(): Promise<void> {

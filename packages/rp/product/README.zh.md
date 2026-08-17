@@ -10,6 +10,8 @@
 
 内置 Marker 解析 `worldInfoBefore`/`worldInfoAfter`、`personaDescription`、`charDescription`、`charPersonality`、`scenario`、`dialogueExamples` 与 `chatHistory` 等常用标识。聊天历史仍由 DSH Session 原生位置承载；Marker 只决定结构化资源在 Prompt Stack 中的位置，不把世界观、角色、Persona 或场景合成一个不可编辑的大文本。安全宏组装支持 `{{user}}`、`{{char}}`、按启用顺序执行的纯文本 `setvar/getvar`、注释移除，并从 Agent 已领取但尚未写入 Session 的当前用户消息展开首步真实 `{{lastUserMessage}}`，后续步骤回退到最新原生 `user/message`。导入 Preset 的 User/Assistant Role 分别保留为 `<st-user-message>` 与 `<st-assistant-prefill>` 语义边界；固定 ST Role Protocol 声明作者人格只管理内部创作过程，可见回复必须属于当前角色。Role Protocol 排在 Host 基础段之后，导入 Seat 从顺序 1000 开始；当顺序以 Assistant Prefill 结尾时，该 Prefill 固定占用最后一个 Seat，Agent RP 运行规则紧挨其前，因此 Preset 的生成起点仍是模型读取的最后一组 System 内容，同时保留 DSH 工具约束。包含未闭合 `planning`/`thinking`/`reasoning` 标记的 Prefill 会保留转义后的源文本并声明为 `private-reasoning`，让 Provider 在 Reasoning Channel 中应用而不把规划块泄漏到可见角色正文。不执行 TavernHelper 或 Regex 脚本。
 
+全部非 History Prompt 层通过 `@deepseek-ai/dsh-system-prompt` Registry 进入持久 `request/header.header.system`，最终发送为 Provider 的 `request.system`。产品界面在快速设置、会话已选入口、完整编排和 Prompt Manager 中显示 `Preset → @deepseek-ai/dsh-system-prompt → request.system` 注入路径；应用回执也明确记录该路径。原生会话中显示的“上下文注入 `@deepseek-ai/dsh-system-prompt`”只代表权限与沙箱等动态 Context Snapshot，不代表完整 System Prompt，产品不会把 Preset 复制到该 user-role Snapshot。角色卡 `first_mes` 与聊天记录继续留在 Session History。
+
 ## 角色卡与批量导入
 
 批量导入器直接复用仓库内 Clean-room 的 `@dsh-rp/compat-sillytavern`，支持 Character Card V1/V2/V3 JSON、带 `chara`/`ccv3` 元数据的 PNG、CHARX、World Info、Persona 与 Chat Completion Preset JSON。一次导入逐文件报告结果：一个损坏文件不会丢弃同批有效资源；脚本、Regex、远程资源与未知扩展不会执行。原始 JSON 文档会随 `ST COMPAT` 资源保留，导入 Preset 立即可在会话下拉框中选择。导入完成后界面明确询问是否另外生成 `HARNESS` 适配副本；适配是非破坏式的，源 Preset 与适配副本可独立选择，重新适配只刷新确定性副本。
@@ -36,7 +38,7 @@ Standalone World Info 与角色卡内嵌 Lore 会保留为逐条 World Entry，�
 
 新会话首页的 Agent Preset 选择器与 Composer 上方的 RP 快速设置共享同一选择状态。选择 Tavern Chat 会立即显示 Prompt Preset、角色卡、Persona、世界书与当前场景；选择 Agent RP 会在相同资源项之外增加 Experience。若首页还没有 Session，点击应用会通过 DSH Workspace Runtime 复用或建立空白 Session，先落实所选 Agent Preset，再绑定整套 RP 资源；标准编码 Preset 不显示 RP 快速设置。
 
-应用后，Composer 上方只保留一枚“已选”配置按钮，摘要仅显示运行模式、主要角色和 Prompt Preset；Persona、世界书与场景折叠为附加项计数，点击即可重新打开完整设置。内部 Prompt Seat 顺序不再横向铺在聊天入口上，只在 Prompt Manager 与完整编排中维护。
+应用后，Composer 上方只保留一枚紧凑的 `SYSTEM ✓` 配置按钮，摘要显示运行模式、主要角色和 Prompt Preset；Persona、世界书与场景折叠为附加项计数，点击即可重新打开完整设置。内部 Prompt Seat 顺序不再横向铺在聊天入口上，只在 Prompt Manager 与完整编排中维护。
 
 Agent RP 把每轮视为世界 Ledger 的 N→N+1 提交。首选工具 `rp_commit_turn` 在一次已记录调用中原子提交 0–32 条变化和 0–8 个选项，覆盖世界、时间、场景、角色、Persona、NPC、关系、记忆、目标与物品；`data.key`/`data.target` 提供跨轮稳定身份，当前状态按键 Last-write-wins，完整事件仍留在履历。`rp_read_state` 提供只读结构化检查，`rp_update_state` 与 `rp_propose_choices` 保留为分步兼容工具。下一轮请求通过 `<rp-dynamic-state>` 读取当前 Projection；角色对话页显示世界状态面板、Revision、状态履历和可点击选项，Reasoning Block 不进入角色正文。
 
