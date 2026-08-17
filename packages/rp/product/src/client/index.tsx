@@ -940,11 +940,23 @@ function AvatarFace({ character, className, fallback, accent }: {
   const [failed, setFailed] = useState(false)
   useEffect(() => setFailed(false), [character?.avatar?.id])
   const avatar = character?.avatar
-  return <span className={`rpp-avatar-face ${className}`} style={{ '--rpp-accent': accent ?? character?.accent ?? '#f47f6b' } as CSSProperties}>
+  const size = avatarSize(className)
+  return <span className={`rpp-avatar-face ${className}`} style={{
+    '--rpp-accent': accent ?? character?.accent ?? '#f47f6b', width: size, height: size, maxWidth: size, maxHeight: size,
+    overflow: 'hidden', contain: 'size paint', flex: 'none',
+  } as CSSProperties}>
     {avatar === undefined || failed
       ? fallback
-      : <img src={`${API}/asset/${encodeURIComponent(avatar.id)}`} alt="" onError={() => setFailed(true)} />}
+      : <img src={`${API}/asset/${encodeURIComponent(avatar.id)}`} alt="" draggable={false} style={{
+        display: 'block', width: '100%', height: '100%', maxWidth: '100%', maxHeight: '100%', objectFit: 'cover', objectPosition: '50% 18%',
+      }} onError={() => setFailed(true)} />}
   </span>
+}
+
+function avatarSize(className: string): number {
+  return className === 'rpp-quick-avatar' ? 25 : className === 'rpp-avatar' ? 29 : className === 'rpp-entity-avatar' ? 35
+    : className === 'rpp-editor-orb' ? 53 : className === 'rpp-story-avatar' || className === 'rpp-ready-avatar' ? 46
+      : className === 'rpp-cast-avatar' ? 22 : 28
 }
 
 function Field({ label, note, accent, children }: { readonly label: string; readonly note: string; readonly accent: string; readonly children: ReactNode }): ReactNode {
