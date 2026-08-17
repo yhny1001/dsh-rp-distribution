@@ -1,0 +1,79 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types"
+  },
+  "include": [
+    "src",
+    "../../../types/host-sdk.d.ts"
+  ],
+  "references": [
+    {
+      "path": "../contracts"
+    },
+    {
+      "path": "../agent-runtime"
+    },
+    {
+      "path": "../component-runtime"
+    },
+    {
+      "path": "../capability-catalog"
+    },
+    {
+      "path": "../pipeline-runtime"
+    },
+    {
+      "path": "../experience-registry"
+    },
+    {
+      "path": "../state"
+    },
+    {
+      "path": "../character"
+    },
+    {
+      "path": "../persona"
+    },
+    {
+      "path": "../memory-basic"
+    },
+    {
+      "path": "../media"
+    },
+    {
+      "path": "../lore"
+    },
+    {
+      "path": "../library"
+    },
+    {
+      "path": "../prompt"
+    },
+    {
+      "path": "../preset"
+    },
+    {
+      "path": "../branches"
+    },
+    {
+      "path": "../registry"
+    },
+    {
+      "path": "../relationship"
+    },
+    {
+      "path": "../rules"
+    },
+    {
+      "path": "../scene"
+    },
+    {
+      "path": "../workflow-router"
+    },
+    {
+      "path": "../outbox"
+    }
+  ]
+}

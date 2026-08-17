@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "example.rp-ui-panel",
+  "name": "Example RP UI panel",
+  "version": "1.0.0",
+  "license": "MIT",
+  "trust": "L0",
+  "dependencies": [],
+  "components": [],
+  "capabilities": [],
+  "uiSlots": ["overview-panel"],
+  "assets": ["ui/index.html", "ui/styles.css"],
+  "compatibility": { "runtime": "dsh-rp-runtime-v1" }
+}

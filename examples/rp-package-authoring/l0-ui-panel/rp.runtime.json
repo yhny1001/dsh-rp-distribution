@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "components": [],
+  "capabilities": [],
+  "uiSlots": [
+    {
+      "schemaVersion": 1,
+      "id": "overview-panel",
+      "title": "Example RP UI panel",
+      "placement": "studio.overview",
+      "entry": "ui/index.html",
+      "assets": ["ui/index.html", "ui/styles.css"],
+      "script": "none",
+      "height": 240
+    }
+  ]
+}

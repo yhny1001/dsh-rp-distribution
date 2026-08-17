@@ -1,0 +1,170 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./packages/rp/agent-provider-harness"
+    },
+    {
+      "path": "./packages/rp/agent-runtime"
+    },
+    {
+      "path": "./packages/rp/branches"
+    },
+    {
+      "path": "./packages/rp/capability-catalog"
+    },
+    {
+      "path": "./packages/rp/character"
+    },
+    {
+      "path": "./packages/rp/cli"
+    },
+    {
+      "path": "./packages/rp/compat-sillytavern"
+    },
+    {
+      "path": "./packages/rp/compat-stscript"
+    },
+    {
+      "path": "./packages/rp/component-runtime"
+    },
+    {
+      "path": "./packages/rp/contracts"
+    },
+    {
+      "path": "./packages/rp/distribution"
+    },
+    {
+      "path": "./packages/rp/distribution-core"
+    },
+    {
+      "path": "./packages/rp/distribution-web"
+    },
+    {
+      "path": "./packages/rp/eval"
+    },
+    {
+      "path": "./packages/rp/experience-registry"
+    },
+    {
+      "path": "./packages/rp/first-party"
+    },
+    {
+      "path": "./packages/rp/harness-bridge"
+    },
+    {
+      "path": "./packages/rp/journal"
+    },
+    {
+      "path": "./packages/rp/library"
+    },
+    {
+      "path": "./packages/rp/lifecycle-common"
+    },
+    {
+      "path": "./packages/rp/lifecycle-l0"
+    },
+    {
+      "path": "./packages/rp/lifecycle-l1"
+    },
+    {
+      "path": "./packages/rp/lifecycle-l2"
+    },
+    {
+      "path": "./packages/rp/lore"
+    },
+    {
+      "path": "./packages/rp/media"
+    },
+    {
+      "path": "./packages/rp/media-input-attachment"
+    },
+    {
+      "path": "./packages/rp/memory-basic"
+    },
+    {
+      "path": "./packages/rp/memory-durable"
+    },
+    {
+      "path": "./packages/rp/memory-vector"
+    },
+    {
+      "path": "./packages/rp/outbox"
+    },
+    {
+      "path": "./packages/rp/package-runtime"
+    },
+    {
+      "path": "./packages/rp/persona"
+    },
+    {
+      "path": "./packages/rp/pipeline-runtime"
+    },
+    {
+      "path": "./packages/rp/policy"
+    },
+    {
+      "path": "./packages/rp/preset"
+    },
+    {
+      "path": "./packages/rp/projection"
+    },
+    {
+      "path": "./packages/rp/prompt"
+    },
+    {
+      "path": "./packages/rp/registry"
+    },
+    {
+      "path": "./packages/rp/registry-artifacts-local"
+    },
+    {
+      "path": "./packages/rp/registry-durable"
+    },
+    {
+      "path": "./packages/rp/registry-server"
+    },
+    {
+      "path": "./packages/rp/registry-sources"
+    },
+    {
+      "path": "./packages/rp/relationship"
+    },
+    {
+      "path": "./packages/rp/rules"
+    },
+    {
+      "path": "./packages/rp/scene"
+    },
+    {
+      "path": "./packages/rp/sdk"
+    },
+    {
+      "path": "./packages/rp/sidecar-jobs"
+    },
+    {
+      "path": "./packages/rp/state"
+    },
+    {
+      "path": "./packages/rp/tool-capability"
+    },
+    {
+      "path": "./packages/rp/turn-runtime"
+    },
+    {
+      "path": "./packages/rp/ui-slot-runtime"
+    },
+    {
+      "path": "./packages/rp/web"
+    },
+    {
+      "path": "./packages/rp/workflow-backends-local"
+    },
+    {
+      "path": "./packages/rp/workflow-backends-sandbox"
+    },
+    {
+      "path": "./packages/rp/workflow-router"
+    }
+  ]
+}

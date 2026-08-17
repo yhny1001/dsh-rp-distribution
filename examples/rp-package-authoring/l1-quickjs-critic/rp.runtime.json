@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {
+      "id": "example.quickjs-critic",
+      "scopes": ["conversation"],
+      "provides": ["agent:critic", "pipeline:workflow"]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "example.critic.agent",
+      "kind": "agent",
+      "title": "Continuity Critic",
+      "description": "QuickJS-isolated critic without ambient Node or network globals.",
+      "scopes": ["conversation"],
+      "permissions": ["script.execute"],
+      "tags": ["critic", "quickjs", "example"],
+      "implementation": {
+        "kind": "quickjs",
+        "path": "runtime/critic.js"
+      }
+    },
+    {
+      "id": "example.critic.pipeline",
+      "kind": "pipeline",
+      "title": "Critic Workflow",
+      "description": "Workflow graph routed to the QuickJS Critic capability.",
+      "scopes": ["conversation"],
+      "permissions": ["script.execute"],
+      "tags": ["pipeline", "workflow", "quickjs", "example"]
+    }
+  ],
+  "pipelines": [
+    {
+      "id": "example.critic.pipeline",
+      "kind": "workflow",
+      "description": "Runs the sandboxed Continuity Critic.",
+      "stages": [
+        {
+          "id": "critic",
+          "operation": {
+            "kind": "invoke-capability",
+            "capabilityId": "example.critic.agent",
+            "grantedPermissions": ["script.execute"],
+            "grantedTrust": "L1"
+          }
+        }
+      ]
+    }
+  ]
+}

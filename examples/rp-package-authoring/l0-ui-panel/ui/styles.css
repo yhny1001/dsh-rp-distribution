@@ -1,0 +1,15 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  color: #e8edf6;
+  background: radial-gradient(circle at top right, #292f61, #151827 58%);
+}
+
+main { padding: 24px; }
+.eyebrow { color: #aeb5ff; font-size: 11px; letter-spacing: .14em; }
+h1 { margin: .25rem 0; font-size: 24px; }
+p { max-width: 56ch; line-height: 1.55; }

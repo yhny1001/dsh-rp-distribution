@@ -1,0 +1,155 @@
+- insert:
+    - id: rp-components
+      name: '@dsh-rp/component-runtime'
+
+    - id: rp-capabilities
+      name: '@dsh-rp/capability-catalog'
+
+    - id: rp-agents
+      name: '@dsh-rp/agent-runtime'
+
+    - id: rp-pipelines
+      name: '@dsh-rp/pipeline-runtime'
+
+    - id: rp-policy
+      name: '@dsh-rp/policy'
+
+    - id: rp-workflow-router
+      name: '@dsh-rp/workflow-router'
+
+    - id: rp-workflow-backends-local
+      name: '@dsh-rp/workflow-backends-local'
+
+    - id: rp-workflow-backends-sandbox
+      name: '@dsh-rp/workflow-backends-sandbox'
+
+    - id: rp-registry
+      name: '@dsh-rp/registry'
+
+    - id: rp-registry-sources
+      name: '@dsh-rp/registry-sources'
+
+    - id: rp-registry-artifacts-local
+      name: '@dsh-rp/registry-artifacts-local'
+
+    - id: rp-lifecycle-l0
+      name: '@dsh-rp/lifecycle-l0'
+
+    - id: rp-lifecycle-l1
+      name: '@dsh-rp/lifecycle-l1'
+
+    - id: rp-lifecycle-l2
+      name: '@dsh-rp/lifecycle-l2'
+
+    - id: rp-registry-durable
+      name: '@dsh-rp/registry-durable'
+
+    - id: rp-outbox
+      name: '@dsh-rp/outbox'
+
+    - id: rp-journal
+      name: '@dsh-rp/journal'
+
+    - id: rp-projection
+      name: '@dsh-rp/projection'
+
+    - id: rp-experiences
+      name: '@dsh-rp/experience-registry'
+
+    - id: rp-media
+      name: '@dsh-rp/media'
+
+    - id: rp-media-input-attachment
+      name: '@dsh-rp/media-input-attachment'
+
+    - id: rp-preset
+      name: '@dsh-rp/preset'
+
+    - id: rp-turn
+      name: '@dsh-rp/turn-runtime'
+
+    - id: rp-harness-bridge
+      name: '@dsh-rp/harness-bridge'
+
+    - id: rp-agent-provider-harness
+      name: '@dsh-rp/agent-provider-harness'
+      config:
+        subagentProviders:
+          - fork
+          - spawn
+        maxDepth: 4
+        defaultTimeoutMs: 60000
+        maxTimeoutMs: 300000
+
+    - id: rp-tool-capability
+      name: '@dsh-rp/tool-capability'
+      config:
+        maxTrust: L2
+        permissions:
+          - script.execute
+          - native.execute
+          - rp.pipeline.execute
+          - rp.sidecar.start
+          - agent:spawn
+        timeoutMs: 5000
+
+    - id: rp-state
+      name: '@dsh-rp/state'
+
+    - id: rp-characters
+      name: '@dsh-rp/character'
+
+    - id: rp-personas
+      name: '@dsh-rp/persona'
+
+    - id: rp-memory-basic
+      name: '@dsh-rp/memory-basic'
+
+    - id: rp-memory-vector
+      name: '@dsh-rp/memory-vector'
+
+    - id: rp-memory-durable
+      name: '@dsh-rp/memory-durable'
+
+    - id: rp-lore
+      name: '@dsh-rp/lore'
+
+    - id: rp-library
+      name: '@dsh-rp/library'
+
+    - id: rp-prompt
+      name: '@dsh-rp/prompt'
+
+    - id: rp-branches
+      name: '@dsh-rp/branches'
+
+    - id: rp-scene
+      name: '@dsh-rp/scene'
+
+    - id: rp-relationship
+      name: '@dsh-rp/relationship'
+
+    - id: rp-rules
+      name: '@dsh-rp/rules'
+
+    - id: rp-first-party
+      name: '@dsh-rp/first-party'
+
+    - id: rp-sidecar-jobs
+      name: '@dsh-rp/sidecar-jobs'
+      config:
+        outputLimitBytes: 65536
+        disposeGraceMs: 5000
+
+    - id: rp-compat-sillytavern
+      name: '@dsh-rp/compat-sillytavern'
+
+    - id: rp-compat-stscript
+      name: '@dsh-rp/compat-stscript'
+
+- insert:
+    - id: rp-ui-slots
+      name: '@dsh-rp/ui-slot-runtime'
+
+    - id: rp-web
+      name: '@dsh-rp/web'

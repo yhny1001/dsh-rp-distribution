@@ -1,0 +1,88 @@
+{
+  "name": "@dsh-rp/first-party",
+  "description": "First-party RP components, executable role templates, multi-Agent DAGs, and Experience profiles",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yhny1001/dsh-rp-distribution.git",
+    "directory": "packages/rp/first-party"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "4.0.1",
+    "@deepseek-ai/dsh-invariants": "0.0.1-rc.1",
+    "@deepseek-ai/dsh-session": "0.0.1-rc.1",
+    "@dsh-rp/agent-runtime": "workspace:^",
+    "@dsh-rp/branches": "workspace:^",
+    "@dsh-rp/capability-catalog": "workspace:^",
+    "@dsh-rp/character": "workspace:^",
+    "@dsh-rp/component-runtime": "workspace:^",
+    "@dsh-rp/contracts": "workspace:^",
+    "@dsh-rp/experience-registry": "workspace:^",
+    "@dsh-rp/library": "workspace:^",
+    "@dsh-rp/lore": "workspace:^",
+    "@dsh-rp/media": "workspace:^",
+    "@dsh-rp/memory-basic": "workspace:^",
+    "@dsh-rp/outbox": "workspace:^",
+    "@dsh-rp/persona": "workspace:^",
+    "@dsh-rp/pipeline-runtime": "workspace:^",
+    "@dsh-rp/preset": "workspace:^",
+    "@dsh-rp/prompt": "workspace:^",
+    "@dsh-rp/registry": "workspace:^",
+    "@dsh-rp/relationship": "workspace:^",
+    "@dsh-rp/rules": "workspace:^",
+    "@dsh-rp/scene": "workspace:^",
+    "@dsh-rp/state": "workspace:^",
+    "@dsh-rp/workflow-router": "workspace:^"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "4.0.1",
+    "@dsh-rp/agent-runtime": "workspace:^",
+    "@dsh-rp/branches": "workspace:^",
+    "@dsh-rp/capability-catalog": "workspace:^",
+    "@dsh-rp/character": "workspace:^",
+    "@dsh-rp/component-runtime": "workspace:^",
+    "@dsh-rp/contracts": "workspace:^",
+    "@dsh-rp/experience-registry": "workspace:^",
+    "@dsh-rp/journal": "workspace:^",
+    "@dsh-rp/library": "workspace:^",
+    "@dsh-rp/lore": "workspace:^",
+    "@dsh-rp/media": "workspace:^",
+    "@dsh-rp/memory-basic": "workspace:^",
+    "@dsh-rp/outbox": "workspace:^",
+    "@dsh-rp/persona": "workspace:^",
+    "@dsh-rp/pipeline-runtime": "workspace:^",
+    "@dsh-rp/preset": "workspace:^",
+    "@dsh-rp/projection": "workspace:^",
+    "@dsh-rp/prompt": "workspace:^",
+    "@dsh-rp/registry": "workspace:^",
+    "@dsh-rp/relationship": "workspace:^",
+    "@dsh-rp/rules": "workspace:^",
+    "@dsh-rp/scene": "workspace:^",
+    "@dsh-rp/state": "workspace:^",
+    "@dsh-rp/turn-runtime": "workspace:^",
+    "@dsh-rp/workflow-router": "workspace:^"
+  }
+}

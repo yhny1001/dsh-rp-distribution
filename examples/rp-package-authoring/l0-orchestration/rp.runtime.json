@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {
+      "id": "example.rp-suite",
+      "scopes": ["conversation"],
+      "provides": ["agent:actor", "memory:provider", "pipeline:turn", "pipeline:sidecar"]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "example.actor.echo",
+      "kind": "agent",
+      "title": "Echo Actor",
+      "description": "Deterministic L0 Actor that returns its invocation input.",
+      "scopes": ["conversation"],
+      "tags": ["actor", "example"],
+      "implementation": {
+        "kind": "expression",
+        "expression": { "op": "input" }
+      }
+    },
+    {
+      "id": "example.memory.echo",
+      "kind": "memory",
+      "title": "Echo Memory",
+      "description": "Deterministic L0 Memory capability used by both example graphs.",
+      "scopes": ["conversation"],
+      "tags": ["memory", "example"],
+      "implementation": {
+        "kind": "expression",
+        "expression": { "op": "input" }
+      }
+    },
+    {
+      "id": "example.sidecar.memory",
+      "kind": "pipeline",
+      "title": "Memory Sidecar",
+      "description": "One-stage asynchronous maintenance graph.",
+      "scopes": ["conversation"],
+      "tags": ["pipeline", "sidecar", "example"]
+    },
+    {
+      "id": "example.turn.directed",
+      "kind": "pipeline",
+      "title": "Directed Turn",
+      "description": "Actor and Memory stages composed as an installable DAG.",
+      "scopes": ["conversation"],
+      "tags": ["pipeline", "turn", "example"]
+    }
+  ],
+  "pipelines": [
+    {
+      "id": "example.sidecar.memory",
+      "kind": "sidecar",
+      "description": "Runs the package Memory capability as a sidecar.",
+      "stages": [
+        {
+          "id": "memory",
+          "operation": {
+            "kind": "invoke-capability",
+            "capabilityId": "example.memory.echo"
+          }
+        }
+      ]
+    },
+    {
+      "id": "example.turn.directed",
+      "kind": "turn",
+      "description": "Runs Actor then forwards its result to Memory.",
+      "stages": [
+        {
+          "id": "actor",
+          "operation": {
+            "kind": "invoke-capability",
+            "capabilityId": "example.actor.echo"
+          }
+        },
+        {
+          "id": "memory",
+          "after": ["actor"],
+          "operation": {
+            "kind": "invoke-capability",
+            "capabilityId": "example.memory.echo",
+            "inputKey": "stage.actor.result"
+          }
+        }
+      ]
+    }
+  ]
+}

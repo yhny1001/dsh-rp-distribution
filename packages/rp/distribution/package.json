@@ -1,0 +1,57 @@
+{
+  "name": "@dsh-rp/distribution",
+  "description": "Installable DSH bundle for the open RP distribution runtime",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yhny1001/dsh-rp-distribution.git",
+    "directory": "packages/rp/distribution"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "cordis.patch.yml",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "dependencies": {
+    "@dsh-rp/distribution-core": "workspace:^",
+    "@dsh-rp/distribution-web": "workspace:^"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "4.0.1",
+    "@deepseek-ai/dsh-invariants": "0.0.1-rc.1",
+    "@deepseek-ai/dsh-storage-domain": "0.0.1-rc.1",
+    "@deepseek-ai/dsh-web-app": "0.0.1-rc.1"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "4.0.1",
+    "@dsh-rp/cli": "workspace:^",
+    "@dsh-rp/package-runtime": "workspace:^",
+    "@dsh-rp/registry-server": "workspace:^",
+    "@dsh-rp/sdk": "workspace:^"
+  }
+}

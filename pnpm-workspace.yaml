@@ -1,0 +1,15 @@
+packages:
+  - packages/rp/*
+
+linkWorkspacePackages: true
+autoInstallPeers: false
+
+peerDependencyRules:
+  allowedVersions:
+    typescript: '>=5 <7'
+
+allowBuilds:
+  esbuild: true
+  koffi: set this to true or false
+  lefthook: set this to true or false
+  node-pty: set this to true or false

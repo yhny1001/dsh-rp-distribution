@@ -1,0 +1,27 @@
+{
+  "extends": "../../../tsconfig.base.client.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types",
+    "tsBuildInfoFile": "lib/tsconfig.client.tsbuildinfo"
+  },
+  "files": [
+    "src/client/index.tsx",
+    "src/client/catalog-controller.ts",
+    "src/client/conversation-ui-slots.tsx",
+    "src/client/locales.ts",
+    "src/client/resource-controller.ts",
+    "src/client/resource-editor.tsx",
+    "src/client/rp-conversation.tsx",
+    "src/client/session-resources.tsx",
+    "src/client/turn-controller.ts",
+    "src/client/ui-slots.tsx",
+    "src/types.ts",
+    "../../../types/host-sdk.d.ts"
+  ],
+  "references": [
+    {
+      "path": "../contracts"
+    }
+  ]
+}

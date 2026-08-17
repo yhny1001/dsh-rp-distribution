@@ -1,0 +1,80 @@
+name: Release RP plugins
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the rp-v tagged artifacts to npm
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  pack:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run check
+      - name: Verify release tag and version
+        env:
+          RELEASE_PUBLISH: ${{ inputs.publish }}
+        run: pnpm run release:verify
+      - name: Pack plugin family
+        run: pnpm run release:pack --out dist/npm-rp
+      - name: Generate release evidence
+        run: pnpm run release:evidence --from dist/npm-rp
+      - name: Verify packed CLI install
+        run: pnpm run release:verify-packed-install --from dist/npm-rp
+      - name: Attest packed artifacts
+        if: inputs.publish
+        uses: actions/attest@v4
+        with:
+          subject-path: dist/npm-rp/*
+      - uses: actions/upload-artifact@v7
+        with:
+          name: rp-npm-tarballs
+          path: dist/npm-rp/*
+          if-no-files-found: error
+
+  publish:
+    if: inputs.publish
+    needs: pack
+    runs-on: ubuntu-24.04
+    environment: npm-publish
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - uses: actions/download-artifact@v8
+        with:
+          name: rp-npm-tarballs
+          path: dist/npm-rp
+      - name: Publish plugin family
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'
+        run: pnpm run release:publish --from dist/npm-rp

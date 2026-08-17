@@ -1,0 +1,11 @@
+{
+  "name": "@dsh-rp-example/quickjs-critic",
+  "version": "1.0.0",
+  "description": "Installable L1 QuickJS Agent and Pipeline RP package example",
+  "type": "module",
+  "license": "MIT",
+  "files": ["runtime/critic.js", "rp.package.tgz", "rp.sbom.json"],
+  "scripts": {
+    "pack:rp": "dsh rp pack ."
+  }
+}

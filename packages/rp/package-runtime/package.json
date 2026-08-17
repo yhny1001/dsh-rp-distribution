@@ -1,0 +1,47 @@
+{
+  "name": "@dsh-rp/package-runtime",
+  "description": "Strict runtime descriptor and bounded tar-gzip reader for executable RP packages",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yhny1001/dsh-rp-distribution.git",
+    "directory": "packages/rp/package-runtime"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "parse5": "8.0.1",
+    "tar-stream": "3.2.0"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "4.0.1",
+    "@deepseek-ai/dsh-invariants": "0.0.1-rc.1",
+    "@dsh-rp/contracts": "workspace:^"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "4.0.1",
+    "@dsh-rp/contracts": "workspace:^",
+    "@types/tar-stream": "^3.1.4"
+  }
+}

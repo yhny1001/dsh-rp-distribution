@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "example.quickjs-critic",
+  "name": "QuickJS Critic Example",
+  "version": "1.0.0",
+  "license": "MIT",
+  "trust": "L1",
+  "dependencies": [],
+  "components": ["example.quickjs-critic"],
+  "capabilities": ["example.critic.agent", "example.critic.pipeline"],
+  "permissions": ["script.execute"],
+  "compatibility": {
+    "runtime": "dsh-rp-runtime-v1"
+  }
+}

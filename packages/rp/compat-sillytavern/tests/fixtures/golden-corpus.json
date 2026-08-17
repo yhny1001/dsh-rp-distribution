@@ -1,0 +1,4910 @@
+[
+  {
+    "schemaVersion": 1,
+    "id": "card-v1-0",
+    "kind": "character-json",
+    "input": {
+      "name": "Card V1 0",
+      "description": "Description 0",
+      "personality": "quiet",
+      "scenario": "Scene 0",
+      "first_mes": "Greeting 0",
+      "mes_example": "<START>\nExample 0",
+      "alternate_greetings": [
+        "Alternate 0"
+      ],
+      "tags": [
+        "golden",
+        "v1"
+      ],
+      "extensions": {
+        "corpus_marker": "card-v1-0",
+        "regex_scripts": [
+          {
+            "script_name": "card-v1-0",
+            "findRegex": "/x+/g",
+            "replaceString": "y"
+          }
+        ]
+      },
+      "character_book": {
+        "name": "card-v1-0 lore",
+        "entries": [
+          {
+            "id": 0,
+            "keys": [
+              "key-0"
+            ],
+            "content": "Lore 0",
+            "enabled": true,
+            "insertion_order": 0
+          }
+        ]
+      },
+      "x_corpus": {
+        "marker": "card-v1-0",
+        "unicode": "角色-0"
+      }
+    },
+    "expected": {
+      "name": "Card V1 0",
+      "format": "sillytavern-character-card-v1",
+      "itemCount": 2,
+      "disabledFeatures": [
+        "display-regex"
+      ],
+      "marker": "card-v1-0"
+    },
+    "inputSha256": "67b0db6ea3385e3a5f9ab51e1a0402d5fa278104c0dbe407c00dbf956498eabe"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v1-1",
+    "kind": "character-json",
+    "input": {
+      "name": "Card V1 1",
+      "description": "Description 1",
+      "personality": "bold",
+      "scenario": "Scene 1",
+      "first_mes": "Greeting 1",
+      "mes_example": "<START>\nExample 1",
+      "alternate_greetings": [
+        "Alternate 1"
+      ],
+      "tags": [
+        "golden",
+        "v1"
+      ],
+      "extensions": {
+        "corpus_marker": "card-v1-1"
+      },
+      "character_book": {
+        "name": "card-v1-1 lore",
+        "entries": [
+          {
+            "id": 1,
+            "keys": [
+              "key-1"
+            ],
+            "content": "Lore 1",
+            "enabled": true,
+            "insertion_order": 1
+          }
+        ]
+      },
+      "x_corpus": {
+        "marker": "card-v1-1",
+        "unicode": "角色-1"
+      }
+    },
+    "expected": {
+      "name": "Card V1 1",
+      "format": "sillytavern-character-card-v1",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "card-v1-1"
+    },
+    "inputSha256": "6095bb60c462652355dd9761e65a67058428371251ffc0a8bcdbe1bf74a41bee"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v1-2",
+    "kind": "character-json",
+    "input": {
+      "name": "Card V1 2",
+      "description": "Description 2",
+      "personality": "bold",
+      "scenario": "Scene 2",
+      "first_mes": "Greeting 2",
+      "mes_example": "<START>\nExample 2",
+      "alternate_greetings": [
+        "Alternate 2"
+      ],
+      "tags": [
+        "golden",
+        "v1"
+      ],
+      "extensions": {
+        "corpus_marker": "card-v1-2",
+        "regex_scripts": [
+          {
+            "script_name": "card-v1-2",
+            "findRegex": "/x+/g",
+            "replaceString": "y"
+          }
+        ]
+      },
+      "character_book": {
+        "name": "card-v1-2 lore",
+        "entries": [
+          {
+            "id": 2,
+            "keys": [
+              "key-2"
+            ],
+            "content": "Lore 2",
+            "enabled": true,
+            "insertion_order": 2
+          }
+        ]
+      },
+      "x_corpus": {
+        "marker": "card-v1-2",
+        "unicode": "角色-2"
+      }
+    },
+    "expected": {
+      "name": "Card V1 2",
+      "format": "sillytavern-character-card-v1",
+      "itemCount": 2,
+      "disabledFeatures": [
+        "display-regex"
+      ],
+      "marker": "card-v1-2"
+    },
+    "inputSha256": "280869e7aece70f329245c9646a1460606bd9e20e4860cbd96494609b4ad6c6a"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v1-3",
+    "kind": "character-json",
+    "input": {
+      "name": "Card V1 3",
+      "description": "Description 3",
+      "personality": "quiet",
+      "scenario": "Scene 3",
+      "first_mes": "Greeting 3",
+      "mes_example": "<START>\nExample 3",
+      "alternate_greetings": [
+        "Alternate 3"
+      ],
+      "tags": [
+        "golden",
+        "v1"
+      ],
+      "extensions": {
+        "corpus_marker": "card-v1-3"
+      },
+      "character_book": {
+        "name": "card-v1-3 lore",
+        "entries": [
+          {
+            "id": 3,
+            "keys": [
+              "key-3"
+            ],
+            "content": "Lore 3",
+            "enabled": true,
+            "insertion_order": 3
+          }
+        ]
+      },
+      "x_corpus": {
+        "marker": "card-v1-3",
+        "unicode": "角色-3"
+      }
+    },
+    "expected": {
+      "name": "Card V1 3",
+      "format": "sillytavern-character-card-v1",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "card-v1-3"
+    },
+    "inputSha256": "8946ef9f5e98e8e8354036584e01da78d497489c7b6f325d95b90ea291d91510"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v1-4",
+    "kind": "character-json",
+    "input": {
+      "name": "Card V1 4",
+      "description": "Description 4",
+      "personality": "bold",
+      "scenario": "Scene 4",
+      "first_mes": "Greeting 4",
+      "mes_example": "<START>\nExample 4",
+      "alternate_greetings": [
+        "Alternate 4"
+      ],
+      "tags": [
+        "golden",
+        "v1"
+      ],
+      "extensions": {
+        "corpus_marker": "card-v1-4",
+        "regex_scripts": [
+          {
+            "script_name": "card-v1-4",
+            "findRegex": "/x+/g",
+            "replaceString": "y"
+          }
+        ]
+      },
+      "character_book": {
+        "name": "card-v1-4 lore",
+        "entries": [
+          {
+            "id": 4,
+            "keys": [
+              "key-4"
+            ],
+            "content": "Lore 4",
+            "enabled": true,
+            "insertion_order": 4
+          }
+        ]
+      },
+      "x_corpus": {
+        "marker": "card-v1-4",
+        "unicode": "角色-4"
+      }
+    },
+    "expected": {
+      "name": "Card V1 4",
+      "format": "sillytavern-character-card-v1",
+      "itemCount": 2,
+      "disabledFeatures": [
+        "display-regex"
+      ],
+      "marker": "card-v1-4"
+    },
+    "inputSha256": "cacfc3a3c5a7e4dc7b8ccc59babdbeba559951cbcfe334f5edc502c11fee99e9"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v1-5",
+    "kind": "character-json",
+    "input": {
+      "name": "Card V1 5",
+      "description": "Description 5",
+      "personality": "bold",
+      "scenario": "Scene 5",
+      "first_mes": "Greeting 5",
+      "mes_example": "<START>\nExample 5",
+      "alternate_greetings": [
+        "Alternate 5"
+      ],
+      "tags": [
+        "golden",
+        "v1"
+      ],
+      "extensions": {
+        "corpus_marker": "card-v1-5"
+      },
+      "character_book": {
+        "name": "card-v1-5 lore",
+        "entries": [
+          {
+            "id": 5,
+            "keys": [
+              "key-5"
+            ],
+            "content": "Lore 5",
+            "enabled": true,
+            "insertion_order": 5
+          }
+        ]
+      },
+      "x_corpus": {
+        "marker": "card-v1-5",
+        "unicode": "角色-5"
+      }
+    },
+    "expected": {
+      "name": "Card V1 5",
+      "format": "sillytavern-character-card-v1",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "card-v1-5"
+    },
+    "inputSha256": "f626a0e5c60b76a7d85c2f54531c970914d6c7c380f2889f947df9ce79113ee6"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v1-6",
+    "kind": "character-json",
+    "input": {
+      "name": "Card V1 6",
+      "description": "Description 6",
+      "personality": "quiet",
+      "scenario": "Scene 6",
+      "first_mes": "Greeting 6",
+      "mes_example": "<START>\nExample 6",
+      "alternate_greetings": [
+        "Alternate 6"
+      ],
+      "tags": [
+        "golden",
+        "v1"
+      ],
+      "extensions": {
+        "corpus_marker": "card-v1-6",
+        "regex_scripts": [
+          {
+            "script_name": "card-v1-6",
+            "findRegex": "/x+/g",
+            "replaceString": "y"
+          }
+        ]
+      },
+      "character_book": {
+        "name": "card-v1-6 lore",
+        "entries": [
+          {
+            "id": 6,
+            "keys": [
+              "key-6"
+            ],
+            "content": "Lore 6",
+            "enabled": true,
+            "insertion_order": 6
+          }
+        ]
+      },
+      "x_corpus": {
+        "marker": "card-v1-6",
+        "unicode": "角色-6"
+      }
+    },
+    "expected": {
+      "name": "Card V1 6",
+      "format": "sillytavern-character-card-v1",
+      "itemCount": 2,
+      "disabledFeatures": [
+        "display-regex"
+      ],
+      "marker": "card-v1-6"
+    },
+    "inputSha256": "14375f8709cc1fee7321b9e8a267c5f0da2ba86c2d6984aba91a164069f4197b"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v1-7",
+    "kind": "character-json",
+    "input": {
+      "name": "Card V1 7",
+      "description": "Description 7",
+      "personality": "bold",
+      "scenario": "Scene 7",
+      "first_mes": "Greeting 7",
+      "mes_example": "<START>\nExample 7",
+      "alternate_greetings": [
+        "Alternate 7"
+      ],
+      "tags": [
+        "golden",
+        "v1"
+      ],
+      "extensions": {
+        "corpus_marker": "card-v1-7"
+      },
+      "character_book": {
+        "name": "card-v1-7 lore",
+        "entries": [
+          {
+            "id": 7,
+            "keys": [
+              "key-7"
+            ],
+            "content": "Lore 7",
+            "enabled": true,
+            "insertion_order": 7
+          }
+        ]
+      },
+      "x_corpus": {
+        "marker": "card-v1-7",
+        "unicode": "角色-7"
+      }
+    },
+    "expected": {
+      "name": "Card V1 7",
+      "format": "sillytavern-character-card-v1",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "card-v1-7"
+    },
+    "inputSha256": "c3bd84be7e9d69464305ca04e5c310ac4dc8b32e13da67d98e856bd2b3a2dda9"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v1-8",
+    "kind": "character-json",
+    "input": {
+      "name": "Card V1 8",
+      "description": "Description 8",
+      "personality": "bold",
+      "scenario": "Scene 8",
+      "first_mes": "Greeting 8",
+      "mes_example": "<START>\nExample 8",
+      "alternate_greetings": [
+        "Alternate 8"
+      ],
+      "tags": [
+        "golden",
+        "v1"
+      ],
+      "extensions": {
+        "corpus_marker": "card-v1-8",
+        "regex_scripts": [
+          {
+            "script_name": "card-v1-8",
+            "findRegex": "/x+/g",
+            "replaceString": "y"
+          }
+        ]
+      },
+      "character_book": {
+        "name": "card-v1-8 lore",
+        "entries": [
+          {
+            "id": 8,
+            "keys": [
+              "key-8"
+            ],
+            "content": "Lore 8",
+            "enabled": true,
+            "insertion_order": 8
+          }
+        ]
+      },
+      "x_corpus": {
+        "marker": "card-v1-8",
+        "unicode": "角色-8"
+      }
+    },
+    "expected": {
+      "name": "Card V1 8",
+      "format": "sillytavern-character-card-v1",
+      "itemCount": 2,
+      "disabledFeatures": [
+        "display-regex"
+      ],
+      "marker": "card-v1-8"
+    },
+    "inputSha256": "127a2d4b04edaea6992bef971ea49c1fda1590163580e1a2be341664700c6339"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v1-9",
+    "kind": "character-json",
+    "input": {
+      "name": "Card V1 9",
+      "description": "Description 9",
+      "personality": "quiet",
+      "scenario": "Scene 9",
+      "first_mes": "Greeting 9",
+      "mes_example": "<START>\nExample 9",
+      "alternate_greetings": [
+        "Alternate 9"
+      ],
+      "tags": [
+        "golden",
+        "v1"
+      ],
+      "extensions": {
+        "corpus_marker": "card-v1-9"
+      },
+      "character_book": {
+        "name": "card-v1-9 lore",
+        "entries": [
+          {
+            "id": 9,
+            "keys": [
+              "key-9"
+            ],
+            "content": "Lore 9",
+            "enabled": true,
+            "insertion_order": 9
+          }
+        ]
+      },
+      "x_corpus": {
+        "marker": "card-v1-9",
+        "unicode": "角色-9"
+      }
+    },
+    "expected": {
+      "name": "Card V1 9",
+      "format": "sillytavern-character-card-v1",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "card-v1-9"
+    },
+    "inputSha256": "47be9d5bd9d5d620b1f0e73029fcc5cd98a704167e375dd13dab4f07e76803d0"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v2-0",
+    "kind": "character-json",
+    "input": {
+      "spec": "chara_card_v2",
+      "spec_version": "2.0",
+      "data": {
+        "name": "Card V2 0",
+        "description": "Description 0",
+        "personality": "quiet",
+        "scenario": "Scene 0",
+        "first_mes": "Greeting 0",
+        "mes_example": "<START>\nExample 0",
+        "alternate_greetings": [
+          "Alternate 0"
+        ],
+        "tags": [
+          "golden",
+          "v2"
+        ],
+        "extensions": {
+          "corpus_marker": "card-v2-0",
+          "regex_scripts": [
+            {
+              "script_name": "card-v2-0",
+              "findRegex": "/x+/g",
+              "replaceString": "y"
+            }
+          ]
+        },
+        "character_book": {
+          "name": "card-v2-0 lore",
+          "entries": [
+            {
+              "id": 0,
+              "keys": [
+                "key-0"
+              ],
+              "content": "Lore 0",
+              "enabled": true,
+              "insertion_order": 0
+            }
+          ]
+        },
+        "x_corpus": {
+          "marker": "card-v2-0",
+          "unicode": "角色-0"
+        }
+      }
+    },
+    "expected": {
+      "name": "Card V2 0",
+      "format": "sillytavern-character-card-v2",
+      "itemCount": 2,
+      "disabledFeatures": [
+        "display-regex"
+      ],
+      "marker": "card-v2-0"
+    },
+    "inputSha256": "6f044af3bcc6955f84ac27d16564619423af2232228e42335944ea9cf7257298"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v2-1",
+    "kind": "character-json",
+    "input": {
+      "spec": "chara_card_v2",
+      "spec_version": "2.0",
+      "data": {
+        "name": "Card V2 1",
+        "description": "Description 1",
+        "personality": "bold",
+        "scenario": "Scene 1",
+        "first_mes": "Greeting 1",
+        "mes_example": "<START>\nExample 1",
+        "alternate_greetings": [
+          "Alternate 1"
+        ],
+        "tags": [
+          "golden",
+          "v2"
+        ],
+        "extensions": {
+          "corpus_marker": "card-v2-1"
+        },
+        "character_book": {
+          "name": "card-v2-1 lore",
+          "entries": [
+            {
+              "id": 1,
+              "keys": [
+                "key-1"
+              ],
+              "content": "Lore 1",
+              "enabled": true,
+              "insertion_order": 1
+            }
+          ]
+        },
+        "x_corpus": {
+          "marker": "card-v2-1",
+          "unicode": "角色-1"
+        }
+      }
+    },
+    "expected": {
+      "name": "Card V2 1",
+      "format": "sillytavern-character-card-v2",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "card-v2-1"
+    },
+    "inputSha256": "964bac320a3b297c68e55ef24797ee2cf74e578a4222e8539724f4a374df9c81"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v2-2",
+    "kind": "character-json",
+    "input": {
+      "spec": "chara_card_v2",
+      "spec_version": "2.0",
+      "data": {
+        "name": "Card V2 2",
+        "description": "Description 2",
+        "personality": "bold",
+        "scenario": "Scene 2",
+        "first_mes": "Greeting 2",
+        "mes_example": "<START>\nExample 2",
+        "alternate_greetings": [
+          "Alternate 2"
+        ],
+        "tags": [
+          "golden",
+          "v2"
+        ],
+        "extensions": {
+          "corpus_marker": "card-v2-2",
+          "regex_scripts": [
+            {
+              "script_name": "card-v2-2",
+              "findRegex": "/x+/g",
+              "replaceString": "y"
+            }
+          ]
+        },
+        "character_book": {
+          "name": "card-v2-2 lore",
+          "entries": [
+            {
+              "id": 2,
+              "keys": [
+                "key-2"
+              ],
+              "content": "Lore 2",
+              "enabled": true,
+              "insertion_order": 2
+            }
+          ]
+        },
+        "x_corpus": {
+          "marker": "card-v2-2",
+          "unicode": "角色-2"
+        }
+      }
+    },
+    "expected": {
+      "name": "Card V2 2",
+      "format": "sillytavern-character-card-v2",
+      "itemCount": 2,
+      "disabledFeatures": [
+        "display-regex"
+      ],
+      "marker": "card-v2-2"
+    },
+    "inputSha256": "74ddf9f1bbd47f270f9cc37926418aaf9b59b76ef41aee758ff9757e57ceeb0c"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v2-3",
+    "kind": "character-json",
+    "input": {
+      "spec": "chara_card_v2",
+      "spec_version": "2.0",
+      "data": {
+        "name": "Card V2 3",
+        "description": "Description 3",
+        "personality": "quiet",
+        "scenario": "Scene 3",
+        "first_mes": "Greeting 3",
+        "mes_example": "<START>\nExample 3",
+        "alternate_greetings": [
+          "Alternate 3"
+        ],
+        "tags": [
+          "golden",
+          "v2"
+        ],
+        "extensions": {
+          "corpus_marker": "card-v2-3"
+        },
+        "character_book": {
+          "name": "card-v2-3 lore",
+          "entries": [
+            {
+              "id": 3,
+              "keys": [
+                "key-3"
+              ],
+              "content": "Lore 3",
+              "enabled": true,
+              "insertion_order": 3
+            }
+          ]
+        },
+        "x_corpus": {
+          "marker": "card-v2-3",
+          "unicode": "角色-3"
+        }
+      }
+    },
+    "expected": {
+      "name": "Card V2 3",
+      "format": "sillytavern-character-card-v2",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "card-v2-3"
+    },
+    "inputSha256": "1048a34a4fee100414fca8448769aaf431b43709388a542b0dcbce9d5aa109ff"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v2-4",
+    "kind": "character-json",
+    "input": {
+      "spec": "chara_card_v2",
+      "spec_version": "2.0",
+      "data": {
+        "name": "Card V2 4",
+        "description": "Description 4",
+        "personality": "bold",
+        "scenario": "Scene 4",
+        "first_mes": "Greeting 4",
+        "mes_example": "<START>\nExample 4",
+        "alternate_greetings": [
+          "Alternate 4"
+        ],
+        "tags": [
+          "golden",
+          "v2"
+        ],
+        "extensions": {
+          "corpus_marker": "card-v2-4",
+          "regex_scripts": [
+            {
+              "script_name": "card-v2-4",
+              "findRegex": "/x+/g",
+              "replaceString": "y"
+            }
+          ]
+        },
+        "character_book": {
+          "name": "card-v2-4 lore",
+          "entries": [
+            {
+              "id": 4,
+              "keys": [
+                "key-4"
+              ],
+              "content": "Lore 4",
+              "enabled": true,
+              "insertion_order": 4
+            }
+          ]
+        },
+        "x_corpus": {
+          "marker": "card-v2-4",
+          "unicode": "角色-4"
+        }
+      }
+    },
+    "expected": {
+      "name": "Card V2 4",
+      "format": "sillytavern-character-card-v2",
+      "itemCount": 2,
+      "disabledFeatures": [
+        "display-regex"
+      ],
+      "marker": "card-v2-4"
+    },
+    "inputSha256": "7f6879016d16277bfc646ccdda9157a0ee9ae74be863345c5317287ba4a859de"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v2-5",
+    "kind": "character-json",
+    "input": {
+      "spec": "chara_card_v2",
+      "spec_version": "2.0",
+      "data": {
+        "name": "Card V2 5",
+        "description": "Description 5",
+        "personality": "bold",
+        "scenario": "Scene 5",
+        "first_mes": "Greeting 5",
+        "mes_example": "<START>\nExample 5",
+        "alternate_greetings": [
+          "Alternate 5"
+        ],
+        "tags": [
+          "golden",
+          "v2"
+        ],
+        "extensions": {
+          "corpus_marker": "card-v2-5"
+        },
+        "character_book": {
+          "name": "card-v2-5 lore",
+          "entries": [
+            {
+              "id": 5,
+              "keys": [
+                "key-5"
+              ],
+              "content": "Lore 5",
+              "enabled": true,
+              "insertion_order": 5
+            }
+          ]
+        },
+        "x_corpus": {
+          "marker": "card-v2-5",
+          "unicode": "角色-5"
+        }
+      }
+    },
+    "expected": {
+      "name": "Card V2 5",
+      "format": "sillytavern-character-card-v2",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "card-v2-5"
+    },
+    "inputSha256": "25c78b8c6bee18acf2aac8317210f7fe49b8fc67db169b39497d28eddb670ce3"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v2-6",
+    "kind": "character-json",
+    "input": {
+      "spec": "chara_card_v2",
+      "spec_version": "2.0",
+      "data": {
+        "name": "Card V2 6",
+        "description": "Description 6",
+        "personality": "quiet",
+        "scenario": "Scene 6",
+        "first_mes": "Greeting 6",
+        "mes_example": "<START>\nExample 6",
+        "alternate_greetings": [
+          "Alternate 6"
+        ],
+        "tags": [
+          "golden",
+          "v2"
+        ],
+        "extensions": {
+          "corpus_marker": "card-v2-6",
+          "regex_scripts": [
+            {
+              "script_name": "card-v2-6",
+              "findRegex": "/x+/g",
+              "replaceString": "y"
+            }
+          ]
+        },
+        "character_book": {
+          "name": "card-v2-6 lore",
+          "entries": [
+            {
+              "id": 6,
+              "keys": [
+                "key-6"
+              ],
+              "content": "Lore 6",
+              "enabled": true,
+              "insertion_order": 6
+            }
+          ]
+        },
+        "x_corpus": {
+          "marker": "card-v2-6",
+          "unicode": "角色-6"
+        }
+      }
+    },
+    "expected": {
+      "name": "Card V2 6",
+      "format": "sillytavern-character-card-v2",
+      "itemCount": 2,
+      "disabledFeatures": [
+        "display-regex"
+      ],
+      "marker": "card-v2-6"
+    },
+    "inputSha256": "0a94e3be3efa2a792a4105392bc508524cd85fdabb2112dadb8f972a62f0af7c"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v2-7",
+    "kind": "character-json",
+    "input": {
+      "spec": "chara_card_v2",
+      "spec_version": "2.0",
+      "data": {
+        "name": "Card V2 7",
+        "description": "Description 7",
+        "personality": "bold",
+        "scenario": "Scene 7",
+        "first_mes": "Greeting 7",
+        "mes_example": "<START>\nExample 7",
+        "alternate_greetings": [
+          "Alternate 7"
+        ],
+        "tags": [
+          "golden",
+          "v2"
+        ],
+        "extensions": {
+          "corpus_marker": "card-v2-7"
+        },
+        "character_book": {
+          "name": "card-v2-7 lore",
+          "entries": [
+            {
+              "id": 7,
+              "keys": [
+                "key-7"
+              ],
+              "content": "Lore 7",
+              "enabled": true,
+              "insertion_order": 7
+            }
+          ]
+        },
+        "x_corpus": {
+          "marker": "card-v2-7",
+          "unicode": "角色-7"
+        }
+      }
+    },
+    "expected": {
+      "name": "Card V2 7",
+      "format": "sillytavern-character-card-v2",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "card-v2-7"
+    },
+    "inputSha256": "b4f1d1e83641039a1ec7a531b078ce329f590262d2ca628b3644d9c32df20c9d"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v2-8",
+    "kind": "character-json",
+    "input": {
+      "spec": "chara_card_v2",
+      "spec_version": "2.0",
+      "data": {
+        "name": "Card V2 8",
+        "description": "Description 8",
+        "personality": "bold",
+        "scenario": "Scene 8",
+        "first_mes": "Greeting 8",
+        "mes_example": "<START>\nExample 8",
+        "alternate_greetings": [
+          "Alternate 8"
+        ],
+        "tags": [
+          "golden",
+          "v2"
+        ],
+        "extensions": {
+          "corpus_marker": "card-v2-8",
+          "regex_scripts": [
+            {
+              "script_name": "card-v2-8",
+              "findRegex": "/x+/g",
+              "replaceString": "y"
+            }
+          ]
+        },
+        "character_book": {
+          "name": "card-v2-8 lore",
+          "entries": [
+            {
+              "id": 8,
+              "keys": [
+                "key-8"
+              ],
+              "content": "Lore 8",
+              "enabled": true,
+              "insertion_order": 8
+            }
+          ]
+        },
+        "x_corpus": {
+          "marker": "card-v2-8",
+          "unicode": "角色-8"
+        }
+      }
+    },
+    "expected": {
+      "name": "Card V2 8",
+      "format": "sillytavern-character-card-v2",
+      "itemCount": 2,
+      "disabledFeatures": [
+        "display-regex"
+      ],
+      "marker": "card-v2-8"
+    },
+    "inputSha256": "b09ecdee16104153e5453d545f366009a8501e3d1213e79672f1f841451c7592"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v2-9",
+    "kind": "character-json",
+    "input": {
+      "spec": "chara_card_v2",
+      "spec_version": "2.0",
+      "data": {
+        "name": "Card V2 9",
+        "description": "Description 9",
+        "personality": "quiet",
+        "scenario": "Scene 9",
+        "first_mes": "Greeting 9",
+        "mes_example": "<START>\nExample 9",
+        "alternate_greetings": [
+          "Alternate 9"
+        ],
+        "tags": [
+          "golden",
+          "v2"
+        ],
+        "extensions": {
+          "corpus_marker": "card-v2-9"
+        },
+        "character_book": {
+          "name": "card-v2-9 lore",
+          "entries": [
+            {
+              "id": 9,
+              "keys": [
+                "key-9"
+              ],
+              "content": "Lore 9",
+              "enabled": true,
+              "insertion_order": 9
+            }
+          ]
+        },
+        "x_corpus": {
+          "marker": "card-v2-9",
+          "unicode": "角色-9"
+        }
+      }
+    },
+    "expected": {
+      "name": "Card V2 9",
+      "format": "sillytavern-character-card-v2",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "card-v2-9"
+    },
+    "inputSha256": "500d2f062e415c0e7731f02cd2802b9371a53ea15e61e8b3a44beecb0863e89f"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v3-0",
+    "kind": "character-json",
+    "input": {
+      "spec": "chara_card_v3",
+      "spec_version": "3.0",
+      "data": {
+        "name": "Card V3 0",
+        "description": "Description 0",
+        "personality": "quiet",
+        "scenario": "Scene 0",
+        "first_mes": "Greeting 0",
+        "mes_example": "<START>\nExample 0",
+        "alternate_greetings": [
+          "Alternate 0"
+        ],
+        "tags": [
+          "golden",
+          "v3"
+        ],
+        "extensions": {
+          "corpus_marker": "card-v3-0",
+          "regex_scripts": [
+            {
+              "script_name": "card-v3-0",
+              "findRegex": "/x+/g",
+              "replaceString": "y"
+            }
+          ]
+        },
+        "character_book": {
+          "name": "card-v3-0 lore",
+          "entries": [
+            {
+              "id": 0,
+              "keys": [
+                "key-0"
+              ],
+              "content": "Lore 0",
+              "enabled": true,
+              "insertion_order": 0
+            }
+          ]
+        },
+        "x_corpus": {
+          "marker": "card-v3-0",
+          "unicode": "角色-0"
+        }
+      }
+    },
+    "expected": {
+      "name": "Card V3 0",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 2,
+      "disabledFeatures": [
+        "display-regex"
+      ],
+      "marker": "card-v3-0"
+    },
+    "inputSha256": "c91f257b753483e3fad182a9c7053608196b5c41fbd310f8381101279d561db5"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v3-1",
+    "kind": "character-json",
+    "input": {
+      "spec": "chara_card_v3",
+      "spec_version": "3.0",
+      "data": {
+        "name": "Card V3 1",
+        "description": "Description 1",
+        "personality": "bold",
+        "scenario": "Scene 1",
+        "first_mes": "Greeting 1",
+        "mes_example": "<START>\nExample 1",
+        "alternate_greetings": [
+          "Alternate 1"
+        ],
+        "tags": [
+          "golden",
+          "v3"
+        ],
+        "extensions": {
+          "corpus_marker": "card-v3-1"
+        },
+        "character_book": {
+          "name": "card-v3-1 lore",
+          "entries": [
+            {
+              "id": 1,
+              "keys": [
+                "key-1"
+              ],
+              "content": "Lore 1",
+              "enabled": true,
+              "insertion_order": 1
+            }
+          ]
+        },
+        "x_corpus": {
+          "marker": "card-v3-1",
+          "unicode": "角色-1"
+        }
+      }
+    },
+    "expected": {
+      "name": "Card V3 1",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "card-v3-1"
+    },
+    "inputSha256": "e14a00ec22b7a7568228b057445b7aca139f8613312c56ceb4542835fee9cf38"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v3-2",
+    "kind": "character-json",
+    "input": {
+      "spec": "chara_card_v3",
+      "spec_version": "3.0",
+      "data": {
+        "name": "Card V3 2",
+        "description": "Description 2",
+        "personality": "bold",
+        "scenario": "Scene 2",
+        "first_mes": "Greeting 2",
+        "mes_example": "<START>\nExample 2",
+        "alternate_greetings": [
+          "Alternate 2"
+        ],
+        "tags": [
+          "golden",
+          "v3"
+        ],
+        "extensions": {
+          "corpus_marker": "card-v3-2",
+          "regex_scripts": [
+            {
+              "script_name": "card-v3-2",
+              "findRegex": "/x+/g",
+              "replaceString": "y"
+            }
+          ]
+        },
+        "character_book": {
+          "name": "card-v3-2 lore",
+          "entries": [
+            {
+              "id": 2,
+              "keys": [
+                "key-2"
+              ],
+              "content": "Lore 2",
+              "enabled": true,
+              "insertion_order": 2
+            }
+          ]
+        },
+        "x_corpus": {
+          "marker": "card-v3-2",
+          "unicode": "角色-2"
+        }
+      }
+    },
+    "expected": {
+      "name": "Card V3 2",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 2,
+      "disabledFeatures": [
+        "display-regex"
+      ],
+      "marker": "card-v3-2"
+    },
+    "inputSha256": "b1106914725a54814d20c33e8e6a9e275940cd973d38e7a22c074b5e1e347bb7"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v3-3",
+    "kind": "character-json",
+    "input": {
+      "spec": "chara_card_v3",
+      "spec_version": "3.0",
+      "data": {
+        "name": "Card V3 3",
+        "description": "Description 3",
+        "personality": "quiet",
+        "scenario": "Scene 3",
+        "first_mes": "Greeting 3",
+        "mes_example": "<START>\nExample 3",
+        "alternate_greetings": [
+          "Alternate 3"
+        ],
+        "tags": [
+          "golden",
+          "v3"
+        ],
+        "extensions": {
+          "corpus_marker": "card-v3-3"
+        },
+        "character_book": {
+          "name": "card-v3-3 lore",
+          "entries": [
+            {
+              "id": 3,
+              "keys": [
+                "key-3"
+              ],
+              "content": "Lore 3",
+              "enabled": true,
+              "insertion_order": 3
+            }
+          ]
+        },
+        "x_corpus": {
+          "marker": "card-v3-3",
+          "unicode": "角色-3"
+        }
+      }
+    },
+    "expected": {
+      "name": "Card V3 3",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "card-v3-3"
+    },
+    "inputSha256": "e80863eca67b5f3cebc4f5d9bce45f8f9e3ceb4350bfa7fce380d09a059e359d"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v3-4",
+    "kind": "character-json",
+    "input": {
+      "spec": "chara_card_v3",
+      "spec_version": "3.0",
+      "data": {
+        "name": "Card V3 4",
+        "description": "Description 4",
+        "personality": "bold",
+        "scenario": "Scene 4",
+        "first_mes": "Greeting 4",
+        "mes_example": "<START>\nExample 4",
+        "alternate_greetings": [
+          "Alternate 4"
+        ],
+        "tags": [
+          "golden",
+          "v3"
+        ],
+        "extensions": {
+          "corpus_marker": "card-v3-4",
+          "regex_scripts": [
+            {
+              "script_name": "card-v3-4",
+              "findRegex": "/x+/g",
+              "replaceString": "y"
+            }
+          ]
+        },
+        "character_book": {
+          "name": "card-v3-4 lore",
+          "entries": [
+            {
+              "id": 4,
+              "keys": [
+                "key-4"
+              ],
+              "content": "Lore 4",
+              "enabled": true,
+              "insertion_order": 4
+            }
+          ]
+        },
+        "x_corpus": {
+          "marker": "card-v3-4",
+          "unicode": "角色-4"
+        }
+      }
+    },
+    "expected": {
+      "name": "Card V3 4",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 2,
+      "disabledFeatures": [
+        "display-regex"
+      ],
+      "marker": "card-v3-4"
+    },
+    "inputSha256": "05e1121cf720cd83d12641a9855f69c10dd1b464b6d4a30d00d92eecc0d6722c"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v3-5",
+    "kind": "character-json",
+    "input": {
+      "spec": "chara_card_v3",
+      "spec_version": "3.0",
+      "data": {
+        "name": "Card V3 5",
+        "description": "Description 5",
+        "personality": "bold",
+        "scenario": "Scene 5",
+        "first_mes": "Greeting 5",
+        "mes_example": "<START>\nExample 5",
+        "alternate_greetings": [
+          "Alternate 5"
+        ],
+        "tags": [
+          "golden",
+          "v3"
+        ],
+        "extensions": {
+          "corpus_marker": "card-v3-5"
+        },
+        "character_book": {
+          "name": "card-v3-5 lore",
+          "entries": [
+            {
+              "id": 5,
+              "keys": [
+                "key-5"
+              ],
+              "content": "Lore 5",
+              "enabled": true,
+              "insertion_order": 5
+            }
+          ]
+        },
+        "x_corpus": {
+          "marker": "card-v3-5",
+          "unicode": "角色-5"
+        }
+      }
+    },
+    "expected": {
+      "name": "Card V3 5",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "card-v3-5"
+    },
+    "inputSha256": "9170320e38f9791fa66a47a1b371f268289d00b83e9bd3db381be7681d0d185e"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v3-6",
+    "kind": "character-json",
+    "input": {
+      "spec": "chara_card_v3",
+      "spec_version": "3.0",
+      "data": {
+        "name": "Card V3 6",
+        "description": "Description 6",
+        "personality": "quiet",
+        "scenario": "Scene 6",
+        "first_mes": "Greeting 6",
+        "mes_example": "<START>\nExample 6",
+        "alternate_greetings": [
+          "Alternate 6"
+        ],
+        "tags": [
+          "golden",
+          "v3"
+        ],
+        "extensions": {
+          "corpus_marker": "card-v3-6",
+          "regex_scripts": [
+            {
+              "script_name": "card-v3-6",
+              "findRegex": "/x+/g",
+              "replaceString": "y"
+            }
+          ]
+        },
+        "character_book": {
+          "name": "card-v3-6 lore",
+          "entries": [
+            {
+              "id": 6,
+              "keys": [
+                "key-6"
+              ],
+              "content": "Lore 6",
+              "enabled": true,
+              "insertion_order": 6
+            }
+          ]
+        },
+        "x_corpus": {
+          "marker": "card-v3-6",
+          "unicode": "角色-6"
+        }
+      }
+    },
+    "expected": {
+      "name": "Card V3 6",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 2,
+      "disabledFeatures": [
+        "display-regex"
+      ],
+      "marker": "card-v3-6"
+    },
+    "inputSha256": "323a54c82814fdcc0d201fdc39b76947d62dd209775c8f73bb2c38d753f6961f"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v3-7",
+    "kind": "character-json",
+    "input": {
+      "spec": "chara_card_v3",
+      "spec_version": "3.0",
+      "data": {
+        "name": "Card V3 7",
+        "description": "Description 7",
+        "personality": "bold",
+        "scenario": "Scene 7",
+        "first_mes": "Greeting 7",
+        "mes_example": "<START>\nExample 7",
+        "alternate_greetings": [
+          "Alternate 7"
+        ],
+        "tags": [
+          "golden",
+          "v3"
+        ],
+        "extensions": {
+          "corpus_marker": "card-v3-7"
+        },
+        "character_book": {
+          "name": "card-v3-7 lore",
+          "entries": [
+            {
+              "id": 7,
+              "keys": [
+                "key-7"
+              ],
+              "content": "Lore 7",
+              "enabled": true,
+              "insertion_order": 7
+            }
+          ]
+        },
+        "x_corpus": {
+          "marker": "card-v3-7",
+          "unicode": "角色-7"
+        }
+      }
+    },
+    "expected": {
+      "name": "Card V3 7",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "card-v3-7"
+    },
+    "inputSha256": "15b32e762ccd2b8a2ec2c95aca0e79f61de11190c0c2c908eefddbc1fa3c7ea8"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v3-8",
+    "kind": "character-json",
+    "input": {
+      "spec": "chara_card_v3",
+      "spec_version": "3.0",
+      "data": {
+        "name": "Card V3 8",
+        "description": "Description 8",
+        "personality": "bold",
+        "scenario": "Scene 8",
+        "first_mes": "Greeting 8",
+        "mes_example": "<START>\nExample 8",
+        "alternate_greetings": [
+          "Alternate 8"
+        ],
+        "tags": [
+          "golden",
+          "v3"
+        ],
+        "extensions": {
+          "corpus_marker": "card-v3-8",
+          "regex_scripts": [
+            {
+              "script_name": "card-v3-8",
+              "findRegex": "/x+/g",
+              "replaceString": "y"
+            }
+          ]
+        },
+        "character_book": {
+          "name": "card-v3-8 lore",
+          "entries": [
+            {
+              "id": 8,
+              "keys": [
+                "key-8"
+              ],
+              "content": "Lore 8",
+              "enabled": true,
+              "insertion_order": 8
+            }
+          ]
+        },
+        "x_corpus": {
+          "marker": "card-v3-8",
+          "unicode": "角色-8"
+        }
+      }
+    },
+    "expected": {
+      "name": "Card V3 8",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 2,
+      "disabledFeatures": [
+        "display-regex"
+      ],
+      "marker": "card-v3-8"
+    },
+    "inputSha256": "baf24d66ce356fc78aa0a0c50225b0aa1dff6f39e633abf74b024589df4bbc3e"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "card-v3-9",
+    "kind": "character-json",
+    "input": {
+      "spec": "chara_card_v3",
+      "spec_version": "3.0",
+      "data": {
+        "name": "Card V3 9",
+        "description": "Description 9",
+        "personality": "quiet",
+        "scenario": "Scene 9",
+        "first_mes": "Greeting 9",
+        "mes_example": "<START>\nExample 9",
+        "alternate_greetings": [
+          "Alternate 9"
+        ],
+        "tags": [
+          "golden",
+          "v3"
+        ],
+        "extensions": {
+          "corpus_marker": "card-v3-9"
+        },
+        "character_book": {
+          "name": "card-v3-9 lore",
+          "entries": [
+            {
+              "id": 9,
+              "keys": [
+                "key-9"
+              ],
+              "content": "Lore 9",
+              "enabled": true,
+              "insertion_order": 9
+            }
+          ]
+        },
+        "x_corpus": {
+          "marker": "card-v3-9",
+          "unicode": "角色-9"
+        }
+      }
+    },
+    "expected": {
+      "name": "Card V3 9",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "card-v3-9"
+    },
+    "inputSha256": "e02679732ddc3652eb559c68ffff627f137f432a3fb97cf8631a1bab49539ecb"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "world-0",
+    "kind": "world-info",
+    "input": {
+      "name": "World 0",
+      "entries": {
+        "0": {
+          "id": "entry-0",
+          "key": [
+            "place-0"
+          ],
+          "keysecondary": [
+            "secondary-0"
+          ],
+          "content": "World fact 0",
+          "enabled": false,
+          "order": 0,
+          "corpus_marker": "world-0",
+          "use_regex": true,
+          "vectorized": true,
+          "probability": 50,
+          "sticky": 2
+        }
+      },
+      "x_corpus": {
+        "marker": "world-0"
+      }
+    },
+    "expected": {
+      "name": "World 0",
+      "format": "sillytavern-world-info",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "regex-lore-matching",
+        "vector-lore-matching",
+        "probabilistic-lore-activation",
+        "timed-lore-effects"
+      ],
+      "marker": "world-0"
+    },
+    "inputSha256": "39a094a11b08f5c22049d3ef37d6a44a55de062f8e3edbfc0aa1bbcfb8f7974f"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "world-1",
+    "kind": "world-info",
+    "input": {
+      "name": "World 1",
+      "entries": [
+        {
+          "id": "entry-1",
+          "key": [
+            "place-1"
+          ],
+          "keysecondary": [
+            "secondary-1"
+          ],
+          "content": "World fact 1",
+          "enabled": true,
+          "order": 1,
+          "corpus_marker": "world-1"
+        }
+      ],
+      "x_corpus": {
+        "marker": "world-1"
+      }
+    },
+    "expected": {
+      "name": "World 1",
+      "format": "sillytavern-world-info",
+      "itemCount": 1,
+      "disabledFeatures": [],
+      "marker": "world-1"
+    },
+    "inputSha256": "9574b2a3258d69a121953bbb93d28966c2a2a0f798a5958aa2c795f84b3e6e15"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "world-2",
+    "kind": "world-info",
+    "input": {
+      "name": "World 2",
+      "entries": {
+        "2": {
+          "id": "entry-2",
+          "key": [
+            "place-2"
+          ],
+          "keysecondary": [
+            "secondary-2"
+          ],
+          "content": "World fact 2",
+          "enabled": true,
+          "order": 2,
+          "corpus_marker": "world-2",
+          "use_regex": true
+        }
+      },
+      "x_corpus": {
+        "marker": "world-2"
+      }
+    },
+    "expected": {
+      "name": "World 2",
+      "format": "sillytavern-world-info",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "regex-lore-matching"
+      ],
+      "marker": "world-2"
+    },
+    "inputSha256": "3c115e501aec3f69f18393485422643c35d7624e7ec8067f3bdeb41c3e08b431"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "world-3",
+    "kind": "world-info",
+    "input": {
+      "name": "World 3",
+      "entries": [
+        {
+          "id": "entry-3",
+          "key": [
+            "place-3"
+          ],
+          "keysecondary": [
+            "secondary-3"
+          ],
+          "content": "World fact 3",
+          "enabled": true,
+          "order": 3,
+          "corpus_marker": "world-3",
+          "vectorized": true
+        }
+      ],
+      "x_corpus": {
+        "marker": "world-3"
+      }
+    },
+    "expected": {
+      "name": "World 3",
+      "format": "sillytavern-world-info",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "vector-lore-matching"
+      ],
+      "marker": "world-3"
+    },
+    "inputSha256": "daa712ea00814f37034b6fcc8302a3650cc19f90cd775c90d9ca4adfa79a995d"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "world-4",
+    "kind": "world-info",
+    "input": {
+      "name": "World 4",
+      "entries": {
+        "4": {
+          "id": "entry-4",
+          "key": [
+            "place-4"
+          ],
+          "keysecondary": [
+            "secondary-4"
+          ],
+          "content": "World fact 4",
+          "enabled": true,
+          "order": 4,
+          "corpus_marker": "world-4",
+          "use_regex": true,
+          "probability": 50
+        }
+      },
+      "x_corpus": {
+        "marker": "world-4"
+      }
+    },
+    "expected": {
+      "name": "World 4",
+      "format": "sillytavern-world-info",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "regex-lore-matching",
+        "probabilistic-lore-activation"
+      ],
+      "marker": "world-4"
+    },
+    "inputSha256": "de80d04ff9cd3febcbe25343e66cf1c420b027312e4b8f8623ecd2f2030d26b2"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "world-5",
+    "kind": "world-info",
+    "input": {
+      "name": "World 5",
+      "entries": [
+        {
+          "id": "entry-5",
+          "key": [
+            "place-5"
+          ],
+          "keysecondary": [
+            "secondary-5"
+          ],
+          "content": "World fact 5",
+          "enabled": false,
+          "order": 5,
+          "corpus_marker": "world-5",
+          "sticky": 2
+        }
+      ],
+      "x_corpus": {
+        "marker": "world-5"
+      }
+    },
+    "expected": {
+      "name": "World 5",
+      "format": "sillytavern-world-info",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "timed-lore-effects"
+      ],
+      "marker": "world-5"
+    },
+    "inputSha256": "3b4199aec4e9d0a6f1de224c6aa78c6ea006a9873e16009f7e1c9718dc062fa6"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "world-6",
+    "kind": "world-info",
+    "input": {
+      "name": "World 6",
+      "entries": {
+        "6": {
+          "id": "entry-6",
+          "key": [
+            "place-6"
+          ],
+          "keysecondary": [
+            "secondary-6"
+          ],
+          "content": "World fact 6",
+          "enabled": true,
+          "order": 6,
+          "corpus_marker": "world-6",
+          "use_regex": true,
+          "vectorized": true
+        }
+      },
+      "x_corpus": {
+        "marker": "world-6"
+      }
+    },
+    "expected": {
+      "name": "World 6",
+      "format": "sillytavern-world-info",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "regex-lore-matching",
+        "vector-lore-matching"
+      ],
+      "marker": "world-6"
+    },
+    "inputSha256": "a6aedd91b64a7b84befb1dbe4f5736184586774d50595dd46881e825a7fb2405"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "world-7",
+    "kind": "world-info",
+    "input": {
+      "name": "World 7",
+      "entries": [
+        {
+          "id": "entry-7",
+          "key": [
+            "place-7"
+          ],
+          "keysecondary": [
+            "secondary-7"
+          ],
+          "content": "World fact 7",
+          "enabled": true,
+          "order": 7,
+          "corpus_marker": "world-7"
+        }
+      ],
+      "x_corpus": {
+        "marker": "world-7"
+      }
+    },
+    "expected": {
+      "name": "World 7",
+      "format": "sillytavern-world-info",
+      "itemCount": 1,
+      "disabledFeatures": [],
+      "marker": "world-7"
+    },
+    "inputSha256": "037d02c3bd83469cd3f4184c9747eb8b1844f7ed58748766e8ad787d3c5bb35f"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "world-8",
+    "kind": "world-info",
+    "input": {
+      "name": "World 8",
+      "entries": {
+        "8": {
+          "id": "entry-8",
+          "key": [
+            "place-8"
+          ],
+          "keysecondary": [
+            "secondary-8"
+          ],
+          "content": "World fact 8",
+          "enabled": true,
+          "order": 8,
+          "corpus_marker": "world-8",
+          "use_regex": true,
+          "probability": 50
+        }
+      },
+      "x_corpus": {
+        "marker": "world-8"
+      }
+    },
+    "expected": {
+      "name": "World 8",
+      "format": "sillytavern-world-info",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "regex-lore-matching",
+        "probabilistic-lore-activation"
+      ],
+      "marker": "world-8"
+    },
+    "inputSha256": "24aed8a4ac9d0253d7a4e9c5d1a8bcf6dd356b7fd3b8f2718ca1b739e44fc9ae"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "world-9",
+    "kind": "world-info",
+    "input": {
+      "name": "World 9",
+      "entries": [
+        {
+          "id": "entry-9",
+          "key": [
+            "place-9"
+          ],
+          "keysecondary": [
+            "secondary-9"
+          ],
+          "content": "World fact 9",
+          "enabled": true,
+          "order": 9,
+          "corpus_marker": "world-9",
+          "vectorized": true
+        }
+      ],
+      "x_corpus": {
+        "marker": "world-9"
+      }
+    },
+    "expected": {
+      "name": "World 9",
+      "format": "sillytavern-world-info",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "vector-lore-matching"
+      ],
+      "marker": "world-9"
+    },
+    "inputSha256": "bc4f549f78655e6aedde347c99eea7f76737473ab1774ea55650fe27ef9fd770"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "world-10",
+    "kind": "world-info",
+    "input": {
+      "name": "World 10",
+      "entries": {
+        "10": {
+          "id": "entry-10",
+          "key": [
+            "place-10"
+          ],
+          "keysecondary": [
+            "secondary-10"
+          ],
+          "content": "World fact 10",
+          "enabled": false,
+          "order": 10,
+          "corpus_marker": "world-10",
+          "use_regex": true,
+          "sticky": 2
+        }
+      },
+      "x_corpus": {
+        "marker": "world-10"
+      }
+    },
+    "expected": {
+      "name": "World 10",
+      "format": "sillytavern-world-info",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "regex-lore-matching",
+        "timed-lore-effects"
+      ],
+      "marker": "world-10"
+    },
+    "inputSha256": "97f512601053bcbca39998a7873ae98b39d1d262c892a8b259072dcccb90352f"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "world-11",
+    "kind": "world-info",
+    "input": {
+      "name": "World 11",
+      "entries": [
+        {
+          "id": "entry-11",
+          "key": [
+            "place-11"
+          ],
+          "keysecondary": [
+            "secondary-11"
+          ],
+          "content": "World fact 11",
+          "enabled": true,
+          "order": 11,
+          "corpus_marker": "world-11"
+        }
+      ],
+      "x_corpus": {
+        "marker": "world-11"
+      }
+    },
+    "expected": {
+      "name": "World 11",
+      "format": "sillytavern-world-info",
+      "itemCount": 1,
+      "disabledFeatures": [],
+      "marker": "world-11"
+    },
+    "inputSha256": "82abdbe01cc9d9eaf550b649270a5f1f2fd45c510f0bc1611c04e3a86a80da30"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "world-12",
+    "kind": "world-info",
+    "input": {
+      "name": "World 12",
+      "entries": {
+        "12": {
+          "id": "entry-12",
+          "key": [
+            "place-12"
+          ],
+          "keysecondary": [
+            "secondary-12"
+          ],
+          "content": "World fact 12",
+          "enabled": true,
+          "order": 12,
+          "corpus_marker": "world-12",
+          "use_regex": true,
+          "vectorized": true,
+          "probability": 50
+        }
+      },
+      "x_corpus": {
+        "marker": "world-12"
+      }
+    },
+    "expected": {
+      "name": "World 12",
+      "format": "sillytavern-world-info",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "regex-lore-matching",
+        "vector-lore-matching",
+        "probabilistic-lore-activation"
+      ],
+      "marker": "world-12"
+    },
+    "inputSha256": "e531486198feb5c2d33b0c0dc39212d3ca545c352739228d1affe5c440dda06b"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "world-13",
+    "kind": "world-info",
+    "input": {
+      "name": "World 13",
+      "entries": [
+        {
+          "id": "entry-13",
+          "key": [
+            "place-13"
+          ],
+          "keysecondary": [
+            "secondary-13"
+          ],
+          "content": "World fact 13",
+          "enabled": true,
+          "order": 13,
+          "corpus_marker": "world-13"
+        }
+      ],
+      "x_corpus": {
+        "marker": "world-13"
+      }
+    },
+    "expected": {
+      "name": "World 13",
+      "format": "sillytavern-world-info",
+      "itemCount": 1,
+      "disabledFeatures": [],
+      "marker": "world-13"
+    },
+    "inputSha256": "7008d1c15f3325e7e0c8a6635b3343ef9c775115ce87181919ff2e4df7582323"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "world-14",
+    "kind": "world-info",
+    "input": {
+      "name": "World 14",
+      "entries": {
+        "14": {
+          "id": "entry-14",
+          "key": [
+            "place-14"
+          ],
+          "keysecondary": [
+            "secondary-14"
+          ],
+          "content": "World fact 14",
+          "enabled": true,
+          "order": 14,
+          "corpus_marker": "world-14",
+          "use_regex": true
+        }
+      },
+      "x_corpus": {
+        "marker": "world-14"
+      }
+    },
+    "expected": {
+      "name": "World 14",
+      "format": "sillytavern-world-info",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "regex-lore-matching"
+      ],
+      "marker": "world-14"
+    },
+    "inputSha256": "c60cc3de2e65f60173380967ca757fc1185b4f00d772008f1f814034e9cdd091"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "preset-0",
+    "kind": "preset",
+    "input": {
+      "name": "Preset 0",
+      "prompts": [
+        {
+          "identifier": "main-0",
+          "role": "system",
+          "content": "Instruction 0",
+          "corpus_marker": "preset-0"
+        },
+        {
+          "identifier": "disabled-0",
+          "role": "user",
+          "content": "disabled but retained"
+        }
+      ],
+      "prompt_order": [
+        {
+          "order": [
+            {
+              "identifier": "main-0",
+              "enabled": true
+            },
+            {
+              "identifier": "disabled-0",
+              "enabled": false
+            }
+          ]
+        }
+      ],
+      "temperature": 0,
+      "top_p": 0.9,
+      "extensions": {
+        "corpus_marker": "preset-0",
+        "tavern_helper": {
+          "scripts": [
+            {
+              "name": "preset-0",
+              "content": "never execute"
+            }
+          ]
+        }
+      }
+    },
+    "expected": {
+      "name": "Preset 0",
+      "format": "sillytavern-chat-completion-preset",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "tavern-helper"
+      ],
+      "marker": "preset-0"
+    },
+    "inputSha256": "a05782c30146572d49057d7f79bab8fde4629ed0e2dff26601955fb9368eabee"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "preset-1",
+    "kind": "preset",
+    "input": {
+      "name": "Preset 1",
+      "prompts": [
+        {
+          "identifier": "main-1",
+          "role": "system",
+          "content": "Instruction 1",
+          "corpus_marker": "preset-1"
+        },
+        {
+          "identifier": "disabled-1",
+          "role": "user",
+          "content": "disabled but retained"
+        }
+      ],
+      "prompt_order": [
+        {
+          "order": [
+            {
+              "identifier": "main-1",
+              "enabled": true
+            },
+            {
+              "identifier": "disabled-1",
+              "enabled": false
+            }
+          ]
+        }
+      ],
+      "temperature": 0.05,
+      "top_p": 0.9,
+      "extensions": {
+        "corpus_marker": "preset-1"
+      }
+    },
+    "expected": {
+      "name": "Preset 1",
+      "format": "sillytavern-chat-completion-preset",
+      "itemCount": 1,
+      "disabledFeatures": [],
+      "marker": "preset-1"
+    },
+    "inputSha256": "f97de451ed67b366f6b98440d2ac6445bae29c5096fe90fc4e8e9ce4f46d4e1a"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "preset-2",
+    "kind": "preset",
+    "input": {
+      "name": "Preset 2",
+      "prompts": [
+        {
+          "identifier": "main-2",
+          "role": "system",
+          "content": "Instruction 2",
+          "corpus_marker": "preset-2"
+        },
+        {
+          "identifier": "disabled-2",
+          "role": "user",
+          "content": "disabled but retained"
+        }
+      ],
+      "prompt_order": [
+        {
+          "order": [
+            {
+              "identifier": "main-2",
+              "enabled": true
+            },
+            {
+              "identifier": "disabled-2",
+              "enabled": false
+            }
+          ]
+        }
+      ],
+      "temperature": 0.1,
+      "top_p": 0.9,
+      "extensions": {
+        "corpus_marker": "preset-2",
+        "tavern_helper": {
+          "scripts": [
+            {
+              "name": "preset-2",
+              "content": "never execute"
+            }
+          ]
+        }
+      }
+    },
+    "expected": {
+      "name": "Preset 2",
+      "format": "sillytavern-chat-completion-preset",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "tavern-helper"
+      ],
+      "marker": "preset-2"
+    },
+    "inputSha256": "63b081154d3765d3d6ee821b75fb0bed99fd1e19cd46e7a932ea0e4344aca29f"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "preset-3",
+    "kind": "preset",
+    "input": {
+      "name": "Preset 3",
+      "prompts": [
+        {
+          "identifier": "main-3",
+          "role": "system",
+          "content": "Instruction 3",
+          "corpus_marker": "preset-3"
+        },
+        {
+          "identifier": "disabled-3",
+          "role": "user",
+          "content": "disabled but retained"
+        }
+      ],
+      "prompt_order": [
+        {
+          "order": [
+            {
+              "identifier": "main-3",
+              "enabled": true
+            },
+            {
+              "identifier": "disabled-3",
+              "enabled": false
+            }
+          ]
+        }
+      ],
+      "temperature": 0.15,
+      "top_p": 0.9,
+      "extensions": {
+        "corpus_marker": "preset-3"
+      }
+    },
+    "expected": {
+      "name": "Preset 3",
+      "format": "sillytavern-chat-completion-preset",
+      "itemCount": 1,
+      "disabledFeatures": [],
+      "marker": "preset-3"
+    },
+    "inputSha256": "7708d5875258e6d44e37f0ae6b20bddc7e24bbeddf60c42f5825f7ec3d8cf7a3"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "preset-4",
+    "kind": "preset",
+    "input": {
+      "name": "Preset 4",
+      "prompts": [
+        {
+          "identifier": "main-4",
+          "role": "system",
+          "content": "Instruction 4",
+          "corpus_marker": "preset-4"
+        },
+        {
+          "identifier": "disabled-4",
+          "role": "user",
+          "content": "disabled but retained"
+        }
+      ],
+      "prompt_order": [
+        {
+          "order": [
+            {
+              "identifier": "main-4",
+              "enabled": true
+            },
+            {
+              "identifier": "disabled-4",
+              "enabled": false
+            }
+          ]
+        }
+      ],
+      "temperature": 0.2,
+      "top_p": 0.9,
+      "extensions": {
+        "corpus_marker": "preset-4",
+        "tavern_helper": {
+          "scripts": [
+            {
+              "name": "preset-4",
+              "content": "never execute"
+            }
+          ]
+        }
+      }
+    },
+    "expected": {
+      "name": "Preset 4",
+      "format": "sillytavern-chat-completion-preset",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "tavern-helper"
+      ],
+      "marker": "preset-4"
+    },
+    "inputSha256": "3da686fbd6c522803d53fbeca85e2b8a07a7dbe695aefbbd5089f17676d70a60"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "preset-5",
+    "kind": "preset",
+    "input": {
+      "name": "Preset 5",
+      "prompts": [
+        {
+          "identifier": "main-5",
+          "role": "system",
+          "content": "Instruction 5",
+          "corpus_marker": "preset-5"
+        },
+        {
+          "identifier": "disabled-5",
+          "role": "user",
+          "content": "disabled but retained"
+        }
+      ],
+      "prompt_order": [
+        {
+          "order": [
+            {
+              "identifier": "main-5",
+              "enabled": true
+            },
+            {
+              "identifier": "disabled-5",
+              "enabled": false
+            }
+          ]
+        }
+      ],
+      "temperature": 0.25,
+      "top_p": 0.9,
+      "extensions": {
+        "corpus_marker": "preset-5"
+      }
+    },
+    "expected": {
+      "name": "Preset 5",
+      "format": "sillytavern-chat-completion-preset",
+      "itemCount": 1,
+      "disabledFeatures": [],
+      "marker": "preset-5"
+    },
+    "inputSha256": "5b66cfa66fca1031049bc62fb04bc1e94b72460efd6bfeb6e22a55fa2d1df5e0"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "preset-6",
+    "kind": "preset",
+    "input": {
+      "name": "Preset 6",
+      "prompts": [
+        {
+          "identifier": "main-6",
+          "role": "system",
+          "content": "Instruction 6",
+          "corpus_marker": "preset-6"
+        },
+        {
+          "identifier": "disabled-6",
+          "role": "user",
+          "content": "disabled but retained"
+        }
+      ],
+      "prompt_order": [
+        {
+          "order": [
+            {
+              "identifier": "main-6",
+              "enabled": true
+            },
+            {
+              "identifier": "disabled-6",
+              "enabled": false
+            }
+          ]
+        }
+      ],
+      "temperature": 0.3,
+      "top_p": 0.9,
+      "extensions": {
+        "corpus_marker": "preset-6",
+        "tavern_helper": {
+          "scripts": [
+            {
+              "name": "preset-6",
+              "content": "never execute"
+            }
+          ]
+        }
+      }
+    },
+    "expected": {
+      "name": "Preset 6",
+      "format": "sillytavern-chat-completion-preset",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "tavern-helper"
+      ],
+      "marker": "preset-6"
+    },
+    "inputSha256": "dcd58484685b737caa7da994c886a4944a1d022fe70beecbf7baa2a72da9c1ba"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "preset-7",
+    "kind": "preset",
+    "input": {
+      "name": "Preset 7",
+      "prompts": [
+        {
+          "identifier": "main-7",
+          "role": "system",
+          "content": "Instruction 7",
+          "corpus_marker": "preset-7"
+        },
+        {
+          "identifier": "disabled-7",
+          "role": "user",
+          "content": "disabled but retained"
+        }
+      ],
+      "prompt_order": [
+        {
+          "order": [
+            {
+              "identifier": "main-7",
+              "enabled": true
+            },
+            {
+              "identifier": "disabled-7",
+              "enabled": false
+            }
+          ]
+        }
+      ],
+      "temperature": 0.35,
+      "top_p": 0.9,
+      "extensions": {
+        "corpus_marker": "preset-7"
+      }
+    },
+    "expected": {
+      "name": "Preset 7",
+      "format": "sillytavern-chat-completion-preset",
+      "itemCount": 1,
+      "disabledFeatures": [],
+      "marker": "preset-7"
+    },
+    "inputSha256": "f13d1c6ab5d3d92052766e8e540477133104be523ace24c7c1753c77a09d1463"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "preset-8",
+    "kind": "preset",
+    "input": {
+      "name": "Preset 8",
+      "prompts": [
+        {
+          "identifier": "main-8",
+          "role": "system",
+          "content": "Instruction 8",
+          "corpus_marker": "preset-8"
+        },
+        {
+          "identifier": "disabled-8",
+          "role": "user",
+          "content": "disabled but retained"
+        }
+      ],
+      "prompt_order": [
+        {
+          "order": [
+            {
+              "identifier": "main-8",
+              "enabled": true
+            },
+            {
+              "identifier": "disabled-8",
+              "enabled": false
+            }
+          ]
+        }
+      ],
+      "temperature": 0.4,
+      "top_p": 0.9,
+      "extensions": {
+        "corpus_marker": "preset-8",
+        "tavern_helper": {
+          "scripts": [
+            {
+              "name": "preset-8",
+              "content": "never execute"
+            }
+          ]
+        }
+      }
+    },
+    "expected": {
+      "name": "Preset 8",
+      "format": "sillytavern-chat-completion-preset",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "tavern-helper"
+      ],
+      "marker": "preset-8"
+    },
+    "inputSha256": "942238d2b4de7718ba04400a37279671201ae3b933500f2515a27a083a92a346"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "preset-9",
+    "kind": "preset",
+    "input": {
+      "name": "Preset 9",
+      "prompts": [
+        {
+          "identifier": "main-9",
+          "role": "system",
+          "content": "Instruction 9",
+          "corpus_marker": "preset-9"
+        },
+        {
+          "identifier": "disabled-9",
+          "role": "user",
+          "content": "disabled but retained"
+        }
+      ],
+      "prompt_order": [
+        {
+          "order": [
+            {
+              "identifier": "main-9",
+              "enabled": true
+            },
+            {
+              "identifier": "disabled-9",
+              "enabled": false
+            }
+          ]
+        }
+      ],
+      "temperature": 0.45,
+      "top_p": 0.9,
+      "extensions": {
+        "corpus_marker": "preset-9"
+      }
+    },
+    "expected": {
+      "name": "Preset 9",
+      "format": "sillytavern-chat-completion-preset",
+      "itemCount": 1,
+      "disabledFeatures": [],
+      "marker": "preset-9"
+    },
+    "inputSha256": "5623b74e2de141592064d9e07c192cf7b478ead809da09671e1af379f5b8a714"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "preset-10",
+    "kind": "preset",
+    "input": {
+      "name": "Preset 10",
+      "prompts": [
+        {
+          "identifier": "main-10",
+          "role": "system",
+          "content": "Instruction 10",
+          "corpus_marker": "preset-10"
+        },
+        {
+          "identifier": "disabled-10",
+          "role": "user",
+          "content": "disabled but retained"
+        }
+      ],
+      "prompt_order": [
+        {
+          "order": [
+            {
+              "identifier": "main-10",
+              "enabled": true
+            },
+            {
+              "identifier": "disabled-10",
+              "enabled": false
+            }
+          ]
+        }
+      ],
+      "temperature": 0.5,
+      "top_p": 0.9,
+      "extensions": {
+        "corpus_marker": "preset-10",
+        "tavern_helper": {
+          "scripts": [
+            {
+              "name": "preset-10",
+              "content": "never execute"
+            }
+          ]
+        }
+      }
+    },
+    "expected": {
+      "name": "Preset 10",
+      "format": "sillytavern-chat-completion-preset",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "tavern-helper"
+      ],
+      "marker": "preset-10"
+    },
+    "inputSha256": "7d4741e3197a5d5951a9efa576149e995dd519f91babb81c3924c85fe4ac6905"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "preset-11",
+    "kind": "preset",
+    "input": {
+      "name": "Preset 11",
+      "prompts": [
+        {
+          "identifier": "main-11",
+          "role": "system",
+          "content": "Instruction 11",
+          "corpus_marker": "preset-11"
+        },
+        {
+          "identifier": "disabled-11",
+          "role": "user",
+          "content": "disabled but retained"
+        }
+      ],
+      "prompt_order": [
+        {
+          "order": [
+            {
+              "identifier": "main-11",
+              "enabled": true
+            },
+            {
+              "identifier": "disabled-11",
+              "enabled": false
+            }
+          ]
+        }
+      ],
+      "temperature": 0.55,
+      "top_p": 0.9,
+      "extensions": {
+        "corpus_marker": "preset-11"
+      }
+    },
+    "expected": {
+      "name": "Preset 11",
+      "format": "sillytavern-chat-completion-preset",
+      "itemCount": 1,
+      "disabledFeatures": [],
+      "marker": "preset-11"
+    },
+    "inputSha256": "574df086b82ade0595bc4c01a28ff941d07ae4e0486ad724e7eb1c7475d32182"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "preset-12",
+    "kind": "preset",
+    "input": {
+      "name": "Preset 12",
+      "prompts": [
+        {
+          "identifier": "main-12",
+          "role": "system",
+          "content": "Instruction 12",
+          "corpus_marker": "preset-12"
+        },
+        {
+          "identifier": "disabled-12",
+          "role": "user",
+          "content": "disabled but retained"
+        }
+      ],
+      "prompt_order": [
+        {
+          "order": [
+            {
+              "identifier": "main-12",
+              "enabled": true
+            },
+            {
+              "identifier": "disabled-12",
+              "enabled": false
+            }
+          ]
+        }
+      ],
+      "temperature": 0.6,
+      "top_p": 0.9,
+      "extensions": {
+        "corpus_marker": "preset-12",
+        "tavern_helper": {
+          "scripts": [
+            {
+              "name": "preset-12",
+              "content": "never execute"
+            }
+          ]
+        }
+      }
+    },
+    "expected": {
+      "name": "Preset 12",
+      "format": "sillytavern-chat-completion-preset",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "tavern-helper"
+      ],
+      "marker": "preset-12"
+    },
+    "inputSha256": "7f0ba1567c95c1ac41626bd61316803e5705f337aed14d2c88359c97a71b6d05"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "preset-13",
+    "kind": "preset",
+    "input": {
+      "name": "Preset 13",
+      "prompts": [
+        {
+          "identifier": "main-13",
+          "role": "system",
+          "content": "Instruction 13",
+          "corpus_marker": "preset-13"
+        },
+        {
+          "identifier": "disabled-13",
+          "role": "user",
+          "content": "disabled but retained"
+        }
+      ],
+      "prompt_order": [
+        {
+          "order": [
+            {
+              "identifier": "main-13",
+              "enabled": true
+            },
+            {
+              "identifier": "disabled-13",
+              "enabled": false
+            }
+          ]
+        }
+      ],
+      "temperature": 0.65,
+      "top_p": 0.9,
+      "extensions": {
+        "corpus_marker": "preset-13"
+      }
+    },
+    "expected": {
+      "name": "Preset 13",
+      "format": "sillytavern-chat-completion-preset",
+      "itemCount": 1,
+      "disabledFeatures": [],
+      "marker": "preset-13"
+    },
+    "inputSha256": "9235359b32f3979468ea1afc52f26b0f36af92f0d8d29a790251dcfc56c4776d"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "preset-14",
+    "kind": "preset",
+    "input": {
+      "name": "Preset 14",
+      "prompts": [
+        {
+          "identifier": "main-14",
+          "role": "system",
+          "content": "Instruction 14",
+          "corpus_marker": "preset-14"
+        },
+        {
+          "identifier": "disabled-14",
+          "role": "user",
+          "content": "disabled but retained"
+        }
+      ],
+      "prompt_order": [
+        {
+          "order": [
+            {
+              "identifier": "main-14",
+              "enabled": true
+            },
+            {
+              "identifier": "disabled-14",
+              "enabled": false
+            }
+          ]
+        }
+      ],
+      "temperature": 0.7,
+      "top_p": 0.9,
+      "extensions": {
+        "corpus_marker": "preset-14",
+        "tavern_helper": {
+          "scripts": [
+            {
+              "name": "preset-14",
+              "content": "never execute"
+            }
+          ]
+        }
+      }
+    },
+    "expected": {
+      "name": "Preset 14",
+      "format": "sillytavern-chat-completion-preset",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "tavern-helper"
+      ],
+      "marker": "preset-14"
+    },
+    "inputSha256": "e7a4456603cc5d4c1ce117efa32659b09a0bc9400346f190ccfa53c5db49df18"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "chat-0",
+    "kind": "chat",
+    "input": [
+      {
+        "user_name": "User 0",
+        "character_name": "Character 0",
+        "chat_metadata": {
+          "corpus_marker": "chat-0"
+        }
+      },
+      {
+        "name": "User 0",
+        "mes": "Question 0",
+        "is_user": true,
+        "is_system": false,
+        "swipes": []
+      },
+      {
+        "name": "Character 0",
+        "mes": "Answer 0",
+        "is_user": false,
+        "is_system": false,
+        "swipes": [
+          "Answer 0",
+          "Alternate answer 0"
+        ],
+        "swipe_id": 0,
+        "extra": {
+          "type": "narrator",
+          "corpus_marker": "chat-0"
+        }
+      }
+    ],
+    "expected": {
+      "name": "Character 0",
+      "format": "sillytavern-chat-jsonl",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "chat-0"
+    },
+    "inputSha256": "cfb575833cf54570530e8d03e087115b3d9eba15f5b41415480472beba2e5761"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "chat-1",
+    "kind": "chat",
+    "input": [
+      {
+        "user_name": "User 1",
+        "character_name": "Character 1",
+        "chat_metadata": {
+          "corpus_marker": "chat-1"
+        }
+      },
+      {
+        "name": "User 1",
+        "mes": "Question 1",
+        "is_user": true,
+        "is_system": false,
+        "swipes": []
+      },
+      {
+        "name": "Character 1",
+        "mes": "Answer 1",
+        "is_user": false,
+        "is_system": false,
+        "swipes": [
+          "Answer 1",
+          "Alternate answer 1"
+        ],
+        "swipe_id": 1,
+        "extra": {
+          "corpus_marker": "chat-1"
+        }
+      }
+    ],
+    "expected": {
+      "name": "Character 1",
+      "format": "sillytavern-chat-jsonl",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "chat-1"
+    },
+    "inputSha256": "ed25e39ffd569c97f70b6670cdcdf7973e06c519c25519eb4a26407604d0aa63"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "chat-2",
+    "kind": "chat",
+    "input": [
+      {
+        "user_name": "User 2",
+        "character_name": "Character 2",
+        "chat_metadata": {
+          "corpus_marker": "chat-2"
+        }
+      },
+      {
+        "name": "User 2",
+        "mes": "Question 2",
+        "is_user": true,
+        "is_system": false,
+        "swipes": []
+      },
+      {
+        "name": "Character 2",
+        "mes": "Answer 2",
+        "is_user": false,
+        "is_system": false,
+        "swipes": [
+          "Answer 2",
+          "Alternate answer 2"
+        ],
+        "swipe_id": 0,
+        "extra": {
+          "corpus_marker": "chat-2"
+        }
+      }
+    ],
+    "expected": {
+      "name": "Character 2",
+      "format": "sillytavern-chat-jsonl",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "chat-2"
+    },
+    "inputSha256": "bd76962d3595e0e6296938470e17fdc1c2db0d8d16a0eccaa11fd1a4765e8c52"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "chat-3",
+    "kind": "chat",
+    "input": [
+      {
+        "user_name": "User 3",
+        "character_name": "Character 3",
+        "chat_metadata": {
+          "corpus_marker": "chat-3"
+        }
+      },
+      {
+        "name": "User 3",
+        "mes": "Question 3",
+        "is_user": true,
+        "is_system": false,
+        "swipes": []
+      },
+      {
+        "name": "Character 3",
+        "mes": "Answer 3",
+        "is_user": false,
+        "is_system": false,
+        "swipes": [
+          "Answer 3",
+          "Alternate answer 3"
+        ],
+        "swipe_id": 1,
+        "extra": {
+          "type": "narrator",
+          "corpus_marker": "chat-3"
+        }
+      }
+    ],
+    "expected": {
+      "name": "Character 3",
+      "format": "sillytavern-chat-jsonl",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "chat-3"
+    },
+    "inputSha256": "b39381219034c007a482aba690c7559af4d9cbe9e0ebd0f7f6a05fec3057da79"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "chat-4",
+    "kind": "chat",
+    "input": [
+      {
+        "user_name": "User 4",
+        "character_name": "Character 4",
+        "chat_metadata": {
+          "corpus_marker": "chat-4"
+        }
+      },
+      {
+        "name": "User 4",
+        "mes": "Question 4",
+        "is_user": true,
+        "is_system": false,
+        "swipes": []
+      },
+      {
+        "name": "Character 4",
+        "mes": "Answer 4",
+        "is_user": false,
+        "is_system": false,
+        "swipes": [
+          "Answer 4",
+          "Alternate answer 4"
+        ],
+        "swipe_id": 0,
+        "extra": {
+          "corpus_marker": "chat-4"
+        }
+      }
+    ],
+    "expected": {
+      "name": "Character 4",
+      "format": "sillytavern-chat-jsonl",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "chat-4"
+    },
+    "inputSha256": "d1f74356a3d12c47ec127f3e9369815855626fee4c1aa9097e6102a614010034"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "chat-5",
+    "kind": "chat",
+    "input": [
+      {
+        "user_name": "User 5",
+        "character_name": "Character 5",
+        "chat_metadata": {
+          "corpus_marker": "chat-5"
+        }
+      },
+      {
+        "name": "User 5",
+        "mes": "Question 5",
+        "is_user": true,
+        "is_system": false,
+        "swipes": []
+      },
+      {
+        "name": "Character 5",
+        "mes": "Answer 5",
+        "is_user": false,
+        "is_system": false,
+        "swipes": [
+          "Answer 5",
+          "Alternate answer 5"
+        ],
+        "swipe_id": 1,
+        "extra": {
+          "corpus_marker": "chat-5"
+        }
+      }
+    ],
+    "expected": {
+      "name": "Character 5",
+      "format": "sillytavern-chat-jsonl",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "chat-5"
+    },
+    "inputSha256": "3ac27fc758aded1ed7439b62235b81a75cd0ff5548600249093b11a05538edc6"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "chat-6",
+    "kind": "chat",
+    "input": [
+      {
+        "user_name": "User 6",
+        "character_name": "Character 6",
+        "chat_metadata": {
+          "corpus_marker": "chat-6"
+        }
+      },
+      {
+        "name": "User 6",
+        "mes": "Question 6",
+        "is_user": true,
+        "is_system": false,
+        "swipes": []
+      },
+      {
+        "name": "Character 6",
+        "mes": "Answer 6",
+        "is_user": false,
+        "is_system": false,
+        "swipes": [
+          "Answer 6",
+          "Alternate answer 6"
+        ],
+        "swipe_id": 0,
+        "extra": {
+          "type": "narrator",
+          "corpus_marker": "chat-6"
+        }
+      }
+    ],
+    "expected": {
+      "name": "Character 6",
+      "format": "sillytavern-chat-jsonl",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "chat-6"
+    },
+    "inputSha256": "d0cba386d0c634d3ba3c9f42e9589d04b5b405d9300696497336e4e9b7a89372"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "chat-7",
+    "kind": "chat",
+    "input": [
+      {
+        "user_name": "User 7",
+        "character_name": "Character 7",
+        "chat_metadata": {
+          "corpus_marker": "chat-7"
+        }
+      },
+      {
+        "name": "User 7",
+        "mes": "Question 7",
+        "is_user": true,
+        "is_system": false,
+        "swipes": []
+      },
+      {
+        "name": "Character 7",
+        "mes": "Answer 7",
+        "is_user": false,
+        "is_system": false,
+        "swipes": [
+          "Answer 7",
+          "Alternate answer 7"
+        ],
+        "swipe_id": 1,
+        "extra": {
+          "corpus_marker": "chat-7"
+        }
+      }
+    ],
+    "expected": {
+      "name": "Character 7",
+      "format": "sillytavern-chat-jsonl",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "chat-7"
+    },
+    "inputSha256": "069263f1832644cc913a8fdb0e5f00d0bd6c3ad8718bd4227a1ad5b85fe1f741"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "chat-8",
+    "kind": "chat",
+    "input": [
+      {
+        "user_name": "User 8",
+        "character_name": "Character 8",
+        "chat_metadata": {
+          "corpus_marker": "chat-8"
+        }
+      },
+      {
+        "name": "User 8",
+        "mes": "Question 8",
+        "is_user": true,
+        "is_system": false,
+        "swipes": []
+      },
+      {
+        "name": "Character 8",
+        "mes": "Answer 8",
+        "is_user": false,
+        "is_system": false,
+        "swipes": [
+          "Answer 8",
+          "Alternate answer 8"
+        ],
+        "swipe_id": 0,
+        "extra": {
+          "corpus_marker": "chat-8"
+        }
+      }
+    ],
+    "expected": {
+      "name": "Character 8",
+      "format": "sillytavern-chat-jsonl",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "chat-8"
+    },
+    "inputSha256": "ce03734218bacd6e0203d6a4a4bba865cfbb7e080f41699e9a5dcac008296119"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "chat-9",
+    "kind": "chat",
+    "input": [
+      {
+        "user_name": "User 9",
+        "character_name": "Character 9",
+        "chat_metadata": {
+          "corpus_marker": "chat-9"
+        }
+      },
+      {
+        "name": "User 9",
+        "mes": "Question 9",
+        "is_user": true,
+        "is_system": false,
+        "swipes": []
+      },
+      {
+        "name": "Character 9",
+        "mes": "Answer 9",
+        "is_user": false,
+        "is_system": false,
+        "swipes": [
+          "Answer 9",
+          "Alternate answer 9"
+        ],
+        "swipe_id": 1,
+        "extra": {
+          "type": "narrator",
+          "corpus_marker": "chat-9"
+        }
+      }
+    ],
+    "expected": {
+      "name": "Character 9",
+      "format": "sillytavern-chat-jsonl",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "chat-9"
+    },
+    "inputSha256": "98b0b70cac8a29404c38715c1a5f94641928586e7a8137dfd54a26548928b28b"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "chat-10",
+    "kind": "chat",
+    "input": [
+      {
+        "user_name": "User 10",
+        "character_name": "Character 10",
+        "chat_metadata": {
+          "corpus_marker": "chat-10"
+        }
+      },
+      {
+        "name": "User 10",
+        "mes": "Question 10",
+        "is_user": true,
+        "is_system": false,
+        "swipes": []
+      },
+      {
+        "name": "Character 10",
+        "mes": "Answer 10",
+        "is_user": false,
+        "is_system": false,
+        "swipes": [
+          "Answer 10",
+          "Alternate answer 10"
+        ],
+        "swipe_id": 0,
+        "extra": {
+          "corpus_marker": "chat-10"
+        }
+      }
+    ],
+    "expected": {
+      "name": "Character 10",
+      "format": "sillytavern-chat-jsonl",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "chat-10"
+    },
+    "inputSha256": "0aa2a3f72365317b361eead5087e780b0b69881ea107f8fa6620b05fe42fc69e"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "chat-11",
+    "kind": "chat",
+    "input": [
+      {
+        "user_name": "User 11",
+        "character_name": "Character 11",
+        "chat_metadata": {
+          "corpus_marker": "chat-11"
+        }
+      },
+      {
+        "name": "User 11",
+        "mes": "Question 11",
+        "is_user": true,
+        "is_system": false,
+        "swipes": []
+      },
+      {
+        "name": "Character 11",
+        "mes": "Answer 11",
+        "is_user": false,
+        "is_system": false,
+        "swipes": [
+          "Answer 11",
+          "Alternate answer 11"
+        ],
+        "swipe_id": 1,
+        "extra": {
+          "corpus_marker": "chat-11"
+        }
+      }
+    ],
+    "expected": {
+      "name": "Character 11",
+      "format": "sillytavern-chat-jsonl",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "chat-11"
+    },
+    "inputSha256": "460390fc3420e600e5d91808121c3c38fe92c841f86baa701594ea8573478fb9"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "chat-12",
+    "kind": "chat",
+    "input": [
+      {
+        "user_name": "User 12",
+        "character_name": "Character 12",
+        "chat_metadata": {
+          "corpus_marker": "chat-12"
+        }
+      },
+      {
+        "name": "User 12",
+        "mes": "Question 12",
+        "is_user": true,
+        "is_system": false,
+        "swipes": []
+      },
+      {
+        "name": "Character 12",
+        "mes": "Answer 12",
+        "is_user": false,
+        "is_system": false,
+        "swipes": [
+          "Answer 12",
+          "Alternate answer 12"
+        ],
+        "swipe_id": 0,
+        "extra": {
+          "type": "narrator",
+          "corpus_marker": "chat-12"
+        }
+      }
+    ],
+    "expected": {
+      "name": "Character 12",
+      "format": "sillytavern-chat-jsonl",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "chat-12"
+    },
+    "inputSha256": "d47143b45263fef584c93732b8d93d4c0205aabc72c041b4b7d5ffe7d8eecc0e"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "chat-13",
+    "kind": "chat",
+    "input": [
+      {
+        "user_name": "User 13",
+        "character_name": "Character 13",
+        "chat_metadata": {
+          "corpus_marker": "chat-13"
+        }
+      },
+      {
+        "name": "User 13",
+        "mes": "Question 13",
+        "is_user": true,
+        "is_system": false,
+        "swipes": []
+      },
+      {
+        "name": "Character 13",
+        "mes": "Answer 13",
+        "is_user": false,
+        "is_system": false,
+        "swipes": [
+          "Answer 13",
+          "Alternate answer 13"
+        ],
+        "swipe_id": 1,
+        "extra": {
+          "corpus_marker": "chat-13"
+        }
+      }
+    ],
+    "expected": {
+      "name": "Character 13",
+      "format": "sillytavern-chat-jsonl",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "chat-13"
+    },
+    "inputSha256": "024dc3c2ce4b40e3b08216eafb07471cc920d6e82b232037823a0ea52ecec96d"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "chat-14",
+    "kind": "chat",
+    "input": [
+      {
+        "user_name": "User 14",
+        "character_name": "Character 14",
+        "chat_metadata": {
+          "corpus_marker": "chat-14"
+        }
+      },
+      {
+        "name": "User 14",
+        "mes": "Question 14",
+        "is_user": true,
+        "is_system": false,
+        "swipes": []
+      },
+      {
+        "name": "Character 14",
+        "mes": "Answer 14",
+        "is_user": false,
+        "is_system": false,
+        "swipes": [
+          "Answer 14",
+          "Alternate answer 14"
+        ],
+        "swipe_id": 0,
+        "extra": {
+          "corpus_marker": "chat-14"
+        }
+      }
+    ],
+    "expected": {
+      "name": "Character 14",
+      "format": "sillytavern-chat-jsonl",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "chat-14"
+    },
+    "inputSha256": "c9f3e6aee8afefb9c222a84756fb8f28d8859a63e6071fa98344e5900bdd4a74"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "chat-15",
+    "kind": "chat",
+    "input": [
+      {
+        "user_name": "User 15",
+        "character_name": "Character 15",
+        "chat_metadata": {
+          "corpus_marker": "chat-15"
+        }
+      },
+      {
+        "name": "User 15",
+        "mes": "Question 15",
+        "is_user": true,
+        "is_system": false,
+        "swipes": []
+      },
+      {
+        "name": "Character 15",
+        "mes": "Answer 15",
+        "is_user": false,
+        "is_system": false,
+        "swipes": [
+          "Answer 15",
+          "Alternate answer 15"
+        ],
+        "swipe_id": 1,
+        "extra": {
+          "type": "narrator",
+          "corpus_marker": "chat-15"
+        }
+      }
+    ],
+    "expected": {
+      "name": "Character 15",
+      "format": "sillytavern-chat-jsonl",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "chat-15"
+    },
+    "inputSha256": "ad01c1805a84b70001a282b9aa09cdbea7cbb42c5e9086ec13d3b45937cb611e"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "chat-16",
+    "kind": "chat",
+    "input": [
+      {
+        "user_name": "User 16",
+        "character_name": "Character 16",
+        "chat_metadata": {
+          "corpus_marker": "chat-16"
+        }
+      },
+      {
+        "name": "User 16",
+        "mes": "Question 16",
+        "is_user": true,
+        "is_system": false,
+        "swipes": []
+      },
+      {
+        "name": "Character 16",
+        "mes": "Answer 16",
+        "is_user": false,
+        "is_system": false,
+        "swipes": [
+          "Answer 16",
+          "Alternate answer 16"
+        ],
+        "swipe_id": 0,
+        "extra": {
+          "corpus_marker": "chat-16"
+        }
+      }
+    ],
+    "expected": {
+      "name": "Character 16",
+      "format": "sillytavern-chat-jsonl",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "chat-16"
+    },
+    "inputSha256": "d1df37782d52955dad7d0494b53ab160c516cea3d8d657d1d8ced9bf078a97ad"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "chat-17",
+    "kind": "chat",
+    "input": [
+      {
+        "user_name": "User 17",
+        "character_name": "Character 17",
+        "chat_metadata": {
+          "corpus_marker": "chat-17"
+        }
+      },
+      {
+        "name": "User 17",
+        "mes": "Question 17",
+        "is_user": true,
+        "is_system": false,
+        "swipes": []
+      },
+      {
+        "name": "Character 17",
+        "mes": "Answer 17",
+        "is_user": false,
+        "is_system": false,
+        "swipes": [
+          "Answer 17",
+          "Alternate answer 17"
+        ],
+        "swipe_id": 1,
+        "extra": {
+          "corpus_marker": "chat-17"
+        }
+      }
+    ],
+    "expected": {
+      "name": "Character 17",
+      "format": "sillytavern-chat-jsonl",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "chat-17"
+    },
+    "inputSha256": "abccbc74a45c626e9af405418860f8514ce617223b19ba37a10386c40576f696"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "chat-18",
+    "kind": "chat",
+    "input": [
+      {
+        "user_name": "User 18",
+        "character_name": "Character 18",
+        "chat_metadata": {
+          "corpus_marker": "chat-18"
+        }
+      },
+      {
+        "name": "User 18",
+        "mes": "Question 18",
+        "is_user": true,
+        "is_system": false,
+        "swipes": []
+      },
+      {
+        "name": "Character 18",
+        "mes": "Answer 18",
+        "is_user": false,
+        "is_system": false,
+        "swipes": [
+          "Answer 18",
+          "Alternate answer 18"
+        ],
+        "swipe_id": 0,
+        "extra": {
+          "type": "narrator",
+          "corpus_marker": "chat-18"
+        }
+      }
+    ],
+    "expected": {
+      "name": "Character 18",
+      "format": "sillytavern-chat-jsonl",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "chat-18"
+    },
+    "inputSha256": "bdd099ce1b3248350ddbb3cbcf07b100eaece67c65fa46585909aee7f7307abe"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "chat-19",
+    "kind": "chat",
+    "input": [
+      {
+        "user_name": "User 19",
+        "character_name": "Character 19",
+        "chat_metadata": {
+          "corpus_marker": "chat-19"
+        }
+      },
+      {
+        "name": "User 19",
+        "mes": "Question 19",
+        "is_user": true,
+        "is_system": false,
+        "swipes": []
+      },
+      {
+        "name": "Character 19",
+        "mes": "Answer 19",
+        "is_user": false,
+        "is_system": false,
+        "swipes": [
+          "Answer 19",
+          "Alternate answer 19"
+        ],
+        "swipe_id": 1,
+        "extra": {
+          "corpus_marker": "chat-19"
+        }
+      }
+    ],
+    "expected": {
+      "name": "Character 19",
+      "format": "sillytavern-chat-jsonl",
+      "itemCount": 2,
+      "disabledFeatures": [],
+      "marker": "chat-19"
+    },
+    "inputSha256": "e1752259b2f6ff621985496a1042d00a79752979a91cf354f69a2e5d5cd4a606"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "png-0",
+    "kind": "png",
+    "input": {
+      "card": {
+        "spec": "chara_card_v3",
+        "spec_version": "3.0",
+        "data": {
+          "name": "PNG Card 0",
+          "description": "Binary 0",
+          "personality": "",
+          "scenario": "",
+          "first_mes": "Binary greeting 0",
+          "mes_example": "",
+          "alternate_greetings": [],
+          "tags": [
+            "binary",
+            "golden"
+          ],
+          "extensions": {
+            "corpus_marker": "png-0",
+            "regex_scripts": [
+              {
+                "script_name": "png-0",
+                "findRegex": "x",
+                "replaceString": "y"
+              }
+            ]
+          }
+        }
+      },
+      "keyword": "ccv3"
+    },
+    "expected": {
+      "name": "PNG Card 0",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 0,
+      "disabledFeatures": [
+        "display-regex"
+      ],
+      "marker": "png-0",
+      "transport": "png-ccv3"
+    },
+    "inputSha256": "92f8a1f1dc39d3514e0e21fee9b41164ea660bf03b540205b0437df1ddaaa42c"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "png-1",
+    "kind": "png",
+    "input": {
+      "card": {
+        "spec": "chara_card_v3",
+        "spec_version": "3.0",
+        "data": {
+          "name": "PNG Card 1",
+          "description": "Binary 1",
+          "personality": "",
+          "scenario": "",
+          "first_mes": "Binary greeting 1",
+          "mes_example": "",
+          "alternate_greetings": [],
+          "tags": [
+            "binary",
+            "golden"
+          ],
+          "extensions": {
+            "corpus_marker": "png-1"
+          }
+        }
+      },
+      "keyword": "chara"
+    },
+    "expected": {
+      "name": "PNG Card 1",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 0,
+      "disabledFeatures": [],
+      "marker": "png-1",
+      "transport": "png-chara"
+    },
+    "inputSha256": "e90c0bfdf6faaa892cbff4d41e44ffcd4d07a0f51bc5f7fb7f0f3e1eeab382ec"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "png-2",
+    "kind": "png",
+    "input": {
+      "card": {
+        "spec": "chara_card_v3",
+        "spec_version": "3.0",
+        "data": {
+          "name": "PNG Card 2",
+          "description": "Binary 2",
+          "personality": "",
+          "scenario": "",
+          "first_mes": "Binary greeting 2",
+          "mes_example": "",
+          "alternate_greetings": [],
+          "tags": [
+            "binary",
+            "golden"
+          ],
+          "extensions": {
+            "corpus_marker": "png-2",
+            "regex_scripts": [
+              {
+                "script_name": "png-2",
+                "findRegex": "x",
+                "replaceString": "y"
+              }
+            ]
+          }
+        }
+      },
+      "keyword": "ccv3"
+    },
+    "expected": {
+      "name": "PNG Card 2",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 0,
+      "disabledFeatures": [
+        "display-regex"
+      ],
+      "marker": "png-2",
+      "transport": "png-ccv3"
+    },
+    "inputSha256": "f12d00fad6f4bcbb45cbb3ed9aff406664e71c1ea515d8fd43ede72b14b9c4f5"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "png-3",
+    "kind": "png",
+    "input": {
+      "card": {
+        "spec": "chara_card_v3",
+        "spec_version": "3.0",
+        "data": {
+          "name": "PNG Card 3",
+          "description": "Binary 3",
+          "personality": "",
+          "scenario": "",
+          "first_mes": "Binary greeting 3",
+          "mes_example": "",
+          "alternate_greetings": [],
+          "tags": [
+            "binary",
+            "golden"
+          ],
+          "extensions": {
+            "corpus_marker": "png-3"
+          }
+        }
+      },
+      "keyword": "chara"
+    },
+    "expected": {
+      "name": "PNG Card 3",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 0,
+      "disabledFeatures": [],
+      "marker": "png-3",
+      "transport": "png-chara"
+    },
+    "inputSha256": "bc2ba78a6fde17c9468e3daf2759f2981955cde419acc33473fb95205dc468b8"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "png-4",
+    "kind": "png",
+    "input": {
+      "card": {
+        "spec": "chara_card_v3",
+        "spec_version": "3.0",
+        "data": {
+          "name": "PNG Card 4",
+          "description": "Binary 4",
+          "personality": "",
+          "scenario": "",
+          "first_mes": "Binary greeting 4",
+          "mes_example": "",
+          "alternate_greetings": [],
+          "tags": [
+            "binary",
+            "golden"
+          ],
+          "extensions": {
+            "corpus_marker": "png-4",
+            "regex_scripts": [
+              {
+                "script_name": "png-4",
+                "findRegex": "x",
+                "replaceString": "y"
+              }
+            ]
+          }
+        }
+      },
+      "keyword": "ccv3"
+    },
+    "expected": {
+      "name": "PNG Card 4",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 0,
+      "disabledFeatures": [
+        "display-regex"
+      ],
+      "marker": "png-4",
+      "transport": "png-ccv3"
+    },
+    "inputSha256": "5c055690b1fd6a19adf2cad74fa3925c28c0920647e8a5bb84758fe820bd5e4c"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "png-5",
+    "kind": "png",
+    "input": {
+      "card": {
+        "spec": "chara_card_v3",
+        "spec_version": "3.0",
+        "data": {
+          "name": "PNG Card 5",
+          "description": "Binary 5",
+          "personality": "",
+          "scenario": "",
+          "first_mes": "Binary greeting 5",
+          "mes_example": "",
+          "alternate_greetings": [],
+          "tags": [
+            "binary",
+            "golden"
+          ],
+          "extensions": {
+            "corpus_marker": "png-5"
+          }
+        }
+      },
+      "keyword": "chara"
+    },
+    "expected": {
+      "name": "PNG Card 5",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 0,
+      "disabledFeatures": [],
+      "marker": "png-5",
+      "transport": "png-chara"
+    },
+    "inputSha256": "2d0edf6870345408c03d830a58c92ef7be7b8909bc85ce25895516bc10c1507d"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "png-6",
+    "kind": "png",
+    "input": {
+      "card": {
+        "spec": "chara_card_v3",
+        "spec_version": "3.0",
+        "data": {
+          "name": "PNG Card 6",
+          "description": "Binary 6",
+          "personality": "",
+          "scenario": "",
+          "first_mes": "Binary greeting 6",
+          "mes_example": "",
+          "alternate_greetings": [],
+          "tags": [
+            "binary",
+            "golden"
+          ],
+          "extensions": {
+            "corpus_marker": "png-6",
+            "regex_scripts": [
+              {
+                "script_name": "png-6",
+                "findRegex": "x",
+                "replaceString": "y"
+              }
+            ]
+          }
+        }
+      },
+      "keyword": "ccv3"
+    },
+    "expected": {
+      "name": "PNG Card 6",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 0,
+      "disabledFeatures": [
+        "display-regex"
+      ],
+      "marker": "png-6",
+      "transport": "png-ccv3"
+    },
+    "inputSha256": "61ab76399d44d4514151f451a1be847755d83f0329b9ea7c413dcd4efa5f34fe"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "png-7",
+    "kind": "png",
+    "input": {
+      "card": {
+        "spec": "chara_card_v3",
+        "spec_version": "3.0",
+        "data": {
+          "name": "PNG Card 7",
+          "description": "Binary 7",
+          "personality": "",
+          "scenario": "",
+          "first_mes": "Binary greeting 7",
+          "mes_example": "",
+          "alternate_greetings": [],
+          "tags": [
+            "binary",
+            "golden"
+          ],
+          "extensions": {
+            "corpus_marker": "png-7"
+          }
+        }
+      },
+      "keyword": "chara"
+    },
+    "expected": {
+      "name": "PNG Card 7",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 0,
+      "disabledFeatures": [],
+      "marker": "png-7",
+      "transport": "png-chara"
+    },
+    "inputSha256": "69b4f3b2296cb709cb67af7c5b859d3fa63485c7091bd4df9b2b7b65526414f6"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "png-8",
+    "kind": "png",
+    "input": {
+      "card": {
+        "spec": "chara_card_v3",
+        "spec_version": "3.0",
+        "data": {
+          "name": "PNG Card 8",
+          "description": "Binary 8",
+          "personality": "",
+          "scenario": "",
+          "first_mes": "Binary greeting 8",
+          "mes_example": "",
+          "alternate_greetings": [],
+          "tags": [
+            "binary",
+            "golden"
+          ],
+          "extensions": {
+            "corpus_marker": "png-8",
+            "regex_scripts": [
+              {
+                "script_name": "png-8",
+                "findRegex": "x",
+                "replaceString": "y"
+              }
+            ]
+          }
+        }
+      },
+      "keyword": "ccv3"
+    },
+    "expected": {
+      "name": "PNG Card 8",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 0,
+      "disabledFeatures": [
+        "display-regex"
+      ],
+      "marker": "png-8",
+      "transport": "png-ccv3"
+    },
+    "inputSha256": "25bf0b0db85faa8b04146ec687d10b9399962be2d75c30e1f7125dda8d984683"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "png-9",
+    "kind": "png",
+    "input": {
+      "card": {
+        "spec": "chara_card_v3",
+        "spec_version": "3.0",
+        "data": {
+          "name": "PNG Card 9",
+          "description": "Binary 9",
+          "personality": "",
+          "scenario": "",
+          "first_mes": "Binary greeting 9",
+          "mes_example": "",
+          "alternate_greetings": [],
+          "tags": [
+            "binary",
+            "golden"
+          ],
+          "extensions": {
+            "corpus_marker": "png-9"
+          }
+        }
+      },
+      "keyword": "chara"
+    },
+    "expected": {
+      "name": "PNG Card 9",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 0,
+      "disabledFeatures": [],
+      "marker": "png-9",
+      "transport": "png-chara"
+    },
+    "inputSha256": "8b43b12ea919a3ee87bee1cecd3c85538f23944237cb66f3888516a5d499fb5b"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "charx-0",
+    "kind": "charx",
+    "input": {
+      "card": {
+        "spec": "chara_card_v3",
+        "spec_version": "3.0",
+        "data": {
+          "name": "CHARX Card 0",
+          "description": "Binary 0",
+          "personality": "",
+          "scenario": "",
+          "first_mes": "Binary greeting 0",
+          "mes_example": "",
+          "alternate_greetings": [],
+          "tags": [
+            "binary",
+            "golden"
+          ],
+          "extensions": {
+            "corpus_marker": "charx-0",
+            "regex_scripts": [
+              {
+                "script_name": "charx-0",
+                "findRegex": "x",
+                "replaceString": "y"
+              }
+            ]
+          },
+          "assets": [
+            {
+              "type": "icon",
+              "uri": "embedded://assets/0.png",
+              "name": "charx-0",
+              "ext": "png"
+            }
+          ]
+        }
+      },
+      "assetPath": "assets/0.png",
+      "assetBytes": [
+        137,
+        80,
+        78,
+        71,
+        0
+      ]
+    },
+    "expected": {
+      "name": "CHARX Card 0",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "display-regex",
+        "remote-assets"
+      ],
+      "marker": "charx-0",
+      "transport": "charx"
+    },
+    "inputSha256": "9e384a92c12b406b00152024629d8c0ba4f17025e775a273a26f265385c9d05a"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "charx-1",
+    "kind": "charx",
+    "input": {
+      "card": {
+        "spec": "chara_card_v3",
+        "spec_version": "3.0",
+        "data": {
+          "name": "CHARX Card 1",
+          "description": "Binary 1",
+          "personality": "",
+          "scenario": "",
+          "first_mes": "Binary greeting 1",
+          "mes_example": "",
+          "alternate_greetings": [],
+          "tags": [
+            "binary",
+            "golden"
+          ],
+          "extensions": {
+            "corpus_marker": "charx-1"
+          },
+          "assets": [
+            {
+              "type": "icon",
+              "uri": "embedded://assets/1.png",
+              "name": "charx-1",
+              "ext": "png"
+            }
+          ]
+        }
+      },
+      "assetPath": "assets/1.png",
+      "assetBytes": [
+        137,
+        80,
+        78,
+        71,
+        1
+      ]
+    },
+    "expected": {
+      "name": "CHARX Card 1",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "remote-assets"
+      ],
+      "marker": "charx-1",
+      "transport": "charx"
+    },
+    "inputSha256": "31c0e642033a04c2aa7a4cf35a00a74f818c0b1f372f72515cf7e3245dba1190"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "charx-2",
+    "kind": "charx",
+    "input": {
+      "card": {
+        "spec": "chara_card_v3",
+        "spec_version": "3.0",
+        "data": {
+          "name": "CHARX Card 2",
+          "description": "Binary 2",
+          "personality": "",
+          "scenario": "",
+          "first_mes": "Binary greeting 2",
+          "mes_example": "",
+          "alternate_greetings": [],
+          "tags": [
+            "binary",
+            "golden"
+          ],
+          "extensions": {
+            "corpus_marker": "charx-2",
+            "regex_scripts": [
+              {
+                "script_name": "charx-2",
+                "findRegex": "x",
+                "replaceString": "y"
+              }
+            ]
+          },
+          "assets": [
+            {
+              "type": "icon",
+              "uri": "embedded://assets/2.png",
+              "name": "charx-2",
+              "ext": "png"
+            }
+          ]
+        }
+      },
+      "assetPath": "assets/2.png",
+      "assetBytes": [
+        137,
+        80,
+        78,
+        71,
+        2
+      ]
+    },
+    "expected": {
+      "name": "CHARX Card 2",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "display-regex",
+        "remote-assets"
+      ],
+      "marker": "charx-2",
+      "transport": "charx"
+    },
+    "inputSha256": "bf7b9a722bc7012e2398b603d44e197fe8c37e76a75b6ce6e390c996433d23c4"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "charx-3",
+    "kind": "charx",
+    "input": {
+      "card": {
+        "spec": "chara_card_v3",
+        "spec_version": "3.0",
+        "data": {
+          "name": "CHARX Card 3",
+          "description": "Binary 3",
+          "personality": "",
+          "scenario": "",
+          "first_mes": "Binary greeting 3",
+          "mes_example": "",
+          "alternate_greetings": [],
+          "tags": [
+            "binary",
+            "golden"
+          ],
+          "extensions": {
+            "corpus_marker": "charx-3"
+          },
+          "assets": [
+            {
+              "type": "icon",
+              "uri": "embedded://assets/3.png",
+              "name": "charx-3",
+              "ext": "png"
+            }
+          ]
+        }
+      },
+      "assetPath": "assets/3.png",
+      "assetBytes": [
+        137,
+        80,
+        78,
+        71,
+        3
+      ]
+    },
+    "expected": {
+      "name": "CHARX Card 3",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "remote-assets"
+      ],
+      "marker": "charx-3",
+      "transport": "charx"
+    },
+    "inputSha256": "d53d35f8be6d3bf89fa3263e71bc99991ddcb8efcd2e9b21034827159dde4b12"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "charx-4",
+    "kind": "charx",
+    "input": {
+      "card": {
+        "spec": "chara_card_v3",
+        "spec_version": "3.0",
+        "data": {
+          "name": "CHARX Card 4",
+          "description": "Binary 4",
+          "personality": "",
+          "scenario": "",
+          "first_mes": "Binary greeting 4",
+          "mes_example": "",
+          "alternate_greetings": [],
+          "tags": [
+            "binary",
+            "golden"
+          ],
+          "extensions": {
+            "corpus_marker": "charx-4",
+            "regex_scripts": [
+              {
+                "script_name": "charx-4",
+                "findRegex": "x",
+                "replaceString": "y"
+              }
+            ]
+          },
+          "assets": [
+            {
+              "type": "icon",
+              "uri": "embedded://assets/4.png",
+              "name": "charx-4",
+              "ext": "png"
+            }
+          ]
+        }
+      },
+      "assetPath": "assets/4.png",
+      "assetBytes": [
+        137,
+        80,
+        78,
+        71,
+        4
+      ]
+    },
+    "expected": {
+      "name": "CHARX Card 4",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "display-regex",
+        "remote-assets"
+      ],
+      "marker": "charx-4",
+      "transport": "charx"
+    },
+    "inputSha256": "e0d9e135a64c749dfe0b4eaf8861b38d95dfbe3d8d8435c1c7d55a53241e2ad0"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "charx-5",
+    "kind": "charx",
+    "input": {
+      "card": {
+        "spec": "chara_card_v3",
+        "spec_version": "3.0",
+        "data": {
+          "name": "CHARX Card 5",
+          "description": "Binary 5",
+          "personality": "",
+          "scenario": "",
+          "first_mes": "Binary greeting 5",
+          "mes_example": "",
+          "alternate_greetings": [],
+          "tags": [
+            "binary",
+            "golden"
+          ],
+          "extensions": {
+            "corpus_marker": "charx-5"
+          },
+          "assets": [
+            {
+              "type": "icon",
+              "uri": "embedded://assets/5.png",
+              "name": "charx-5",
+              "ext": "png"
+            }
+          ]
+        }
+      },
+      "assetPath": "assets/5.png",
+      "assetBytes": [
+        137,
+        80,
+        78,
+        71,
+        5
+      ]
+    },
+    "expected": {
+      "name": "CHARX Card 5",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "remote-assets"
+      ],
+      "marker": "charx-5",
+      "transport": "charx"
+    },
+    "inputSha256": "0112137769f4da816a860ef8ec790caa6fa7ce6673c9d2a887e79f17552f9e21"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "charx-6",
+    "kind": "charx",
+    "input": {
+      "card": {
+        "spec": "chara_card_v3",
+        "spec_version": "3.0",
+        "data": {
+          "name": "CHARX Card 6",
+          "description": "Binary 6",
+          "personality": "",
+          "scenario": "",
+          "first_mes": "Binary greeting 6",
+          "mes_example": "",
+          "alternate_greetings": [],
+          "tags": [
+            "binary",
+            "golden"
+          ],
+          "extensions": {
+            "corpus_marker": "charx-6",
+            "regex_scripts": [
+              {
+                "script_name": "charx-6",
+                "findRegex": "x",
+                "replaceString": "y"
+              }
+            ]
+          },
+          "assets": [
+            {
+              "type": "icon",
+              "uri": "embedded://assets/6.png",
+              "name": "charx-6",
+              "ext": "png"
+            }
+          ]
+        }
+      },
+      "assetPath": "assets/6.png",
+      "assetBytes": [
+        137,
+        80,
+        78,
+        71,
+        6
+      ]
+    },
+    "expected": {
+      "name": "CHARX Card 6",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "display-regex",
+        "remote-assets"
+      ],
+      "marker": "charx-6",
+      "transport": "charx"
+    },
+    "inputSha256": "5893ca53ebae37d81ad5e151d7aa568464bab7618d74a5284a576fa7630aa3c3"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "charx-7",
+    "kind": "charx",
+    "input": {
+      "card": {
+        "spec": "chara_card_v3",
+        "spec_version": "3.0",
+        "data": {
+          "name": "CHARX Card 7",
+          "description": "Binary 7",
+          "personality": "",
+          "scenario": "",
+          "first_mes": "Binary greeting 7",
+          "mes_example": "",
+          "alternate_greetings": [],
+          "tags": [
+            "binary",
+            "golden"
+          ],
+          "extensions": {
+            "corpus_marker": "charx-7"
+          },
+          "assets": [
+            {
+              "type": "icon",
+              "uri": "embedded://assets/7.png",
+              "name": "charx-7",
+              "ext": "png"
+            }
+          ]
+        }
+      },
+      "assetPath": "assets/7.png",
+      "assetBytes": [
+        137,
+        80,
+        78,
+        71,
+        7
+      ]
+    },
+    "expected": {
+      "name": "CHARX Card 7",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "remote-assets"
+      ],
+      "marker": "charx-7",
+      "transport": "charx"
+    },
+    "inputSha256": "62a5296a8b6f8a24cfc76f309677e558b95cab3ed1769ee3dfd37a42b1969446"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "charx-8",
+    "kind": "charx",
+    "input": {
+      "card": {
+        "spec": "chara_card_v3",
+        "spec_version": "3.0",
+        "data": {
+          "name": "CHARX Card 8",
+          "description": "Binary 8",
+          "personality": "",
+          "scenario": "",
+          "first_mes": "Binary greeting 8",
+          "mes_example": "",
+          "alternate_greetings": [],
+          "tags": [
+            "binary",
+            "golden"
+          ],
+          "extensions": {
+            "corpus_marker": "charx-8",
+            "regex_scripts": [
+              {
+                "script_name": "charx-8",
+                "findRegex": "x",
+                "replaceString": "y"
+              }
+            ]
+          },
+          "assets": [
+            {
+              "type": "icon",
+              "uri": "embedded://assets/8.png",
+              "name": "charx-8",
+              "ext": "png"
+            }
+          ]
+        }
+      },
+      "assetPath": "assets/8.png",
+      "assetBytes": [
+        137,
+        80,
+        78,
+        71,
+        8
+      ]
+    },
+    "expected": {
+      "name": "CHARX Card 8",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "display-regex",
+        "remote-assets"
+      ],
+      "marker": "charx-8",
+      "transport": "charx"
+    },
+    "inputSha256": "00a3d913e00cc0139a57f699693a90d69675bf7adc7271bbea376d2d1973e5bc"
+  },
+  {
+    "schemaVersion": 1,
+    "id": "charx-9",
+    "kind": "charx",
+    "input": {
+      "card": {
+        "spec": "chara_card_v3",
+        "spec_version": "3.0",
+        "data": {
+          "name": "CHARX Card 9",
+          "description": "Binary 9",
+          "personality": "",
+          "scenario": "",
+          "first_mes": "Binary greeting 9",
+          "mes_example": "",
+          "alternate_greetings": [],
+          "tags": [
+            "binary",
+            "golden"
+          ],
+          "extensions": {
+            "corpus_marker": "charx-9"
+          },
+          "assets": [
+            {
+              "type": "icon",
+              "uri": "embedded://assets/9.png",
+              "name": "charx-9",
+              "ext": "png"
+            }
+          ]
+        }
+      },
+      "assetPath": "assets/9.png",
+      "assetBytes": [
+        137,
+        80,
+        78,
+        71,
+        9
+      ]
+    },
+    "expected": {
+      "name": "CHARX Card 9",
+      "format": "sillytavern-character-card-v3",
+      "itemCount": 1,
+      "disabledFeatures": [
+        "remote-assets"
+      ],
+      "marker": "charx-9",
+      "transport": "charx"
+    },
+    "inputSha256": "2baba51ac26817a5410681f8aa0ec5e23edc7c4786868e2fee74495332926b4b"
+  }
+]

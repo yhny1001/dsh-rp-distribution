@@ -1,0 +1,16 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types"
+  },
+  "include": [
+    "src",
+    "../../../types/host-sdk.d.ts"
+  ],
+  "references": [
+    {
+      "path": "../registry"
+    }
+  ]
+}

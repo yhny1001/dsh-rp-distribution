@@ -1,0 +1,37 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types"
+  },
+  "include": [
+    "src",
+    "../../../types/host-sdk.d.ts"
+  ],
+  "references": [
+    {
+      "path": "../contracts"
+    },
+    {
+      "path": "../component-runtime"
+    },
+    {
+      "path": "../capability-catalog"
+    },
+    {
+      "path": "../package-runtime"
+    },
+    {
+      "path": "../lifecycle-common"
+    },
+    {
+      "path": "../pipeline-runtime"
+    },
+    {
+      "path": "../registry"
+    },
+    {
+      "path": "../ui-slot-runtime"
+    }
+  ]
+}

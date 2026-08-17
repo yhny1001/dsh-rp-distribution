@@ -1,0 +1,12 @@
+.env
+node_modules/
+lib/
+*.tsbuildinfo
+.pnpm-store/
+.cache/
+coverage/
+dist/
+tmp/
+.DS_Store
+.idea/
+.vscode/

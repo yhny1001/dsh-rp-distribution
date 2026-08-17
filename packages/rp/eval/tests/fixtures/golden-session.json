@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "scenarios": [
+    {
+      "schemaVersion": 1,
+      "id": "directed-turn",
+      "events": [
+        {
+          "type": "rp/composition-resolved",
+          "seq": 0,
+          "time": 1,
+          "data": {
+            "turnId": "turn-1",
+            "compositionId": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "componentIds": ["actor", "state"],
+            "scope": { "kind": "conversation", "id": "conversation-1" }
+          }
+        },
+        {
+          "type": "rp/context-activated",
+          "seq": 1,
+          "time": 2,
+          "data": {
+            "schemaVersion": 1,
+            "turnId": "turn-1",
+            "input": { "text": "continue" },
+            "context": { "experience": "rp-directed" }
+          }
+        },
+        {
+          "type": "rp/pipeline-started",
+          "seq": 2,
+          "time": 3,
+          "data": {
+            "turnId": "turn-1",
+            "pipelineId": "turn.directed",
+            "snapshotHash": "pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+            "kind": "turn"
+          }
+        },
+        {
+          "type": "rp/pipeline-stage",
+          "seq": 3,
+          "time": 4,
+          "data": {
+            "turnId": "turn-1",
+            "pipelineId": "turn.directed",
+            "snapshotHash": "pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+            "kind": "turn",
+            "stageId": "actor",
+            "outcome": "completed"
+          }
+        },
+        {
+          "type": "rp/pipeline-completed",
+          "seq": 4,
+          "time": 5,
+          "data": {
+            "turnId": "turn-1",
+            "pipelineId": "turn.directed",
+            "snapshotHash": "pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+            "kind": "turn"
+          }
+        },
+        {
+          "type": "rp/turn-committed",
+          "seq": 5,
+          "time": 6,
+          "data": {
+            "schemaVersion": 1,
+            "turnId": "turn-1",
+            "composition": {
+              "turnId": "turn-1",
+              "compositionId": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "componentIds": ["actor", "state"],
+              "scope": { "kind": "conversation", "id": "conversation-1" }
+            },
+            "pipeline": {
+              "turnId": "turn-1",
+              "pipelineId": "turn.directed",
+              "snapshotHash": "pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+              "kind": "turn"
+            },
+            "assistantMessage": "The lantern steadied in the rain.",
+            "state": {
+              "schemaVersion": 1,
+              "revision": 1,
+              "owner": "scene",
+              "value": { "weather": "rain", "lantern": "lit" }
+            },
+            "memories": [
+              {
+                "schemaVersion": 1,
+                "id": "memory-1",
+                "owner": "character:guide",
+                "content": "The guide kept the lantern lit in the storm.",
+                "salience": 0.8,
+                "createdAt": 6
+              }
+            ],
+            "branch": {
+              "id": "branch-main",
+              "active": true,
+              "message": "The lantern steadied in the rain."
+            },
+            "committedAt": 6
+          }
+        }
+      ],
+      "expected": {
+        "projectionSha256": "4448ac33195bf6b95ecf445742ef54d930ef07ef2ff40c553e5a48805b21d083",
+        "eventLogSha256": "b47fe556df404533638b7b4bf12406c710a4b4a9a223a9b4c6eb73bc3978b584",
+        "counts": {
+          "turns": 1,
+          "aborted": 0,
+          "pipelines": 1,
+          "agents": 0,
+          "memories": 1,
+          "branches": 1,
+          "media": 0,
+          "capabilityInvocations": 0
+        },
+        "assistantMessages": ["The lantern steadied in the rain."],
+        "state": { "weather": "rain", "lantern": "lit" },
+        "activeBranchId": "branch-main",
+        "settled": true
+      }
+    }
+  ]
+}

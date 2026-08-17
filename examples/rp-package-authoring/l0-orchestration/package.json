@@ -1,0 +1,11 @@
+{
+  "name": "@dsh-rp-example/orchestration",
+  "version": "1.0.0",
+  "description": "Installable L0 multi-Pipeline, Agent, and Memory RP package example",
+  "type": "module",
+  "license": "MIT",
+  "files": ["rp.package.tgz", "rp.sbom.json"],
+  "scripts": {
+    "pack:rp": "dsh rp pack ."
+  }
+}

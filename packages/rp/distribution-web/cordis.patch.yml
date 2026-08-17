@@ -1,0 +1,6 @@
+- insert:
+    - id: rp-ui-slots
+      name: '@dsh-rp/ui-slot-runtime'
+
+    - id: rp-web
+      name: '@dsh-rp/web'

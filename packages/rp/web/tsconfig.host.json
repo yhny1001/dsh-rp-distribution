@@ -1,0 +1,68 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types",
+    "tsBuildInfoFile": "lib/tsconfig.host.tsbuildinfo"
+  },
+  "files": [
+    "src/index.ts",
+    "src/invariant.ts",
+    "src/types.ts",
+    "src/turn-api.ts",
+    "../../../types/host-sdk.d.ts"
+  ],
+  "references": [
+    {
+      "path": "../contracts"
+    },
+    {
+      "path": "../component-runtime"
+    },
+    {
+      "path": "../capability-catalog"
+    },
+    {
+      "path": "../pipeline-runtime"
+    },
+    {
+      "path": "../experience-registry"
+    },
+    {
+      "path": "../compat-sillytavern"
+    },
+    {
+      "path": "../library"
+    },
+    {
+      "path": "../preset"
+    },
+    {
+      "path": "../projection"
+    },
+    {
+      "path": "../registry"
+    },
+    {
+      "path": "../rules"
+    },
+    {
+      "path": "../media"
+    },
+    {
+      "path": "../memory-basic"
+    },
+    {
+      "path": "../turn-runtime"
+    },
+    {
+      "path": "../ui-slot-runtime"
+    },
+    {
+      "path": "../workflow-router"
+    },
+    {
+      "path": "../outbox"
+    }
+  ]
+}

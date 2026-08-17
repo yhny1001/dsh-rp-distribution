@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "example.rp-orchestration",
+  "name": "RP Orchestration Example",
+  "version": "1.0.0",
+  "license": "MIT",
+  "trust": "L0",
+  "dependencies": [],
+  "components": ["example.rp-suite"],
+  "capabilities": [
+    "example.actor.echo",
+    "example.memory.echo",
+    "example.sidecar.memory",
+    "example.turn.directed"
+  ],
+  "compatibility": {
+    "runtime": "dsh-rp-runtime-v1"
+  }
+}
