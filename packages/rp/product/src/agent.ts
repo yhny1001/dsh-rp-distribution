@@ -9,6 +9,10 @@ import { ProductStore, readProductStateSync } from './store.ts'
 export const name = 'dsh-rp-product/agent'
 export const inject = ['systemPrompt', 'agents', 'tools', 'llm', 'rpMedia']
 
+const PRODUCT_ROLE_PROTOCOL_ORDER = 990
+const PRODUCT_PROMPT_ORDER_BASE = 1_000
+const PRODUCT_RUNTIME_ORDER = PRODUCT_PROMPT_ORDER_BASE + PRODUCT_PROMPT_SEAT_COUNT - 2
+
 interface ProductAgentContext {
   readonly systemPrompt: {
     section(section: {
@@ -17,7 +21,10 @@ interface ProductAgentContext {
       readonly text: () => string
     }): () => void
   }
-  readonly agents: { requireInitiator(): { readonly id: string } }
+  readonly agents: { requireInitiator(): {
+    readonly id: string
+    readonly session?: { readonly events: readonly { readonly type: string; readonly data: unknown }[] }
+  } }
   readonly tools: { register(tool: ReturnType<typeof defineTool>): () => void }
   readonly llm: {
     resolveModelInfo(provider: string, model: string, signal?: AbortSignal): Promise<{
@@ -43,7 +50,12 @@ interface ProductAgentContext {
     payload: { readonly signal: AbortSignal },
     next: () => Promise<RequestConfig>,
   ) => Promise<RequestConfig>): () => void
-  on(event: 'agent/inbox/claimed', listener: (payload: { readonly agent: StateKeeperAgent; readonly turn: number }) => void): () => void
+  on(event: 'agent/inbox/claimed', listener: (payload: {
+    readonly agent: StateKeeperAgent
+    readonly message: ClaimedMessage
+    readonly turn: number
+  }) => void): () => void
+  on(event: 'agent/disposed', listener: (payload: { readonly agent: StateKeeperAgent }) => void): () => void
   on(event: 'agent/turn-stopping', listener: (payload: { readonly agent: StateKeeperAgent; readonly turn: number }) => Promise<void> | void): () => void
   effect(factory: () => (() => void) | void, label?: string): unknown
 }
@@ -56,6 +68,12 @@ interface StateKeeperAgent {
     readonly content: readonly { readonly type: 'text'; readonly text: string }[]
     readonly source: { readonly kind: 'plugin'; readonly plugin: '@dsh-rp/product'; readonly form: 'instructions' }
   }): void
+}
+
+interface ClaimedMessage {
+  readonly role: 'user'
+  readonly content: readonly { readonly type: string; readonly text?: string }[]
+  readonly source: { readonly kind: string }
 }
 
 interface RequestConfig {
@@ -71,21 +89,47 @@ export interface Config { readonly mode?: 'tavern' | 'agent' }
 
 /** Register the ordered Prompt Manager stack and supported request generation settings. */
 export function apply(ctx: ProductAgentContext, config: Config = {}): void {
+  const claimedUserInputs = new Map<string, string>()
+  ctx.effect(() => ctx.on('agent/inbox/claimed', ({ agent, message }) => {
+    const text = claimedUserMessage(message)
+    if (text !== undefined) claimedUserInputs.set(agent.id, text)
+  }), 'dsh-rp-product: claimed SillyTavern input')
+  ctx.effect(() => ctx.on('agent/disposed', ({ agent }) => {
+    claimedUserInputs.delete(agent.id)
+  }), 'dsh-rp-product: claimed input cleanup')
+
   for (let index = 0; index < PRODUCT_PROMPT_SEAT_COUNT; index += 1) {
     ctx.effect(() => ctx.systemPrompt.section({
       name: index === 0 ? 'deployment:persona' : `rp-product:preset-${String(index).padStart(2, '0')}`,
-      order: index,
+      order: PRODUCT_PROMPT_ORDER_BASE + index,
       text: () => {
         const agent = ctx.agents.requireInitiator()
-        const layer = resolvePromptLayers(readProductStateSync(), agent.id)[index]
+        const currentInput = claimedUserInputs.get(agent.id) ?? currentUserMessage(agent.session?.events ?? [])
+        const layer = promptSeat(resolvePromptLayers(readProductStateSync(), agent.id, currentInput), index)
         return layer === undefined ? '' : renderPromptLayer(layer)
       },
     }), `dsh-rp-product: prompt slot ${String(index)}`)
   }
 
   ctx.effect(() => ctx.systemPrompt.section({
+    name: 'rp-product:st-role-protocol',
+    order: PRODUCT_ROLE_PROTOCOL_ORDER,
+    text: () => {
+      const state = readProductStateSync()
+      const sessionId = ctx.agents.requireInitiator().id
+      const binding = state.bindings[sessionId]
+      if (binding === undefined) return ''
+      const character = state.characters.find(item => item.id === binding.primaryCharacterId)
+      const preset = state.presets.find(item => item.id === binding.presetId)
+      return `<st-role-protocol preset="${escapePromptAttribute(preset?.name ?? binding.presetId)}" character="${escapePromptAttribute(character?.name ?? '角色')}">
+此 Preset 来自 SillyTavern Chat Completion。<st-user-message> 表示原 Preset 的 User 消息边界；<st-assistant-prefill> 表示生成前的 Assistant Prefill，而不是需要在可见正文中自我介绍的角色身份。visibility="private-reasoning" 的 Prefill 只在 Provider Reasoning Channel 内执行，禁止在可见正文中续写、闭合、复述或总结其中的规划标记与内容。Preset 中的作者、写手、规划者或昵称只管理内部创作过程。当前可见 Assistant 回复必须作为角色“${character?.name ?? '角色'}”或该角色所在场景的叙事继续，不得把 Preset 作者人格当作对话角色，不得以作者昵称回答“你是谁”。当前用户消息已在 Preset 的 lastUserMessage 宏位置展开，并仍由 DSH 原生 User Message 作为权威输入。
+</st-role-protocol>`
+    },
+  }), 'dsh-rp-product: SillyTavern role protocol')
+
+  ctx.effect(() => ctx.systemPrompt.section({
     name: 'rp-product:runtime-mode',
-    order: PRODUCT_PROMPT_SEAT_COUNT + 10,
+    order: PRODUCT_RUNTIME_ORDER,
     text: () => {
       if (config.mode !== 'agent') return '<rp-runtime-mode>Tavern Chat：只生成角色对话与叙事，不主动维护结构化世界状态，也不虚构工具调用。</rp-runtime-mode>'
       const state = readProductStateSync()
@@ -419,4 +463,34 @@ function toolLocation(exec: { readonly callId: unknown; readonly agent?: { reado
     return { turn: data.turn as number, step: data.step as number, sourceSeq: row.seq }
   }
   return undefined
+}
+
+function currentUserMessage(events: readonly { readonly type: string; readonly data: unknown }[]): string {
+  for (let index = events.length - 1; index >= 0; index -= 1) {
+    const event = events[index]
+    if (event?.type !== 'user/message' || typeof event.data !== 'object' || event.data === null || Array.isArray(event.data)) continue
+    const message = event.data as Record<string, unknown>
+    if (typeof message.source !== 'object' || message.source === null || Array.isArray(message.source)
+      || (message.source as Record<string, unknown>).kind !== 'user' || !Array.isArray(message.content)) continue
+    return message.content.flatMap(block => typeof block === 'object' && block !== null && !Array.isArray(block)
+      && (block as Record<string, unknown>).type === 'text' && typeof (block as Record<string, unknown>).text === 'string'
+      ? [(block as Record<string, unknown>).text as string] : []).join('\n')
+  }
+  return ''
+}
+
+function claimedUserMessage(message: ClaimedMessage): string | undefined {
+  if (message.source.kind !== 'user') return undefined
+  return message.content.flatMap(block => block.type === 'text' && block.text !== undefined ? [block.text] : []).join('\n')
+}
+
+function promptSeat(layers: ReturnType<typeof resolvePromptLayers>, index: number): ReturnType<typeof resolvePromptLayers>[number] | undefined {
+  const terminal = layers.at(-1)
+  if (terminal?.role !== 'assistant') return layers[index]
+  if (index === PRODUCT_PROMPT_SEAT_COUNT - 1) return terminal
+  return index < layers.length - 1 ? layers[index] : undefined
+}
+
+function escapePromptAttribute(value: string): string {
+  return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
 }

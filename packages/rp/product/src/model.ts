@@ -844,13 +844,13 @@ function runtimeContextData(effect: RuntimeEffect): JsonObject {
 }
 
 /** Resolve the ordered, enabled Prompt Manager stack for one Session. */
-export function resolvePromptLayers(state: ProductState, sessionId: string): readonly PromptLayer[] {
+export function resolvePromptLayers(state: ProductState, sessionId: string, currentUserMessage = ''): readonly PromptLayer[] {
   const binding = state.bindings[sessionId]
   const preset = binding === undefined ? undefined : state.presets.find(item => item.id === binding.presetId)
   const order = preset?.promptOrders.find(item => item.id === preset.selectedPromptOrderId)
   if (binding === undefined || preset === undefined || order === undefined) return Object.freeze([])
   const definitions = new Map(preset.promptDefinitions.map(item => [item.id, item]))
-  const material = promptMaterial(state, binding)
+  const material = promptMaterial(state, binding, currentUserMessage)
   const variables = new Map<string, string>()
   let worldEmitted = false
   const layers: PromptLayer[] = []
@@ -876,6 +876,14 @@ export function resolveGenerationSettings(state: ProductState, sessionId: string
 /** Render one prompt layer with explicit semantic and imported-role tags. */
 export function renderPromptLayer(layer: PromptLayer): string {
   if (layer.empty || layer.kind === 'history') return ''
+  if (layer.role === 'assistant' && isPrivatePlanningPrefill(layer.content)) {
+    return `<st-assistant-prefill id="${escapeAttribute(layer.id)}" semantic="${layer.kind}" visibility="private-reasoning">
+The imported Assistant Prefill below is a private planning seed. Apply it in the provider reasoning channel. Never quote, continue, close, summarize, or expose its markup or planning content in the visible Assistant response.
+<st-prefill-source>${escapePromptText(layer.content)}</st-prefill-source>
+</st-assistant-prefill>`
+  }
+  if (layer.role === 'assistant') return `<st-assistant-prefill id="${escapeAttribute(layer.id)}" semantic="${layer.kind}">\n${layer.content}\n</st-assistant-prefill>`
+  if (layer.role === 'user') return `<st-user-message id="${escapeAttribute(layer.id)}" semantic="${layer.kind}">\n${layer.content}\n</st-user-message>`
   return `<rp-${layer.kind} id="${escapeAttribute(layer.id)}" role="${layer.role}">\n${layer.content}\n</rp-${layer.kind}>`
 }
 
@@ -928,9 +936,10 @@ interface PromptMaterial {
   readonly examples: string
   readonly characterName: string
   readonly personaName: string
+  readonly lastUserMessage: string
 }
 
-function promptMaterial(state: ProductState, binding: SessionComposition): PromptMaterial {
+function promptMaterial(state: ProductState, binding: SessionComposition, currentUserMessage: string): PromptMaterial {
   const system = state.systems.find(item => item.id === binding.systemId)
   const world = state.worlds.find(item => item.id === binding.worldId)
   const persona = state.personas.find(item => item.id === binding.personaId)
@@ -960,6 +969,7 @@ function promptMaterial(state: ProductState, binding: SessionComposition): Promp
     ].join('\n'),
     scenario: [expand(primary?.scenario ?? ''), expand(binding.scene)].filter(value => value.trim() !== '').join('\n\n'),
     examples: primary?.examples.map(expand).join('\n\n') ?? '', characterName, personaName,
+    lastUserMessage: currentUserMessage,
   }
 }
 
@@ -983,7 +993,7 @@ function expandMacros(content: string, material: PromptMaterial, variables: Map<
   })
   return assigned.replace(/\{\{getvar::([^:{}]+)\}\}/gu, (_match, name: string) => variables.get(name) ?? '')
     .replace(/\{\{\/\/[^{}]*\}\}/gu, '')
-    .replaceAll('{{lastUserMessage}}', '[当前用户消息由 DSH 原生会话紧随本 Prompt 提供]')
+    .replaceAll('{{lastUserMessage}}', material.lastUserMessage || '[当前没有可用的用户消息]')
     .replaceAll('{{system}}', material.system).replaceAll('{{char}}', material.characterName)
     .replaceAll('{{user}}', material.personaName).replaceAll('{{persona}}', material.persona)
     .replaceAll('{{world}}', material.world).replaceAll('{{scenario}}', material.scenario)
@@ -1005,6 +1015,14 @@ function promptDefinitionMaterial(
 
 function expandResourceMacros(content: string, characterName: string, personaName: string): string {
   return content.replaceAll('{{char}}', characterName).replaceAll('{{user}}', personaName)
+}
+
+function isPrivatePlanningPrefill(content: string): boolean {
+  return /<[^>]*(?:planning|thinking|reasoning)[^>]*>/iu.test(content)
+}
+
+function escapePromptText(value: string): string {
+  return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
 }
 
 function normalizeSystem(value: unknown): SystemProfile {

@@ -8,7 +8,7 @@
 
 每个会话选择一套 Prompt Preset，再组合系统规则、世界书、角色阵容、用户 Persona 与当前场景。Preset 保存全部 Prompt 定义、Role、Marker、ST 注入元数据、完整顺序配置、逐项启停与生成参数；当前顺序会在下一次原生 AgentLoop 请求时重新装配。产品最多保留 1024 个定义，每套顺序最多容纳 256 个可开关项；未编排定义也会显示并可加入顺序。管理器提供搜索、仅看已启用、启用计数与逐项上下移动。`temperature` 和 `openai_max_tokens` 分别映射到 DSH 的 `temperature` 与 `maxTokens`。ST `reasoning_effort=min` 在资源中规范化为 DSH `minimal`，请求阶段会先读取当前精确 provider/model 路由声明的档位：支持时才覆盖，不支持时保留当前模型选择或 Provider 默认值。其余已导入参数作为惰性数据保留。
 
-内置 Marker 解析 `worldInfoBefore`/`worldInfoAfter`、`personaDescription`、`charDescription`、`charPersonality`、`scenario`、`dialogueExamples` 与 `chatHistory` 等常用标识。聊天历史仍由 DSH Session 原生位置承载；Marker 只决定结构化资源在 Prompt Stack 中的位置，不把世界观、角色、Persona 或场景合成一个不可编辑的大文本。安全宏组装支持 `{{user}}`、`{{char}}`、按启用顺序执行的纯文本 `setvar/getvar`、注释移除与 `lastUserMessage` 语义占位；不执行 TavernHelper 或 Regex 脚本。
+内置 Marker 解析 `worldInfoBefore`/`worldInfoAfter`、`personaDescription`、`charDescription`、`charPersonality`、`scenario`、`dialogueExamples` 与 `chatHistory` 等常用标识。聊天历史仍由 DSH Session 原生位置承载；Marker 只决定结构化资源在 Prompt Stack 中的位置，不把世界观、角色、Persona 或场景合成一个不可编辑的大文本。安全宏组装支持 `{{user}}`、`{{char}}`、按启用顺序执行的纯文本 `setvar/getvar`、注释移除，并从 Agent 已领取但尚未写入 Session 的当前用户消息展开首步真实 `{{lastUserMessage}}`，后续步骤回退到最新原生 `user/message`。导入 Preset 的 User/Assistant Role 分别保留为 `<st-user-message>` 与 `<st-assistant-prefill>` 语义边界；固定 ST Role Protocol 声明作者人格只管理内部创作过程，可见回复必须属于当前角色。Role Protocol 排在 Host 基础段之后，导入 Seat 从顺序 1000 开始；当顺序以 Assistant Prefill 结尾时，该 Prefill 固定占用最后一个 Seat，Agent RP 运行规则紧挨其前，因此 Preset 的生成起点仍是模型读取的最后一组 System 内容，同时保留 DSH 工具约束。包含未闭合 `planning`/`thinking`/`reasoning` 标记的 Prefill 会保留转义后的源文本并声明为 `private-reasoning`，让 Provider 在 Reasoning Channel 中应用而不把规划块泄漏到可见角色正文。不执行 TavernHelper 或 Regex 脚本。
 
 ## 角色卡与批量导入
 
@@ -16,7 +16,7 @@
 
 导入完成后不要求用户理解 Prompt Seat 或逐项配置。推荐器优先选择最近导入的 Harness 适配 Preset、角色卡、Persona 与世界书，并从 Character Card Scenario 生成开局；新会话快速页默认折叠高级字段，只显示已就绪组合和开始按钮。导入结果还提供“直接开始 Tavern”和“直接开始 Agent RP”，自动取得空白 DSH Session、切换原生 Agent Preset 并绑定推荐组合。
 
-角色卡保留首条开场白、备选开场白、场景、示例对话、标签与来源报告。PNG 角色卡的原始图像按内容哈希写入本地产品资产目录，并用于资源列表、编辑器与对话头像；统一头像容器同时以组件内联尺寸和 CSS 强制方形 `cover` 裁切，把竖版角色图焦点上移到脸部，即使样式表延迟或浏览器混用旧缓存，原图也不能投射为聊天背景或越过头像边界。应用会话设定后，可从编排页或角色对话页把角色卡开场白加入 Session；它作为明确标注的角色历史进入模型上下文，不伪造真人来源。
+角色卡保留首条开场白、备选开场白、场景、示例对话、标签与来源报告。PNG 角色卡的原始图像按内容哈希写入本地产品资产目录，并用于资源列表、编辑器与对话头像；统一头像容器同时以组件内联尺寸和 CSS 强制方形 `cover` 裁切，把竖版角色图焦点上移到脸部，即使样式表延迟或浏览器混用旧缓存，原图也不能投射为聊天背景或越过头像边界。首次把组合应用到空白 Session 时，产品自动把 Character Card `first_mes` 作为明确标注的角色历史加入原生 Session，复现 ST 新聊天的角色锚点；之后仍可从编排页或角色对话页手动加入备选开场白，不伪造真人来源。
 
 ## 角色对话与正文编辑
 
@@ -59,7 +59,7 @@ dsh --profile web
 
 ## 当前限制
 
-- Prompt 定义的原始 Role 会保留并显示，但 DSH `0.1.0-rc.6` 的公开扩展点把这些段落装配进一个系统 Prompt 字符串，不能在历史中间创建任意 system/user/assistant Message。
+- DSH `0.1.0-rc.6` 的公开 Prompt 扩展点仍不能在历史中间创建任意真实 system/user/assistant Message；产品以明确的 `<st-user-message>`/`<st-assistant-prefill>` 协议、首步真实 `lastUserMessage` 展开、Preset 后置优先顺序和自动 `first_mes` 复现 ST 组装语义，但 Provider 看到的底层载体仍是一个 System Prompt 加原生 Session History。
 - PNG 角色卡原图由产品作为本地头像资产保存；CHARX 内嵌 Asset 原始字节仍按兼容层策略省略，只保留惰性元数据。
 - 内置媒体 Provider 只生成确定性 SVG Scene Card；Raster Image、持久 TTS Audio、Video 与 Document 需要独立 Provider 插件。浏览器本地“朗读”不是可导出的 Audio Artifact。
 - 已被 Compaction 覆盖而不再位于当前 Surface 的消息不能局部替换；界面会保留正文，但编辑命令会明确失败。

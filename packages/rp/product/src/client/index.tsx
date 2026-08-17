@@ -1150,7 +1150,10 @@ async function applyComposition(response: ProductResponse, draft: CompositionDra
     await applyStagedAgentPreset()
     const target = response.sessionId === sessionId ? response : await request(`state?sessionId=${encodeURIComponent(sessionId)}`)
     const receipt = await sendCommand(sessionId, 'rp-studio-bind', { sessionId, baseRevision: target.state.revision, ...draft })
-    update({ saving: false, notice: receipt, preferredPresetId: '' })
+    const opening = shouldAutoOpening(target, draft)
+      ? await sendCommand(sessionId, 'rp-studio-opening', { sessionId, greetingIndex: 0 })
+      : ''
+    update({ saving: false, notice: opening === '' ? receipt : `${receipt}；${opening}`, preferredPresetId: '' })
     await loadProduct(sessionId)
   } catch (error: unknown) { update({ saving: false, error: publicError(error) }) }
 }
@@ -1282,7 +1285,10 @@ async function startRecommendedComposition(mode: CompositionDraft['mode']): Prom
     const draft = recommendComposition(response.state, mode)
     if (draft.primaryCharacterId === '') throw new Error('没有可用角色；请先导入一张角色卡')
     const receipt = await sendCommand(sessionId, 'rp-studio-bind', { sessionId, baseRevision: response.state.revision, ...draft })
-    update({ saving: false, open: false, response: undefined, sessionId, notice: receipt, preferredPresetId: '' })
+    const opening = shouldAutoOpening(response, draft)
+      ? await sendCommand(sessionId, 'rp-studio-opening', { sessionId, greetingIndex: 0 })
+      : ''
+    update({ saving: false, open: false, response: undefined, sessionId, notice: opening === '' ? receipt : `${receipt}；${opening}`, preferredPresetId: '' })
     await loadProduct(sessionId)
   } catch (error: unknown) { update({ saving: false, error: publicError(error) }) }
 }
@@ -1354,6 +1360,12 @@ function compositionDraft(response: ProductResponse): CompositionDraft {
   if (response.binding !== undefined) return Object.freeze({ ...response.binding, ...(preferred === undefined ? {} : { presetId: preferred }) })
   const recommended = recommendComposition(response.state, agentPresetSnapshot.current === 'rp-agent' ? 'agent' : 'tavern')
   return Object.freeze({ ...recommended, ...(preferred === undefined ? {} : { presetId: preferred }) })
+}
+
+function shouldAutoOpening(response: ProductResponse, draft: CompositionDraft): boolean {
+  if (response.binding !== undefined || (response.transcript?.messages.length ?? 0) > 0) return false
+  const character = response.state.characters.find(item => item.id === draft.primaryCharacterId)
+  return character !== undefined && character.openingMessage.trim() !== ''
 }
 
 function withExperience(draft: CompositionDraft, experienceId: string, state: ProductState): CompositionDraft {

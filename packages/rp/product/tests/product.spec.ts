@@ -244,7 +244,26 @@ describe('@dsh-rp/product', () => {
       },
     })
     const bound = bindSession(adapted.state, { sessionId: 'real-scale', ...composition, presetId: adapted.presetId }, 2, 14)
-    expect(resolvePromptLayers(bound, 'real-scale')).toHaveLength(56)
+    const layers = resolvePromptLayers(bound, 'real-scale', '你是谁？')
+    expect(layers).toHaveLength(56)
+    expect(renderPromptLayer(layers.find(layer => layer.role === 'assistant')!)).toMatch(/^<st-assistant-prefill/u)
+    expect(renderPromptLayer(layers.find(layer => layer.role === 'user')!)).toMatch(/^<st-user-message/u)
+  })
+
+  it('keeps planning-prefill source while preventing its open tag from entering visible completion', () => {
+    const state = defaultProductState()
+    const preset = normalizeEntity('presets', {
+      id: 'planning-prefill', name: 'Planning prefill',
+      promptDefinitions: [{ id: 'thinking', name: 'Thinking', role: 'assistant', content: '开始规划\n<konatan_planning~>', marker: false }],
+      promptOrders: [{ id: 'global', entries: [{ identifier: 'thinking', enabled: true }] }],
+      selectedPromptOrderId: 'global', generation: { retained: {} }, updatedAt: 0,
+    }, 1)
+    const expanded = upsertEntity(state, 'presets', preset, 0)
+    const bound = bindSession(expanded, { sessionId: 'planning-session', ...composition, presetId: preset.id }, 1, 2)
+    const rendered = renderPromptLayer(resolvePromptLayers(bound, 'planning-session')[0]!)
+    expect(rendered).toContain('visibility="private-reasoning"')
+    expect(rendered).toContain('&lt;konatan_planning~&gt;')
+    expect(rendered).not.toContain('\n<konatan_planning~>')
   })
 
   it('assembles safe ST variables and identity macros without executing scripts', () => {
@@ -262,10 +281,10 @@ describe('@dsh-rp/product', () => {
     }, 1)
     const expanded = upsertEntity(defaultProductState(), 'presets', preset, 0)
     const bound = bindSession(expanded, { sessionId: 'macro-session', ...composition, presetId: 'macro-preset' }, 1, 2)
-    expect(resolvePromptLayers(bound, 'macro-session').map(layer => layer.content).join('\n')).toContain(
-      'tone=quiet user=远行者 [当前用户消息由 DSH 原生会话紧随本 Prompt 提供]',
+    expect(resolvePromptLayers(bound, 'macro-session', '你是谁？').map(layer => layer.content).join('\n')).toContain(
+      'tone=quiet user=远行者 你是谁？',
     )
-    expect(resolvePromptLayers(bound, 'macro-session').map(layer => layer.content).join('\n')).not.toContain('{{')
+    expect(resolvePromptLayers(bound, 'macro-session', '你是谁？').map(layer => layer.content).join('\n')).not.toContain('{{')
     expect(resolveCharacterText(bound, 'macro-session', '{{char}}正在等待{{user}}。')).toBe('林遥正在等待远行者。')
   })
 
@@ -394,18 +413,70 @@ describe('@dsh-rp/product', () => {
     const context = {
       systemPrompt: { section: (section: { name: string; order: number; text: () => string }) => { sections.push(section); return () => {} } },
       agents: { requireInitiator: () => ({ id: 'session-agent' }) },
-      on: (_event: string, listener: typeof requestListener) => { requestListener = listener; return () => {} },
+      tools: { register: () => () => {} },
+      llm: { resolveModelInfo: async () => ({}) },
+      on: (event: string, listener: typeof requestListener) => {
+        if (event === 'agent/request') requestListener = listener
+        return () => {}
+      },
       effect: (factory: () => unknown) => factory(),
     }
-    applyAgent(context)
-    expect(sections).toHaveLength(257)
+    applyAgent(context as never)
+    expect(sections).toHaveLength(258)
     expect(sections.slice(0, 3).map(section => section.name)).toEqual(['deployment:persona', 'rp-product:preset-01', 'rp-product:preset-02'])
+    expect(sections.slice(0, 3).map(section => section.order)).toEqual([1_000, 1_001, 1_002])
     expect(sections[0]?.text()).toContain('<rp-system')
     expect(sections[1]?.text()).toContain('<rp-world')
+    expect(sections[256]).toMatchObject({ name: 'rp-product:st-role-protocol', order: 990 })
+    expect(sections[256]?.text()).toContain('当前可见 Assistant 回复必须作为角色“林遥”')
+    expect(sections[257]).toMatchObject({ name: 'rp-product:runtime-mode', order: 1_254 })
     let delegated = false
     const config = await requestListener!({}, async () => { delegated = true; return { provider: 'test', model: 'model' } })
     expect(delegated).toBe(true)
     expect(config).toMatchObject({ provider: 'test', model: 'model', temperature: 0.9, maxTokens: 8192 })
+  })
+
+  it('expands the claimed user input on the first model step before Session history is appended', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'dsh-rp-product-claimed-input-'))
+    vi.stubEnv('DSH_HOME', home)
+    const store = await ProductStore.open()
+    const preset = normalizeEntity('presets', {
+      id: 'claimed-input-preset', name: 'Claimed input preset',
+      promptDefinitions: [
+        { id: 'main', name: 'Main', role: 'system', content: '<Master_input>{{lastUserMessage}}</Master_input>', marker: false },
+        { id: 'prefill', name: 'Prefill', role: 'assistant', content: '开始角色续写', marker: false },
+      ],
+      promptOrders: [{ id: 'global', entries: [{ identifier: 'main', enabled: true }, { identifier: 'prefill', enabled: true }] }],
+      selectedPromptOrderId: 'global', generation: { retained: {} }, updatedAt: 0,
+    }, 1)
+    await store.upsert('presets', preset, 0)
+    await store.bind({ sessionId: 'claimed-session', ...composition, presetId: preset.id, updatedAt: 2 }, 1)
+    const sections: Array<{ name: string; order: number; text: () => string }> = []
+    let claimed: ((payload: {
+      agent: { id: string }
+      message: { role: 'user'; content: readonly { type: string; text?: string }[]; source: { kind: string } }
+      turn: number
+    }) => void) | undefined
+    applyAgent({
+      systemPrompt: { section: (section: { name: string; order: number; text: () => string }) => { sections.push(section); return () => {} } },
+      agents: { requireInitiator: () => ({ id: 'claimed-session', session: { events: [] } }) },
+      tools: { register: () => () => {} },
+      llm: { resolveModelInfo: async () => ({}) },
+      on: (event: string, listener: typeof claimed) => {
+        if (event === 'agent/inbox/claimed') claimed = listener
+        return () => {}
+      },
+      effect: (factory: () => unknown) => factory(),
+    } as never)
+    expect(sections[0]?.text()).toContain('[当前没有可用的用户消息]')
+    claimed!({
+      agent: { id: 'claimed-session' }, turn: 1,
+      message: { role: 'user', content: [{ type: 'text', text: '你是？' }], source: { kind: 'user' } },
+    })
+    expect(sections[0]?.text()).toContain('<Master_input>你是？</Master_input>')
+    expect(sections[1]?.text()).toBe('')
+    expect(sections[255]?.text()).toContain('<st-assistant-prefill')
+    expect(sections[257]?.order).toBeLessThan(sections[255]!.order)
   })
 
   it('applies an imported reasoning effort only when the selected model route supports it', async () => {
