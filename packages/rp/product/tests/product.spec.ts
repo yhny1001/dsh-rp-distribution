@@ -8,6 +8,7 @@ import { importProductFiles } from '../src/import.ts'
 import { apply as applyProduct } from '../src/index.ts'
 import {
   adaptPresetToHarness,
+  advanceCastSpeaker,
   applyRuntimeEffect,
   bindSession,
   commitRuntimeTurn,
@@ -19,6 +20,7 @@ import {
   normalizeEntity,
   recordTranscriptMessage,
   recommendComposition,
+  scheduleCast,
   renderRuntimeContext,
   replaceRuntimeChoices,
   removeEntity,
@@ -77,6 +79,28 @@ describe('@dsh-rp/product', () => {
     expect(layer?.content).toContain('林遥')
     const spoken = recordTranscriptMessage(bound, 'session-cast', 7, 'assistant', 4)
     expect(spoken.transcripts['session-cast']?.messages[0]).toMatchObject({ speakerId: 'qin', speakerName: '秦雾' })
+  })
+
+  it('schedules and consumes a bounded Multi-character speaker queue', () => {
+    const second = normalizeEntity('characters', {
+      id: 'qin', name: '秦雾', summary: '旧灯塔守望者', personality: '', speechStyle: '', appearance: '', goals: '', scenario: '',
+      openingMessage: '', alternateGreetings: [], examples: [], tags: [], accent: '#d97757', updatedAt: 0,
+    }, 1)
+    const expanded = upsertEntity(defaultProductState(), 'characters', second, 0)
+    const bound = bindSession(expanded, {
+      sessionId: 'group-session', ...composition, mode: 'agent', experienceId: 'rp-multi-character',
+      characterIds: ['lin-yao', 'qin'], primaryCharacterId: 'lin-yao',
+    }, 1, 2)
+    const scheduled = scheduleCast(bound, 'group-session', ['qin', 'lin-yao'], { turn: 1, step: 1, sourceSeq: 10 })
+    expect(scheduled.runtimes['group-session']).toMatchObject({ castQueue: ['qin', 'lin-yao'], castRound: 1, castQueueSourceSeq: 10 })
+    const qinTurn = advanceCastSpeaker(scheduled, 'group-session', { turn: 1, step: 2, sourceSeq: 12 }, 3)
+    expect(qinTurn.bindings['group-session']?.primaryCharacterId).toBe('qin')
+    expect(qinTurn.runtimes['group-session']).toMatchObject({ castQueue: ['lin-yao'], lastSpeakerId: 'qin', castRound: 1 })
+    const linTurn = advanceCastSpeaker(qinTurn, 'group-session', { turn: 2, step: 1, sourceSeq: 20 }, 4)
+    expect(linTurn.bindings['group-session']?.primaryCharacterId).toBe('lin-yao')
+    expect(linTurn.runtimes['group-session']).toMatchObject({ castQueue: [], lastSpeakerId: 'lin-yao' })
+    expect(() => advanceCastSpeaker(linTurn, 'group-session')).toThrow(/queue is empty/u)
+    expect(() => scheduleCast(bound, 'group-session', ['outside'])).toThrow(/Session cast/u)
   })
 
   it('repairs Session bindings when a referenced persona is removed', () => {
@@ -332,7 +356,8 @@ describe('@dsh-rp/product', () => {
     const first = commitRuntimeTurn(history, 'fork-source', 'call-1', {
       updates: [{ kind: 'time', title: '第一轮时间', summary: '23:00', data: { key: 'clock' } }],
     }, 3, { turn: 1, step: 1, sourceSeq: 20 })
-    const second = commitRuntimeTurn(first, 'fork-source', 'call-2', {
+    const scheduled = scheduleCast(first, 'fork-source', ['lin-yao'], { turn: 1, step: 2, sourceSeq: 25 })
+    const second = commitRuntimeTurn(scheduled, 'fork-source', 'call-2', {
       updates: [{ kind: 'time', title: '第二轮时间', summary: '23:10', data: { key: 'clock' } }],
       choicesTitle: '第二轮选项', choices: [{ id: 'later', label: '未来选项', prompt: '未来' }],
     }, 4, { turn: 2, step: 1, sourceSeq: 40 })
@@ -341,6 +366,7 @@ describe('@dsh-rp/product', () => {
     expect(forked.transcripts['fork-child']?.messages).toHaveLength(2)
     expect(forked.runtimes['fork-child']).toMatchObject({
       revision: 1, effects: [{ title: '第一轮时间', turn: 1, sourceSeq: 20 }], choices: [], choicesTitle: '',
+      castQueue: ['lin-yao'], castRound: 1, castQueueSourceSeq: 25,
     })
     expect(renderRuntimeContext(forked, 'fork-child')).toContain('第一轮时间')
     expect(renderRuntimeContext(forked, 'fork-child')).not.toContain('第二轮时间')
@@ -442,7 +468,14 @@ describe('@dsh-rp/product', () => {
     const home = mkdtempSync(join(tmpdir(), 'dsh-rp-product-agent-tools-'))
     vi.stubEnv('DSH_HOME', home)
     const store = await ProductStore.open()
-    await store.bind({ sessionId: 'agent-tools', ...composition, mode: 'agent', updatedAt: 1 }, 0)
+    const second = normalizeEntity('characters', {
+      id: 'qin', name: '秦雾', summary: '旧灯塔守望者', personality: '', speechStyle: '', appearance: '', goals: '', scenario: '',
+      openingMessage: '', alternateGreetings: [], examples: [], tags: [], accent: '#d97757', updatedAt: 0,
+    }, 1)
+    await store.upsert('characters', second, 0)
+    await store.bind({
+      sessionId: 'agent-tools', ...composition, mode: 'agent', characterIds: ['lin-yao', 'qin'], primaryCharacterId: 'lin-yao', updatedAt: 1,
+    }, 1)
     const definitions: Array<{ name: string; execute: (args: unknown, exec: unknown) => Promise<unknown> }> = []
     const base = {
       systemPrompt: { section: () => () => {} },
@@ -453,7 +486,7 @@ describe('@dsh-rp/product', () => {
     }
     applyAgent(base, { mode: 'agent' })
     expect(definitions.map(tool => tool.name)).toEqual([
-      'rp_commit_turn', 'rp_update_state', 'rp_propose_choices', 'rp_select_speaker', 'rp_roll', 'rp_read_state',
+      'rp_commit_turn', 'rp_update_state', 'rp_propose_choices', 'rp_schedule_cast', 'rp_next_speaker', 'rp_select_speaker', 'rp_roll', 'rp_read_state',
     ])
     const tools = new Map(definitions.map(tool => [tool.name, tool]))
     const execution = { agent: { id: 'agent-tools', session: { events: [
@@ -463,8 +496,12 @@ describe('@dsh-rp/product', () => {
       updates: [{ kind: 'scene', title: '场景变化', summary: '进入港口', data: { key: 'active-scene', location: '港口' } }],
       choicesTitle: '下一步', choices: [{ id: 'ask', label: '询问', prompt: '我询问守卫。' }],
     }, execution)
+    expect(await tools.get('rp_schedule_cast')!.execute({ characterIds: ['qin', 'lin-yao'] }, { ...execution, callId: 'call-schedule' }))
+      .toMatchObject({ scheduled: true, round: 1, queue: [{ id: 'qin', name: '秦雾' }, { id: 'lin-yao', name: '林遥' }] })
+    expect(await tools.get('rp_next_speaker')!.execute({}, { ...execution, callId: 'call-next' }))
+      .toMatchObject({ selected: true, characterId: 'qin', characterName: '秦雾', remaining: [{ id: 'lin-yao' }] })
     const read = await tools.get('rp_read_state')!.execute({}, { ...execution, callId: 'call-read' }) as { state: unknown[]; choices: unknown[] }
-    expect(read).toMatchObject({ state: [{ kind: 'scene', title: '场景变化' }], choices: [{ id: 'ask' }] })
+    expect(read).toMatchObject({ state: [{ kind: 'scene', title: '场景变化' }], choices: [{ id: 'ask' }], castRound: 1, lastSpeakerId: 'qin', castQueue: [{ id: 'lin-yao', name: '林遥' }] })
     expect(await tools.get('rp_select_speaker')!.execute({ characterId: 'lin-yao' }, { ...execution, callId: 'call-speaker' }))
       .toMatchObject({ selected: true, characterId: 'lin-yao', characterName: '林遥' })
     await expect(tools.get('rp_select_speaker')!.execute({ characterId: 'not-in-cast' }, { ...execution, callId: 'call-bad-speaker' }))

@@ -42,7 +42,7 @@ Agent RP 把每轮视为世界 Ledger 的 N→N+1 提交。首选工具 `rp_comm
 
 State Keeper 在每轮第一次输入进入时记录 Ledger Revision，并在原生 `agent/turn-stopping` 扩展点审计本轮是否推进。没有提交时会自动 Steering 要求补交；确实没有变化也必须以 `updates: []` 留下无变化审计。连续两次忽略后该轮失败关闭，不能静默产生无 Ledger 的 Agent RP 回复。内部审计消息与 Reasoning 一样不进入角色对话正文。
 
-Experience 会改变 Agent 行为，而不只是保存标签。World Simulation 强化时间、NPC 与目标的因果推进；Multi-character 要求通过 `rp_select_speaker` 从配置阵容中确定下一位说话者，使 Transcript 在工具提交后按真实角色署名；TRPG 可用已记录的 `rp_roll` 执行有界 `NdM±K` 检定，并把结果造成的目标、物品或世界变化提交到 Ledger；Companion 优先关系、记忆、Persona 与角色状态，并取消强制每轮给选项。
+Experience 会改变 Agent 行为，而不只是保存标签。World Simulation 强化时间、NPC 与目标的因果推进；Multi-character 通过 `rp_schedule_cast` 建立持久有序队列，再由 `rp_next_speaker` 逐 Turn 消费队首并切换真实 Primary Character，`rp_select_speaker` 只保留为手动覆盖。队列 Round、上一位和下一位会显示在角色对话页，Transcript 按真实角色署名。TRPG 可用已记录的 `rp_roll` 执行有界 `NdM±K` 检定，并把结果造成的目标、物品或世界变化提交到 Ledger；Companion 优先关系、记忆、Persona 与角色状态，并取消强制每轮给选项。
 
 ## 本地安装
 
@@ -60,6 +60,6 @@ dsh --profile web
 - Prompt 定义的原始 Role 会保留并显示，但 DSH `0.1.0-rc.6` 的公开扩展点把这些段落装配进一个系统 Prompt 字符串，不能在历史中间创建任意 system/user/assistant Message。
 - PNG 角色卡原图由产品作为本地头像资产保存；CHARX 内嵌 Asset 原始字节仍按兼容层策略省略，只保留惰性元数据。
 - 已被 Compaction 覆盖而不再位于当前 Surface 的消息不能局部替换；界面会保留正文，但编辑命令会明确失败。
-- 当前 Swipe/Regenerate 采用原生子 Session 分支，而不是同一气泡内的 ST Swipe 数组；首轮因没有可裁切前缀暂不支持。自动群聊轮次调度、Regex/STscript 与 Kobold Text Completion 尚未进入本地产品层；Multi-character Agent 已能通过受限 Tool 从配置阵容选择下一位说话者，但还不会自行安排完整群聊轮次表。
+- 当前 Swipe/Regenerate 采用原生子 Session 分支，而不是同一气泡内的 ST Swipe 数组；首轮因没有可裁切前缀暂不支持。Multi-character 队列按多个 DSH Turn 轮流产生一位角色正文，不会在一个 Turn 中批量生成多个角色气泡。Regex/STscript 与 Kobold Text Completion 尚未进入本地产品层。
 - State Keeper 强制每轮至少推进一次 Ledger Revision，但当前只证明“发生了提交”，不会语义比较角色正文与状态 Patch 是否完整一致；更深的独立语义审计仍可作为后续 Provider 插件加入。
 - 产品数据原子写入 `$DSH_HOME/rp-product/product-state.json`，schema v2 不读取预发布的 schema v1；外部 Storage Provider 尚不可选。

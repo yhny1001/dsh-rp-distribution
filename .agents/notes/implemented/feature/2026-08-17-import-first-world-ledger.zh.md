@@ -12,7 +12,7 @@
 
 角色对话页以当前状态而不是工具流水为主视图：最多十二个状态单元显示类型、标题与摘要，Revision 标识原子提交次数，折叠履历显示最近二十条原始 Effect，选项仍可直接送入同一个 Agent Session。Reasoning Block 从角色正文投影中排除；Agent Prompt 要求先调用 Ledger Tool，再只输出一条最终角色回复。
 
-Experience 拥有独立运行说明。World Simulation 强化时间、NPC 与目标推进；Multi-character 使用 `rp_select_speaker` 把下一条最终回复的主要角色切换到配置阵容成员，后续 Transcript Annotation 读取同一 Binding；TRPG 的 `rp_roll` 验证并执行至多 20 个、每个至多 1000 面的 `NdM±K` 骰式，结果由原生 Tool Result 记录；Companion 强化关系、记忆、Persona 与角色连续性，不要求每轮选项。它们仍是同一个 `rp-agent` 内的插件 Tool 与 Prompt Policy，不拆出第二套 AgentLoop。
+Experience 拥有独立运行说明。World Simulation 强化时间、NPC 与目标推进；Multi-character 使用 `rp_schedule_cast` 与 `rp_next_speaker` 管理跨 Turn 队列，并保留 `rp_select_speaker` 作为手动覆盖；TRPG 的 `rp_roll` 验证并执行至多 20 个、每个至多 1000 面的 `NdM±K` 骰式，结果由原生 Tool Result 记录；Companion 强化关系、记忆、Persona 与角色连续性，不要求每轮选项。它们仍是同一个 `rp-agent` 内的插件 Tool 与 Prompt Policy，不拆出第二套 AgentLoop。
 
 State Keeper 通过已有事件扩展实现，不修改 AgentLoop。`agent/inbox/claimed` 为每个 Turn 保存第一次输入对应的 Runtime Revision；`agent/turn-stopping` 比较当前 Revision，未推进时用来源为 `@dsh-rp/product`、Form 为 `instructions` 的 Steering 要求 `rp_commit_turn` 补交。无变化 Turn 允许 `updates: []`，同样推进 Revision。最多两次 Repair；第三次仍未推进则抛错让 Turn 失败关闭。成功、失败或异常缺少 Baseline 时都会清理逐 Turn 状态，内部 Steering 不投影为角色消息。
 
@@ -20,7 +20,7 @@ State Keeper 通过已有事件扩展实现，不修改 AgentLoop。`agent/inbox
 
 聚焦测试证明推荐器从混合导入中选择 Harness 适配 Preset、导入角色与 Character Card Scenario；原子提交一次写入时间、场景、NPC 和选项，下一轮用相同稳定键推进时间后，当前 Projection 只保留新时间而履历保留两次提交；`rp_read_state` 的只读结果与写入 Projection 一致。
 
-工具测试还验证 `rp_select_speaker` 接受阵容内角色并拒绝阵容外 ID，`rp_roll` 的 `2d6+3` 结果始终位于 5–15。Agent RP Tool Roster 共有六项：原子提交、单条补交、独立选项、说话者选择、骰子与只读状态。
+工具测试还验证 `rp_select_speaker` 接受阵容内角色并拒绝阵容外 ID，`rp_roll` 的 `2d6+3` 结果始终位于 5–15。Agent RP Tool Roster 共有八项：原子提交、单条补交、独立选项、队列安排、队首消费、手动说话者、骰子与只读状态。
 
 State Keeper 测试覆盖缺失提交时第一次 Steering、空更新提交后正常关闭，以及连续两次 Repair 仍无提交时第三次 Fail-closed；测试同时确认审计消息属于 Plugin Instructions，而不是 Persona 用户输入。
 

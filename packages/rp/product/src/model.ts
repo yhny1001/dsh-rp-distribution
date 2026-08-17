@@ -216,6 +216,12 @@ export interface SessionRuntimeState {
   readonly lastCommitTurn?: number
   readonly lastCommitStep?: number
   readonly lastCommitSourceSeq?: number
+  readonly castQueue: readonly string[]
+  readonly castRound: number
+  readonly lastSpeakerId: string
+  readonly castQueueTurn?: number
+  readonly castQueueStep?: number
+  readonly castQueueSourceSeq?: number
 }
 
 export interface ProductState {
@@ -443,7 +449,12 @@ export function removeEntity(state: ProductState, kind: ProductEntityKind, id: s
       ...(kind === 'worlds' && binding.worldId === targetId ? { worldId: '' } : {}),
     }]
   }))
-  return normalizeProductState({ ...state, revision: state.revision + 1, [kind]: nextCollection, bindings })
+  const runtimes = kind !== 'characters' ? state.runtimes : Object.fromEntries(Object.entries(state.runtimes).map(([sessionId, runtime]) => [sessionId, {
+    ...runtime,
+    castQueue: runtime.castQueue.filter(characterId => characterId !== targetId),
+    lastSpeakerId: runtime.lastSpeakerId === targetId ? '' : runtime.lastSpeakerId,
+  }]))
+  return normalizeProductState({ ...state, revision: state.revision + 1, [kind]: nextCollection, bindings, runtimes })
 }
 
 /** Bind an exact preset and layered composition to one DSH Session. */
@@ -468,6 +479,69 @@ export function selectPrimaryCharacter(state: ProductState, sessionId: string, c
   })
 }
 
+/** Schedule one explicit ordered speaker queue from the Session's configured cast. */
+export function scheduleCast(
+  state: ProductState,
+  sessionId: string,
+  value: unknown,
+  location?: RuntimeLocation,
+): ProductState {
+  const binding = state.bindings[sessionId]
+  if (binding?.mode !== 'agent') throw new Error('cast scheduling requires Agent RP mode')
+  const ids = array(value, 'cast queue').map((item, index) => normalizedId(item, `cast queue[${index}]`))
+  if (ids.length === 0 || ids.length > 16) throw new Error('cast queue must contain 1-16 character ids')
+  if (new Set(ids).size !== ids.length) throw new Error('cast queue repeats a character id')
+  for (const id of ids) if (!binding.characterIds.includes(id)) throw new Error('cast queue characters must belong to the Session cast')
+  const runtime = state.runtimes[sessionId] ?? emptyRuntime(sessionId)
+  return normalizeProductState({
+    ...state,
+    revision: state.revision + 1,
+    runtimes: { ...state.runtimes, [sessionId]: {
+      ...runtime,
+      revision: runtime.revision + 1,
+      castQueue: ids,
+      castRound: runtime.castRound + 1,
+      ...(location === undefined ? {} : {
+        castQueueTurn: location.turn,
+        castQueueStep: location.step,
+        castQueueSourceSeq: location.sourceSeq,
+        lastCommitTurn: location.turn,
+        lastCommitStep: location.step,
+        lastCommitSourceSeq: location.sourceSeq,
+      }),
+    } },
+  })
+}
+
+/** Consume the queue head and make it the primary speaker for the next final reply. */
+export function advanceCastSpeaker(state: ProductState, sessionId: string, location?: RuntimeLocation, now = Date.now()): ProductState {
+  const binding = state.bindings[sessionId]
+  if (binding?.mode !== 'agent') throw new Error('speaker queue requires Agent RP mode')
+  const runtime = state.runtimes[sessionId] ?? emptyRuntime(sessionId)
+  const speakerId = runtime.castQueue[0]
+  if (speakerId === undefined) throw new Error('speaker queue is empty; schedule the cast first')
+  if (!binding.characterIds.includes(speakerId)) throw new Error('queued speaker no longer belongs to the Session cast')
+  return normalizeProductState({
+    ...state,
+    revision: state.revision + 1,
+    bindings: { ...state.bindings, [sessionId]: { ...binding, primaryCharacterId: speakerId, updatedAt: now } },
+    runtimes: { ...state.runtimes, [sessionId]: {
+      ...runtime,
+      revision: runtime.revision + 1,
+      castQueue: runtime.castQueue.slice(1),
+      lastSpeakerId: speakerId,
+      ...(location === undefined ? {} : {
+        castQueueTurn: location.turn,
+        castQueueStep: location.step,
+        castQueueSourceSeq: location.sourceSeq,
+        lastCommitTurn: location.turn,
+        lastCommitStep: location.step,
+        lastCommitSourceSeq: location.sourceSeq,
+      }),
+    } },
+  })
+}
+
 /** Clone RP-owned projections into a native fork, clipped to the child's seeded event prefix. */
 export function forkSessionProjection(
   state: ProductState,
@@ -488,6 +562,7 @@ export function forkSessionProjection(
   const sourceRuntime = state.runtimes[sourceSessionId]
   const effects = sourceRuntime?.effects.filter(effect => effect.sourceSeq !== undefined && effect.sourceSeq < cut && (effect.turn ?? turn) <= turn) ?? []
   const keepChoices = sourceRuntime?.choicesSourceSeq !== undefined && sourceRuntime.choicesSourceSeq < cut && (sourceRuntime.choicesTurn ?? turn) <= turn
+  const keepCastQueue = sourceRuntime?.castQueueSourceSeq !== undefined && sourceRuntime.castQueueSourceSeq < cut && (sourceRuntime.castQueueTurn ?? turn) <= turn
   const last = effects.at(-1)
   const runtime = sourceRuntime === undefined ? undefined : Object.freeze({
     sessionId: childSessionId,
@@ -502,6 +577,12 @@ export function forkSessionProjection(
     ...(last?.turn === undefined ? {} : { lastCommitTurn: last.turn }),
     ...(last?.step === undefined ? {} : { lastCommitStep: last.step }),
     ...(last?.sourceSeq === undefined ? {} : { lastCommitSourceSeq: last.sourceSeq }),
+    castQueue: Object.freeze(keepCastQueue ? sourceRuntime.castQueue : []),
+    castRound: keepCastQueue ? sourceRuntime.castRound : 0,
+    lastSpeakerId: keepCastQueue ? sourceRuntime.lastSpeakerId : '',
+    ...(keepCastQueue && sourceRuntime.castQueueTurn !== undefined ? { castQueueTurn: sourceRuntime.castQueueTurn } : {}),
+    ...(keepCastQueue && sourceRuntime.castQueueStep !== undefined ? { castQueueStep: sourceRuntime.castQueueStep } : {}),
+    ...(keepCastQueue && sourceRuntime.castQueueSourceSeq !== undefined ? { castQueueSourceSeq: sourceRuntime.castQueueSourceSeq } : {}),
   })
   return normalizeProductState({
     ...state,
@@ -1022,11 +1103,14 @@ function normalizeComposition(value: unknown, fallbackSessionId?: string): Sessi
   const characterIds = array(item.characterIds, 'characterIds').map((id, index) => normalizedId(id, `characterIds[${index}]`))
   const uniqueCharacters = [...new Set(characterIds)]
   const primaryCharacterId = optionalId(item.primaryCharacterId, 'primaryCharacterId') || uniqueCharacters[0] || ''
+  const experienceId = optionalText(item.experienceId, 'experienceId', 128) || 'rp-adaptive'
+  if (!['rp-adaptive', 'rp-world-sim', 'rp-multi-character', 'rp-trpg', 'rp-companion'].includes(experienceId)) throw new Error('experienceId is not a supported RP Experience')
+  if (experienceId === 'rp-multi-character' && uniqueCharacters.length < 2) throw new Error('Multi-character requires at least two configured characters')
   if (primaryCharacterId !== '' && !uniqueCharacters.includes(primaryCharacterId)) throw new Error('primaryCharacterId must appear in characterIds')
   return Object.freeze({
     sessionId: text(item.sessionId ?? fallbackSessionId, 'session id', 512), presetId: normalizedId(item.presetId, 'presetId'),
     mode: productSessionMode(item.mode),
-    experienceId: optionalText(item.experienceId, 'experienceId', 128) || 'rp-adaptive',
+    experienceId,
     systemId: normalizedId(item.systemId, 'systemId'), characterIds: Object.freeze(uniqueCharacters), primaryCharacterId,
     personaId: optionalId(item.personaId, 'personaId'), worldId: optionalId(item.worldId, 'worldId'),
     scene: optionalText(item.scene, 'scene', 16_000), updatedAt: timestamp(item.updatedAt),
@@ -1082,11 +1166,20 @@ function normalizeRuntime(value: unknown, fallbackSessionId: string): SessionRun
     ...(item.lastCommitTurn === undefined ? {} : { lastCommitTurn: integer(item.lastCommitTurn, 'lastCommitTurn', 1, Number.MAX_SAFE_INTEGER) }),
     ...(item.lastCommitStep === undefined ? {} : { lastCommitStep: integer(item.lastCommitStep, 'lastCommitStep', 1, Number.MAX_SAFE_INTEGER) }),
     ...(item.lastCommitSourceSeq === undefined ? {} : { lastCommitSourceSeq: integer(item.lastCommitSourceSeq, 'lastCommitSourceSeq', 0, Number.MAX_SAFE_INTEGER) }),
+    castQueue: Object.freeze(stringList(item.castQueue, 'castQueue', 16, 128).map((id, index) => normalizedId(id, `castQueue[${index}]`))),
+    castRound: integer(item.castRound ?? 0, 'castRound', 0, Number.MAX_SAFE_INTEGER),
+    lastSpeakerId: optionalId(item.lastSpeakerId, 'lastSpeakerId'),
+    ...(item.castQueueTurn === undefined ? {} : { castQueueTurn: integer(item.castQueueTurn, 'castQueueTurn', 1, Number.MAX_SAFE_INTEGER) }),
+    ...(item.castQueueStep === undefined ? {} : { castQueueStep: integer(item.castQueueStep, 'castQueueStep', 1, Number.MAX_SAFE_INTEGER) }),
+    ...(item.castQueueSourceSeq === undefined ? {} : { castQueueSourceSeq: integer(item.castQueueSourceSeq, 'castQueueSourceSeq', 0, Number.MAX_SAFE_INTEGER) }),
   })
 }
 
 function emptyRuntime(sessionId: string): SessionRuntimeState {
-  return Object.freeze({ sessionId, revision: 0, effects: Object.freeze([]), choicesTitle: '', choices: Object.freeze([]), selectedChoiceId: '' })
+  return Object.freeze({
+    sessionId, revision: 0, effects: Object.freeze([]), choicesTitle: '', choices: Object.freeze([]), selectedChoiceId: '',
+    castQueue: Object.freeze([]), castRound: 0, lastSpeakerId: '',
+  })
 }
 
 function runtimeEffectKind(value: unknown): RuntimeEffectKind {

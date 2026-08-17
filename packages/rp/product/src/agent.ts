@@ -211,8 +211,48 @@ function registerAgentTools(ctx: ProductAgentContext): void {
   })), 'dsh-rp-product: Agent RP choices tool')
 
   ctx.effect(() => ctx.tools.register(defineTool({
+    name: 'rp_schedule_cast',
+    description: 'Set the ordered speaker queue for a Multi-character scene. Every id must belong to the configured Session cast. Use before rp_next_speaker when the queue is empty or the scene changes; do not repeat a character within one queue.',
+    parameters: { characterIds: { type: 'json', required: true, description: 'Ordered array of 1-16 configured Character Profile ids.' } },
+    output: { schema: { type: 'json' }, render: (_args, value) => [{ type: 'text', text: JSON.stringify(value) }] },
+    async execute(args, exec) {
+      if (exec.agent === undefined) throw new Error('rp_schedule_cast requires an Agent-owned call')
+      const sessionId = String(exec.agent.id)
+      const state = await (await ProductStore.open()).castQueue(sessionId, args.characterIds, toolLocation(exec))
+      const runtime = state.runtimes[sessionId]
+      return {
+        scheduled: true,
+        sessionId,
+        round: runtime?.castRound ?? 0,
+        queue: (runtime?.castQueue ?? []).map(id => ({ id, name: state.characters.find(character => character.id === id)?.name ?? id })),
+      }
+    },
+  })), 'dsh-rp-product: cast queue scheduling tool')
+
+  ctx.effect(() => ctx.tools.register(defineTool({
+    name: 'rp_next_speaker',
+    description: 'Consume the head of the scheduled Multi-character queue and select that configured character as the next final-reply speaker. Schedule a queue first; do not choose another character after this call in the same Turn.',
+    parameters: {},
+    output: { schema: { type: 'json' }, render: (_args, value) => [{ type: 'text', text: JSON.stringify(value) }] },
+    async execute(_args, exec) {
+      if (exec.agent === undefined) throw new Error('rp_next_speaker requires an Agent-owned call')
+      const sessionId = String(exec.agent.id)
+      const state = await (await ProductStore.open()).nextSpeaker(sessionId, toolLocation(exec))
+      const runtime = state.runtimes[sessionId]
+      const character = state.characters.find(item => item.id === state.bindings[sessionId]?.primaryCharacterId)
+      return {
+        selected: true,
+        sessionId,
+        characterId: character?.id ?? '',
+        characterName: character?.name ?? '',
+        remaining: (runtime?.castQueue ?? []).map(id => ({ id, name: state.characters.find(item => item.id === id)?.name ?? id })),
+      }
+    },
+  })), 'dsh-rp-product: queued speaker selection tool')
+
+  ctx.effect(() => ctx.tools.register(defineTool({
     name: 'rp_select_speaker',
-    description: 'Select one character from the configured Session cast as the speaker of the next final reply. Use in multi-character scenes before writing that character. Never select a character outside the configured cast.',
+    description: 'Manually override the next final-reply speaker with one configured cast member. Prefer rp_schedule_cast plus rp_next_speaker for normal Multi-character rotation. Never select a character outside the configured cast.',
     parameters: { characterId: { type: 'string', required: true, description: 'Configured Character Profile id.' } },
     output: { schema: { type: 'json' }, render: (_args, value) => [{ type: 'text', text: JSON.stringify(value) }] },
     async execute(args, exec) {
@@ -248,7 +288,8 @@ function registerAgentTools(ctx: ProductAgentContext): void {
     async execute(_args, exec) {
       if (exec.agent === undefined) throw new Error('rp_read_state requires an Agent-owned call')
       const sessionId = String(exec.agent.id)
-      const runtime = (await ProductStore.open()).snapshot().runtimes[sessionId]
+      const state = (await ProductStore.open()).snapshot()
+      const runtime = state.runtimes[sessionId]
       return runtime === undefined
         ? { sessionId, revision: 0, state: [], choices: [] }
         : {
@@ -257,6 +298,9 @@ function registerAgentTools(ctx: ProductAgentContext): void {
           state: currentRuntimeEffects(runtime).map(effect => ({ ...effect, data: { ...effect.data } })),
           choicesTitle: runtime.choicesTitle,
           choices: runtime.choices.map(choice => ({ ...choice })),
+          castRound: runtime.castRound,
+          lastSpeakerId: runtime.lastSpeakerId,
+          castQueue: runtime.castQueue.map(id => ({ id, name: state.characters.find(character => character.id === id)?.name ?? id })),
         }
     },
   })), 'dsh-rp-product: state inspection tool')
@@ -268,7 +312,8 @@ function experienceGuide(state: ProductState, sessionId: string): string {
   if (binding.experienceId === 'rp-world-sim') return '<rp-experience>World Simulation：世界不围绕用户停转。优先维护时间、场景、NPC 与目标；只提交有因果依据的后台变化，并给用户观察或介入机会。</rp-experience>'
   if (binding.experienceId === 'rp-multi-character') {
     const cast = binding.characterIds.map(id => state.characters.find(character => character.id === id)).filter(character => character !== undefined)
-    return `<rp-experience>Multi-character：角色声音、知识和目标必须分离。最终回复前按本轮实际发言者调用 rp_select_speaker；当前阵容：${cast.map(character => `${character.id}=${character.name}`).join('、') || '未配置'}。</rp-experience>`
+    const queue = (state.runtimes[sessionId]?.castQueue ?? []).map(id => state.characters.find(character => character.id === id)).filter(character => character !== undefined)
+    return `<rp-experience>Multi-character：角色声音、知识和目标必须分离。待发言队列为空或场景变化时先调用 rp_schedule_cast；每轮最终回复前调用 rp_next_speaker 消费队首，一个 DSH Turn 只输出该角色的一条最终正文。当前阵容：${cast.map(character => `${character.id}=${character.name}`).join('、') || '未配置'}。待发言队列：${queue.map(character => `${character.id}=${character.name}`).join(' → ') || '空'}。</rp-experience>`
   }
   if (binding.experienceId === 'rp-trpg') return '<rp-experience>TRPG：只有结果确实不确定且用户接受规则裁决时调用 rp_roll；公开骰式、理由和结果，再用 rp_commit_turn 提交造成的目标、物品、角色或世界变化。</rp-experience>'
   if (binding.experienceId === 'rp-companion') return '<rp-experience>Companion：优先保持情感连续性，提交关系、记忆、Persona 与角色状态；不要为了游戏化而强制每轮提供选项。</rp-experience>'

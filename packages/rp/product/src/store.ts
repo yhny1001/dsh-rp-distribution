@@ -7,6 +7,7 @@ import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import {
   adaptPresetToHarness,
+  advanceCastSpeaker,
   applyRuntimeEffect,
   bindSession,
   commitRuntimeTurn,
@@ -21,6 +22,7 @@ import {
   recordTranscriptMessage,
   replaceRuntimeChoices,
   removeEntity,
+  scheduleCast,
   selectPrimaryCharacter,
   selectRuntimeChoice,
   upsertEntity,
@@ -168,6 +170,16 @@ export class ProductStore {
   /** Select one configured cast member as the next Agent RP speaker. */
   async primaryCharacter(sessionId: string, characterId: string): Promise<ProductState> {
     return await this.mutate(() => selectPrimaryCharacter(this.state, sessionId, characterId))
+  }
+
+  /** Replace the ordered Multi-character queue. */
+  async castQueue(sessionId: string, characterIds: unknown, location?: RuntimeLocation): Promise<ProductState> {
+    return await this.mutate(() => scheduleCast(this.state, sessionId, characterIds, location))
+  }
+
+  /** Consume the next queued speaker and select it for the final reply. */
+  async nextSpeaker(sessionId: string, location?: RuntimeLocation): Promise<ProductState> {
+    return await this.mutate(() => advanceCastSpeaker(this.state, sessionId, location))
   }
 
   /** Clone RP projections into one already-created native Session fork. */
