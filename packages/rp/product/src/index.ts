@@ -42,6 +42,7 @@ interface SurfaceEvent {
 interface ProductSession {
   readonly id?: string
   readonly events: readonly SurfaceEvent[]
+  readonly header?: { readonly parentSession?: string; readonly seedLength?: number }
   append(type: 'agent-preset/selected', data: { readonly agentPreset: string }): unknown
   append(type: 'user/message', data: UserMessage, options: {
     readonly surfaceOp: 'append' | { readonly op: 'replace'; readonly start: number; readonly end: number }
@@ -157,6 +158,25 @@ export async function apply(ctx: ProductContext): Promise<void> {
           })
         })
         return { kind: 'success', text: `已更新${record.speakerName}的正文；后续模型上下文使用新版本` }
+      } catch (error: unknown) { return { kind: 'error', text: publicError(error) } }
+    },
+  })
+
+  registerCommand(ctx, {
+    name: 'rp-studio-fork-adopt',
+    description: 'adopt one native Session fork with RP projections clipped to its seeded prefix',
+    handler: async ({ agent, rawInput }) => {
+      try {
+        requireIdle(agent)
+        const request = decodeForkAdopt(rawInput)
+        if (agent.session.header?.parentSession !== request.sourceSessionId) throw new Error('RP fork source does not match native Session lineage')
+        const source = store.snapshot().bindings[request.sourceSessionId]
+        if (source === undefined) throw new Error('RP fork source composition is unavailable')
+        const expectedPreset = source.mode === 'agent' ? AGENT_PRESET_ID : TAVERN_PRESET_ID
+        if (ctx.agentPresets.composedPreset(agent.ctx) !== expectedPreset) throw new Error('native Session fork did not inherit the RP Agent preset')
+        const seedLength = agent.session.header.seedLength ?? agent.session.events.length
+        await store.forkProjection(request.sourceSessionId, agent.id, seedLength, request.maxTurn)
+        return { kind: 'success', text: `已从 Turn ${String(request.maxTurn)} 的结束状态建立 RP 分支` }
       } catch (error: unknown) { return { kind: 'error', text: publicError(error) } }
     },
   })
@@ -401,6 +421,14 @@ function decodeChatImport(rawInput: string): {
   return Object.freeze({ sessionId: requiredString(source.sessionId, 'sessionId', 512), messages: Object.freeze(messages) })
 }
 
+function decodeForkAdopt(rawInput: string): { readonly sourceSessionId: string; readonly maxTurn: number } {
+  const source = decodePayload(rawInput)
+  return Object.freeze({
+    sourceSessionId: requiredString(source.sourceSessionId, 'sourceSessionId', 512),
+    maxTurn: positiveInteger(source.maxTurn, 'maxTurn'),
+  })
+}
+
 function decodePayload(rawInput: string): Record<string, unknown> {
   const encoded = rawInput.trim()
   if (encoded === '' || encoded.length > MAX_COMMAND_PAYLOAD_CHARS) throw new Error('RP command payload is missing or too large')
@@ -532,6 +560,11 @@ function revision(value: unknown): number { return nonNegativeInteger(value, 'ba
 
 function nonNegativeInteger(value: unknown, label: string): number {
   if (!Number.isSafeInteger(value) || (value as number) < 0) throw new Error(`${label} must be a non-negative integer`)
+  return value as number
+}
+
+function positiveInteger(value: unknown, label: string): number {
+  if (!Number.isSafeInteger(value) || (value as number) < 1) throw new Error(`${label} must be a positive integer`)
   return value as number
 }
 

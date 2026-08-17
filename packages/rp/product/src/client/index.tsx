@@ -69,6 +69,8 @@ interface ClientContext {
   readonly sessions: {
     readonly list: { getSnapshot(): SessionListSnapshot; subscribe(listener: () => void): () => void }
     noteAgentPreset(sessionId: string, agentPreset: string): void
+    fork(options: { readonly sessionId: string; readonly atSeq?: number; readonly increaseTitle?: boolean }): Promise<string>
+    open(sessionId: string): void
     binding(sessionId: string): { readonly session: {
       command(line: string): Promise<CommandReceipt>
       prompt(content: readonly { readonly type: 'text'; readonly text: string }[], mode: 'queue'): Promise<PromptReceipt>
@@ -752,11 +754,15 @@ function RpConversationView({ sessionId, useSession }: { readonly sessionId: str
       <div className="rpp-story-thread">{messages.length === 0 ? <div className="rpp-story-empty rpp-story-empty-compact"><span>☾</span><h3>故事还没有开始</h3>
         <p>{greetings.length === 0 ? '从下方输入第一句话。' : `可以先加入${character?.name ?? '角色'}的角色卡开场白。`}</p>
         {greetings.length === 0 ? null : <button type="button" className="rpp-secondary-action" onClick={() => { void addOpening(sessionId, 0) }}>加入开场白</button>}</div> : null}
-        {messages.map(message => {
+        {messages.map((message, index) => {
           const speakerCharacter = message.role === 'assistant' ? response?.state.characters.find(item => item.id === message.speakerId) : undefined
+          const fork = message.role === 'assistant' ? forkRewriteCandidate(messages, index) : undefined
           return <article key={message.sourceSeq} className={`rpp-message rpp-message-${message.role}`}>
           <div className="rpp-message-head"><AvatarFace character={speakerCharacter} className="rpp-message-avatar" fallback={message.speakerName.slice(0, 1)} accent={message.role === 'assistant' ? speakerCharacter?.accent ?? '#f47f6b' : '#36b8d4'} />
             <span><b>{message.speakerName}</b><small>{message.role === 'assistant' ? '角色' : 'Persona'} · #{message.sourceSeq}{message.editRevision > 0 ? ` · 已编辑 v${message.editRevision}` : ''}</small></span>
+            {message.role === 'assistant' ? <button type="button" disabled={fork === undefined || client.saving || running}
+              title={fork === undefined ? '首轮回复没有可用的前置 Turn，暂不能原生分支' : '保留原会话，从上一轮结束状态分支并重写本轮'}
+              onClick={() => { if (fork !== undefined) void forkRewrite(sessionId, fork) }}>分支重写</button> : null}
             <button type="button" onClick={() => { setEditing(message.sourceSeq); setBody(message.content) }}>编辑正文</button></div>
           {editing === message.sourceSeq ? <div className="rpp-message-editor"><textarea rows={Math.max(4, Math.min(12, body.split('\n').length + 2))} value={body}
             onChange={event => setBody(event.target.value)} /><div><button type="button" onClick={() => setEditing(undefined)}>取消</button>
@@ -812,6 +818,30 @@ interface StoryMessage {
   readonly speakerName: string
   readonly content: string
   readonly editRevision: number
+  readonly turn?: number
+}
+
+interface ForkRewriteCandidate {
+  readonly anchorSeq: number
+  readonly maxTurn: number
+  readonly prompt: string
+}
+
+function forkRewriteCandidate(messages: readonly StoryMessage[], index: number): ForkRewriteCandidate | undefined {
+  const target = messages[index]
+  if (target?.role !== 'assistant' || target.turn === undefined || target.turn <= 1) return undefined
+  let prompt: string | undefined
+  let previous: StoryMessage | undefined
+  for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
+    const message = messages[cursor]!
+    if (prompt === undefined && message.role === 'user') prompt = message.content
+    if (message.role === 'assistant' && message.turn !== undefined && message.turn < target.turn) {
+      previous = message
+      break
+    }
+  }
+  if (prompt === undefined || previous?.turn === undefined) return undefined
+  return Object.freeze({ anchorSeq: previous.sourceSeq, maxTurn: previous.turn, prompt })
 }
 
 function storyMessages(nodes: readonly ViewNode[], transcript: SessionTranscript | undefined, fallbackCharacter: string, fallbackPersona: string): readonly StoryMessage[] {
@@ -843,6 +873,7 @@ function storyMessages(nodes: readonly ViewNode[], transcript: SessionTranscript
       speakerName: record?.speakerName ?? (role === 'assistant' ? fallbackCharacter : fallbackPersona),
       content,
       editRevision: record?.editRevision ?? 0,
+      ...(node.turn === undefined ? {} : { turn: node.turn }),
     })
   }
   return messages
@@ -1141,6 +1172,22 @@ async function chooseRuntimeOption(sessionId: string, choiceId: string, prompt: 
     const receipt = await binding.session.prompt([{ type: 'text', text: prompt }], 'queue')
     if (!receipt.ok) throw new Error(receipt.error?.message ?? '选项消息发送失败')
     update({ saving: false, notice: '选项已进入当前 Agent RP 会话。' })
+  } catch (error: unknown) { update({ saving: false, error: publicError(error) }) }
+}
+
+async function forkRewrite(sourceSessionId: string, candidate: ForkRewriteCandidate): Promise<void> {
+  const ctx = context
+  if (ctx === undefined) { update({ error: 'DSH 客户端尚未加载' }); return }
+  update({ saving: true, error: '', notice: '正在建立原生 Session 分支…' })
+  try {
+    const childSessionId = await ctx.sessions.fork({ sessionId: sourceSessionId, atSeq: candidate.anchorSeq, increaseTitle: true })
+    ctx.sessions.open(childSessionId)
+    if (ctx.sessions.binding(childSessionId) === undefined) throw new Error('原生 Session 分支尚未建立客户端绑定')
+    await sendCommand(childSessionId, 'rp-studio-fork-adopt', { sourceSessionId, maxTurn: candidate.maxTurn })
+    const receipt = await ctx.sessions.binding(childSessionId)!.session.prompt([{ type: 'text', text: candidate.prompt }], 'queue')
+    if (!receipt.ok) throw new Error(receipt.error?.message ?? '分支重写消息发送失败')
+    update({ saving: false, sessionId: childSessionId, response: undefined, notice: '已保留原会话，并在原生子 Session 中重新生成这一轮。' })
+    await loadProduct(childSessionId)
   } catch (error: unknown) { update({ saving: false, error: publicError(error) }) }
 }
 

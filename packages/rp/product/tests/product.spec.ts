@@ -13,6 +13,7 @@ import {
   commitRuntimeTurn,
   currentRuntimeEffects,
   defaultProductState,
+  forkSessionProjection,
   mergeImportedEntities,
   importTranscriptHistory,
   normalizeEntity,
@@ -322,6 +323,29 @@ describe('@dsh-rp/product', () => {
     expect(renderRuntimeContext(second, 'world-engine')).toContain('[objective] 调查港口')
   })
 
+  it('clips transcript, state, and choices when adopting a native Session fork', () => {
+    const bound = bindSession(defaultProductState(), { sessionId: 'fork-source', ...composition, mode: 'agent' }, 0, 1)
+    const history = importTranscriptHistory(bound, 'fork-source', 10, [
+      { role: 'user', speakerName: '远行者', content: '第一轮' },
+      { role: 'assistant', speakerName: '林遥', content: '第一轮回复' },
+    ], 2)
+    const first = commitRuntimeTurn(history, 'fork-source', 'call-1', {
+      updates: [{ kind: 'time', title: '第一轮时间', summary: '23:00', data: { key: 'clock' } }],
+    }, 3, { turn: 1, step: 1, sourceSeq: 20 })
+    const second = commitRuntimeTurn(first, 'fork-source', 'call-2', {
+      updates: [{ kind: 'time', title: '第二轮时间', summary: '23:10', data: { key: 'clock' } }],
+      choicesTitle: '第二轮选项', choices: [{ id: 'later', label: '未来选项', prompt: '未来' }],
+    }, 4, { turn: 2, step: 1, sourceSeq: 40 })
+    const forked = forkSessionProjection(second, 'fork-source', 'fork-child', 30, 1, 5)
+    expect(forked.bindings['fork-child']).toMatchObject({ sessionId: 'fork-child', mode: 'agent', primaryCharacterId: 'lin-yao' })
+    expect(forked.transcripts['fork-child']?.messages).toHaveLength(2)
+    expect(forked.runtimes['fork-child']).toMatchObject({
+      revision: 1, effects: [{ title: '第一轮时间', turn: 1, sourceSeq: 20 }], choices: [], choicesTitle: '',
+    })
+    expect(renderRuntimeContext(forked, 'fork-child')).toContain('第一轮时间')
+    expect(renderRuntimeContext(forked, 'fork-child')).not.toContain('第二轮时间')
+  })
+
   it('registers 256 ordered Prompt Manager seats and applies supported generation parameters through next()', async () => {
     const home = mkdtempSync(join(tmpdir(), 'dsh-rp-product-agent-'))
     vi.stubEnv('DSH_HOME', home)
@@ -432,7 +456,9 @@ describe('@dsh-rp/product', () => {
       'rp_commit_turn', 'rp_update_state', 'rp_propose_choices', 'rp_select_speaker', 'rp_roll', 'rp_read_state',
     ])
     const tools = new Map(definitions.map(tool => [tool.name, tool]))
-    const execution = { agent: { id: 'agent-tools' }, callId: 'call-1', signal: new AbortController().signal }
+    const execution = { agent: { id: 'agent-tools', session: { events: [
+      { type: 'tool/call', seq: 5, data: { turn: 1, step: 1, callId: 'call-1' } },
+    ] } }, callId: 'call-1', signal: new AbortController().signal }
     await tools.get('rp_commit_turn')!.execute({
       updates: [{ kind: 'scene', title: '场景变化', summary: '进入港口', data: { key: 'active-scene', location: '港口' } }],
       choicesTitle: '下一步', choices: [{ id: 'ask', label: '询问', prompt: '我询问守卫。' }],
@@ -449,7 +475,7 @@ describe('@dsh-rp/product', () => {
     expect(roll.total).toBeLessThanOrEqual(15)
     await tools.get('rp_update_state')!.execute({ kind: 'memory', title: '守卫口供', summary: '旧船昨夜靠港', data: { key: 'guard-testimony' } }, { ...execution, callId: 'call-2' })
     expect(store.snapshot().runtimes['agent-tools']).toMatchObject({
-      effects: [{ kind: 'scene', title: '场景变化' }, { kind: 'memory', title: '守卫口供' }], choicesTitle: '下一步', choices: [{ id: 'ask' }],
+      effects: [{ kind: 'scene', title: '场景变化', turn: 1, step: 1, sourceSeq: 5 }, { kind: 'memory', title: '守卫口供' }], choicesTitle: '下一步', choices: [{ id: 'ask' }],
     })
     const tavernTools: unknown[] = []
     applyAgent({ ...base, tools: { register: (tool: unknown) => { tavernTools.push(tool); return () => {} } } }, { mode: 'tavern' })
@@ -475,7 +501,7 @@ describe('@dsh-rp/product', () => {
       commands: { register: (definition: { name: string; handler: (input: CommandInput) => Promise<{ kind: string; text: string }> }) => {
         commands.set(definition.name, definition.handler); return () => {}
       } },
-      agentPresets: { composedPreset: () => 'standard', recompose: async (_ctx: object, id: string) => ({ id }) },
+      agentPresets: { composedPreset: (agentCtx: object) => 'preset' in agentCtx ? String((agentCtx as { preset: unknown }).preset) : 'standard', recompose: async (_ctx: object, id: string) => ({ id }) },
       on: (event: string, listener: (...args: never[]) => void) => {
         if (event === 'session/event') sessionListeners.push(listener as unknown as (session: TestSession, event: TestEvent) => void)
         return () => {}
@@ -486,6 +512,7 @@ describe('@dsh-rp/product', () => {
     const bind = commands.get('rp-studio-bind')!
     const edit = commands.get('rp-studio-edit')!
     const chatImport = commands.get('rp-studio-chat-import')!
+    const forkAdopt = commands.get('rp-studio-fork-adopt')!
     const rawInput = Buffer.from(JSON.stringify({ sessionId: 'session-bind', baseRevision: 0, ...composition })).toString('base64url')
     expect((await bind({ agent: { id: 'session-bind', status: 'idle', ctx: {}, session }, rawInput })).kind).toBe('success')
     expect(events[0]).toMatchObject({ type: 'agent-preset/selected', data: { agentPreset: 'rp-tavern' } })
@@ -521,6 +548,19 @@ describe('@dsh-rp/product', () => {
       { role: 'assistant', speakerName: '林遥', editedContent: '导入的角色历史' },
       { role: 'user', speakerName: '远行者', editedContent: '导入的用户历史' },
     ])
+    const childEvents = events.map(event => ({ ...event }))
+    const childSession: TestSession = {
+      id: 'session-child', events: childEvents, header: { parentSession: 'session-bind', seedLength: childEvents.length },
+      append: (type: string, data: unknown, options?: Record<string, unknown>) => {
+        const event = { type, seq: childEvents.length, time: Date.now(), data, ...options }
+        childEvents.push(event)
+        return event
+      },
+    }
+    const forkInput = Buffer.from(JSON.stringify({ sourceSessionId: 'session-bind', maxTurn: 1 })).toString('base64url')
+    expect((await forkAdopt({ agent: { id: 'session-child', status: 'idle', ctx: { preset: 'rp-tavern' }, session: childSession }, rawInput: forkInput })).kind).toBe('success')
+    expect(readProductStateSync().bindings['session-child']).toMatchObject({ sessionId: 'session-child', mode: 'tavern', primaryCharacterId: 'lin-yao' })
+    expect(readProductStateSync().transcripts['session-child']?.messages).toHaveLength(3)
   })
 })
 
@@ -538,5 +578,6 @@ interface TestEvent {
 interface TestSession {
   readonly id: string
   readonly events: TestEvent[]
+  readonly header?: { readonly parentSession?: string; readonly seedLength?: number }
   readonly append: (type: string, data: unknown, options?: Record<string, unknown>) => TestEvent
 }

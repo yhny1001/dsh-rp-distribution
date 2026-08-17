@@ -3,7 +3,7 @@
 import { randomInt, randomUUID } from 'node:crypto'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import { currentRuntimeEffects, PRODUCT_PROMPT_SEAT_COUNT, renderPromptLayer, renderRuntimeContext, resolveGenerationSettings, resolvePromptLayers } from './model.ts'
-import type { ProductState } from './model.ts'
+import type { ProductState, RuntimeLocation } from './model.ts'
 import { ProductStore, readProductStateSync } from './store.ts'
 
 export const name = 'dsh-rp-product/agent'
@@ -160,7 +160,7 @@ function registerAgentTools(ctx: ProductAgentContext): void {
       const state = await store.runtimeTurn(sessionId, String(exec.callId), {
         updates: args.updates,
         ...(args.choices === undefined ? {} : { choices: args.choices, choicesTitle: args.choicesTitle }),
-      })
+      }, toolLocation(exec))
       const runtime = state.runtimes[sessionId]
       return {
         committed: true,
@@ -188,7 +188,7 @@ function registerAgentTools(ctx: ProductAgentContext): void {
       const sessionId = String(exec.agent.id)
       const state = await store.runtimeEffect(sessionId, String(exec.callId), {
         kind: args.kind, title: args.title, summary: args.summary, data: args.data ?? {},
-      })
+      }, toolLocation(exec))
       return { committed: true, sessionId, revision: state.runtimes[sessionId]?.revision ?? 0, kind: args.kind, title: args.title }
     },
   })), 'dsh-rp-product: Agent RP state tool')
@@ -205,7 +205,7 @@ function registerAgentTools(ctx: ProductAgentContext): void {
       if (exec.agent === undefined) throw new Error('rp_propose_choices requires an Agent-owned call')
       const store = await ProductStore.open()
       const sessionId = String(exec.agent.id)
-      const state = await store.runtimeChoices(sessionId, String(exec.callId), args.title, args.options)
+      const state = await store.runtimeChoices(sessionId, String(exec.callId), args.title, args.options, toolLocation(exec))
       return { committed: true, sessionId, revision: state.runtimes[sessionId]?.revision ?? 0, optionCount: state.runtimes[sessionId]?.choices.length ?? 0 }
     },
   })), 'dsh-rp-product: Agent RP choices tool')
@@ -284,4 +284,20 @@ function rollDice(value: string): { readonly notation: string; readonly rolls: n
   if (count < 1 || count > 20 || sides < 2 || sides > 1_000 || modifier < -10_000 || modifier > 10_000) throw new Error('dice notation exceeds RP roll limits')
   const rolls = Array.from({ length: count }, () => randomInt(1, sides + 1))
   return { notation: `${String(count)}d${String(sides)}${modifier === 0 ? '' : modifier > 0 ? `+${String(modifier)}` : String(modifier)}`, rolls, modifier, total: rolls.reduce((sum, roll) => sum + roll, modifier) }
+}
+
+function toolLocation(exec: { readonly callId: unknown; readonly agent?: { readonly session?: { readonly events: readonly unknown[] } } }): RuntimeLocation | undefined {
+  const events = exec.agent?.session?.events
+  if (events === undefined) return undefined
+  const callId = String(exec.callId)
+  for (let index = events.length - 1; index >= 0; index -= 1) {
+    const event = events[index]
+    if (typeof event !== 'object' || event === null) continue
+    const row = event as Record<string, unknown>
+    if (row.type !== 'tool/call' || typeof row.seq !== 'number' || typeof row.data !== 'object' || row.data === null) continue
+    const data = row.data as Record<string, unknown>
+    if (data.callId !== callId || !Number.isSafeInteger(data.turn) || !Number.isSafeInteger(data.step)) continue
+    return { turn: data.turn as number, step: data.step as number, sourceSeq: row.seq }
+  }
+  return undefined
 }

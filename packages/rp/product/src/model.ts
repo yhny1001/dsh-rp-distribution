@@ -186,6 +186,15 @@ export interface RuntimeEffect {
   readonly summary: string
   readonly data: JsonObject
   readonly createdAt: number
+  readonly turn?: number
+  readonly step?: number
+  readonly sourceSeq?: number
+}
+
+export interface RuntimeLocation {
+  readonly turn: number
+  readonly step: number
+  readonly sourceSeq: number
 }
 
 export interface RuntimeChoice {
@@ -201,6 +210,12 @@ export interface SessionRuntimeState {
   readonly choicesTitle: string
   readonly choices: readonly RuntimeChoice[]
   readonly selectedChoiceId: string
+  readonly choicesTurn?: number
+  readonly choicesStep?: number
+  readonly choicesSourceSeq?: number
+  readonly lastCommitTurn?: number
+  readonly lastCommitStep?: number
+  readonly lastCommitSourceSeq?: number
 }
 
 export interface ProductState {
@@ -453,6 +468,53 @@ export function selectPrimaryCharacter(state: ProductState, sessionId: string, c
   })
 }
 
+/** Clone RP-owned projections into a native fork, clipped to the child's seeded event prefix. */
+export function forkSessionProjection(
+  state: ProductState,
+  sourceSessionId: string,
+  childSessionIdValue: string,
+  childEventCount: number,
+  maxTurn: number,
+  now = Date.now(),
+): ProductState {
+  const sourceBinding = state.bindings[sourceSessionId]
+  if (sourceBinding === undefined) throw new Error('fork source has no RP composition')
+  const childSessionId = text(childSessionIdValue, 'fork child sessionId', 512)
+  const cut = integer(childEventCount, 'fork childEventCount', 0, Number.MAX_SAFE_INTEGER)
+  const turn = integer(maxTurn, 'fork maxTurn', 1, Number.MAX_SAFE_INTEGER)
+  const binding: SessionComposition = Object.freeze({ ...sourceBinding, sessionId: childSessionId, updatedAt: now })
+  const sourceTranscript = state.transcripts[sourceSessionId]
+  const messages = sourceTranscript?.messages.filter(message => message.sourceSeq < cut && message.currentSurfaceSeq < cut) ?? []
+  const sourceRuntime = state.runtimes[sourceSessionId]
+  const effects = sourceRuntime?.effects.filter(effect => effect.sourceSeq !== undefined && effect.sourceSeq < cut && (effect.turn ?? turn) <= turn) ?? []
+  const keepChoices = sourceRuntime?.choicesSourceSeq !== undefined && sourceRuntime.choicesSourceSeq < cut && (sourceRuntime.choicesTurn ?? turn) <= turn
+  const last = effects.at(-1)
+  const runtime = sourceRuntime === undefined ? undefined : Object.freeze({
+    sessionId: childSessionId,
+    revision: new Set(effects.map(effect => effect.callId)).size,
+    effects: Object.freeze(effects),
+    choicesTitle: keepChoices ? sourceRuntime.choicesTitle : '',
+    choices: Object.freeze(keepChoices ? sourceRuntime.choices : []),
+    selectedChoiceId: keepChoices ? sourceRuntime.selectedChoiceId : '',
+    ...(keepChoices && sourceRuntime.choicesTurn !== undefined ? { choicesTurn: sourceRuntime.choicesTurn } : {}),
+    ...(keepChoices && sourceRuntime.choicesStep !== undefined ? { choicesStep: sourceRuntime.choicesStep } : {}),
+    ...(keepChoices && sourceRuntime.choicesSourceSeq !== undefined ? { choicesSourceSeq: sourceRuntime.choicesSourceSeq } : {}),
+    ...(last?.turn === undefined ? {} : { lastCommitTurn: last.turn }),
+    ...(last?.step === undefined ? {} : { lastCommitStep: last.step }),
+    ...(last?.sourceSeq === undefined ? {} : { lastCommitSourceSeq: last.sourceSeq }),
+  })
+  return normalizeProductState({
+    ...state,
+    revision: state.revision + 1,
+    bindings: { ...state.bindings, [childSessionId]: binding },
+    transcripts: sourceTranscript === undefined ? state.transcripts : {
+      ...state.transcripts,
+      [childSessionId]: { sessionId: childSessionId, messages },
+    },
+    runtimes: runtime === undefined ? state.runtimes : { ...state.runtimes, [childSessionId]: runtime },
+  })
+}
+
 /** Record the selected speaker for one append-origin message. */
 export function recordTranscriptMessage(state: ProductState, sessionId: string, sourceSeq: number, role: TranscriptRole, createdAt: number): ProductState {
   const binding = state.bindings[sessionId]
@@ -562,8 +624,9 @@ export function applyRuntimeEffect(
   callId: string,
   value: unknown,
   now = Date.now(),
+  location?: RuntimeLocation,
 ): ProductState {
-  return commitRuntimeTurn(state, sessionId, callId, { updates: [value] }, now)
+  return commitRuntimeTurn(state, sessionId, callId, { updates: [value] }, now, location)
 }
 
 /** Atomically commit one turn's N→N+1 world ledger and optional user choices. */
@@ -573,6 +636,7 @@ export function commitRuntimeTurn(
   callIdValue: string,
   value: unknown,
   now = Date.now(),
+  location?: RuntimeLocation,
 ): ProductState {
   const binding = state.bindings[sessionId]
   if (binding?.mode !== 'agent') throw new Error('RP domain effects require Agent RP mode')
@@ -592,6 +656,7 @@ export function commitRuntimeTurn(
       summary: text(update.summary, `runtime turn updates[${index}].summary`, 8_000),
       data: jsonObject(update.data ?? {}, `runtime turn updates[${index}].data`),
       createdAt: now,
+      ...(location === undefined ? {} : location),
     })
   })
   const effects = [...runtime.effects.filter(existing => existing.callId !== callId), ...committed].slice(-500)
@@ -603,10 +668,20 @@ export function commitRuntimeTurn(
       ...runtime,
       revision: runtime.revision + 1,
       effects,
+      ...(location === undefined ? {} : {
+        lastCommitTurn: location.turn,
+        lastCommitStep: location.step,
+        lastCommitSourceSeq: location.sourceSeq,
+      }),
       ...(hasChoices ? {
         choicesTitle: choices.length === 0 ? '' : text(item.choicesTitle ?? '接下来做什么？', 'choices title', 240),
         choices,
         selectedChoiceId: '',
+        ...(location === undefined ? {} : {
+          choicesTurn: location.turn,
+          choicesStep: location.step,
+          choicesSourceSeq: location.sourceSeq,
+        }),
       } : {}),
     } },
   })
@@ -619,6 +694,7 @@ export function replaceRuntimeChoices(
   callId: string,
   titleValue: unknown,
   choicesValue: unknown,
+  location?: RuntimeLocation,
 ): ProductState {
   const binding = state.bindings[sessionId]
   if (binding?.mode !== 'agent') throw new Error('RP choices require Agent RP mode')
@@ -634,6 +710,14 @@ export function replaceRuntimeChoices(
       choices,
       selectedChoiceId: '',
       effects: runtime.effects,
+      ...(location === undefined ? {} : {
+        choicesTurn: location.turn,
+        choicesStep: location.step,
+        choicesSourceSeq: location.sourceSeq,
+        lastCommitTurn: location.turn,
+        lastCommitStep: location.step,
+        lastCommitSourceSeq: location.sourceSeq,
+      }),
       lastChoiceCallId: callId,
     } },
   })
@@ -976,6 +1060,9 @@ function normalizeRuntime(value: unknown, fallbackSessionId: string): SessionRun
       kind: runtimeEffectKind(effect.kind), title: text(effect.title, 'effect title', 240),
       summary: text(effect.summary, 'effect summary', 8_000), data: jsonObject(effect.data ?? {}, 'effect data'),
       createdAt: integer(effect.createdAt, 'effect createdAt', 0, Number.MAX_SAFE_INTEGER),
+      ...(effect.turn === undefined ? {} : { turn: integer(effect.turn, 'effect turn', 1, Number.MAX_SAFE_INTEGER) }),
+      ...(effect.step === undefined ? {} : { step: integer(effect.step, 'effect step', 1, Number.MAX_SAFE_INTEGER) }),
+      ...(effect.sourceSeq === undefined ? {} : { sourceSeq: integer(effect.sourceSeq, 'effect sourceSeq', 0, Number.MAX_SAFE_INTEGER) }),
     })
   })
   const choices = (item.choices === undefined ? [] : array(item.choices, 'runtime choices')).map((value, index) => {
@@ -989,6 +1076,12 @@ function normalizeRuntime(value: unknown, fallbackSessionId: string): SessionRun
     choicesTitle: optionalText(item.choicesTitle, 'choicesTitle', 240),
     choices: Object.freeze(choices),
     selectedChoiceId: optionalText(item.selectedChoiceId, 'selectedChoiceId', 240),
+    ...(item.choicesTurn === undefined ? {} : { choicesTurn: integer(item.choicesTurn, 'choicesTurn', 1, Number.MAX_SAFE_INTEGER) }),
+    ...(item.choicesStep === undefined ? {} : { choicesStep: integer(item.choicesStep, 'choicesStep', 1, Number.MAX_SAFE_INTEGER) }),
+    ...(item.choicesSourceSeq === undefined ? {} : { choicesSourceSeq: integer(item.choicesSourceSeq, 'choicesSourceSeq', 0, Number.MAX_SAFE_INTEGER) }),
+    ...(item.lastCommitTurn === undefined ? {} : { lastCommitTurn: integer(item.lastCommitTurn, 'lastCommitTurn', 1, Number.MAX_SAFE_INTEGER) }),
+    ...(item.lastCommitStep === undefined ? {} : { lastCommitStep: integer(item.lastCommitStep, 'lastCommitStep', 1, Number.MAX_SAFE_INTEGER) }),
+    ...(item.lastCommitSourceSeq === undefined ? {} : { lastCommitSourceSeq: integer(item.lastCommitSourceSeq, 'lastCommitSourceSeq', 0, Number.MAX_SAFE_INTEGER) }),
   })
 }
 

@@ -12,6 +12,7 @@ import {
   commitRuntimeTurn,
   defaultProductState,
   editTranscriptMessage,
+  forkSessionProjection,
   importTranscriptHistory,
   mergeImportedEntities,
   normalizeEntity,
@@ -26,6 +27,7 @@ import {
   type ImportedProductEntities,
   type ProductEntityKind,
   type ProductState,
+  type RuntimeLocation,
   type TranscriptRole,
 } from './model.ts'
 
@@ -144,18 +146,18 @@ export class ProductStore {
   }
 
   /** Commit one Agent RP domain effect from a logged tool call. */
-  async runtimeEffect(sessionId: string, callId: string, value: unknown): Promise<ProductState> {
-    return await this.mutate(() => applyRuntimeEffect(this.state, sessionId, callId, value))
+  async runtimeEffect(sessionId: string, callId: string, value: unknown, location?: RuntimeLocation): Promise<ProductState> {
+    return await this.mutate(() => applyRuntimeEffect(this.state, sessionId, callId, value, Date.now(), location))
   }
 
   /** Atomically commit one Agent RP turn ledger and its optional choices. */
-  async runtimeTurn(sessionId: string, callId: string, value: unknown): Promise<ProductState> {
-    return await this.mutate(() => commitRuntimeTurn(this.state, sessionId, callId, value))
+  async runtimeTurn(sessionId: string, callId: string, value: unknown, location?: RuntimeLocation): Promise<ProductState> {
+    return await this.mutate(() => commitRuntimeTurn(this.state, sessionId, callId, value, Date.now(), location))
   }
 
   /** Replace structured choices proposed by one logged Agent RP tool call. */
-  async runtimeChoices(sessionId: string, callId: string, title: unknown, choices: unknown): Promise<ProductState> {
-    return await this.mutate(() => replaceRuntimeChoices(this.state, sessionId, callId, title, choices))
+  async runtimeChoices(sessionId: string, callId: string, title: unknown, choices: unknown, location?: RuntimeLocation): Promise<ProductState> {
+    return await this.mutate(() => replaceRuntimeChoices(this.state, sessionId, callId, title, choices, location))
   }
 
   /** Mark one choice selected before its prompt is sent to the native Agent. */
@@ -166,6 +168,11 @@ export class ProductStore {
   /** Select one configured cast member as the next Agent RP speaker. */
   async primaryCharacter(sessionId: string, characterId: string): Promise<ProductState> {
     return await this.mutate(() => selectPrimaryCharacter(this.state, sessionId, characterId))
+  }
+
+  /** Clone RP projections into one already-created native Session fork. */
+  async forkProjection(sourceSessionId: string, childSessionId: string, childEventCount: number, maxTurn: number): Promise<ProductState> {
+    return await this.mutate(() => forkSessionProjection(this.state, sourceSessionId, childSessionId, childEventCount, maxTurn))
   }
 
   /** Commit a binding while serializing its cross-service activation and rollback. */
