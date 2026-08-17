@@ -12,6 +12,7 @@ import {
   commitRuntimeTurn,
   defaultProductState,
   editTranscriptMessage,
+  importTranscriptHistory,
   mergeImportedEntities,
   normalizeEntity,
   normalizeProductState,
@@ -205,6 +206,19 @@ export class ProductStore {
     )
   }
 
+  /** Persist and append one validated Tavern chat history batch. */
+  async historyWithEffect(
+    sessionId: string,
+    startSeq: number,
+    messages: unknown,
+    effect: () => void,
+  ): Promise<ProductState> {
+    return await this.mutateWithEffect(
+      () => importTranscriptHistory(this.state, sessionId, startSeq, messages),
+      effect,
+    )
+  }
+
   /** Persist and append one model-visible transcript replacement. */
   async editWithEffect(
     sessionId: string,
@@ -269,6 +283,7 @@ async function writeAtomic(path: string, state: ProductState): Promise<void> {
   try {
     await writeFile(temporary, `${JSON.stringify(state, null, 2)}\n`, { encoding: 'utf8', mode: 0o600, flag: 'wx' })
     await rename(temporary, path)
+    synchronousReadCache = { path, millisecond: Date.now(), state }
   } finally {
     await rm(temporary, { force: true }).catch(() => undefined)
   }

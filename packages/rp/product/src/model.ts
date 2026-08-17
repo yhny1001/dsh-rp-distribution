@@ -490,6 +490,50 @@ export function recordOpeningMessage(state: ProductState, sessionId: string, sou
   })
 }
 
+/** Import validated Tavern history as synthetic transcript rows backed by append-only plugin messages. */
+export function importTranscriptHistory(
+  state: ProductState,
+  sessionId: string,
+  startSeq: number,
+  value: unknown,
+  now = Date.now(),
+): ProductState {
+  const binding = state.bindings[sessionId]
+  if (binding === undefined) throw new Error('RP Session has no composition')
+  const entries = array(value, 'chat messages')
+  if (entries.length === 0 || entries.length > 500) throw new Error('chat history must contain 1-500 messages')
+  let total = 0
+  const imported = entries.map((value, index): TranscriptMessage => {
+    const item = record(value, `chat messages[${index}]`)
+    const role = transcriptRole(item.role)
+    const speakerName = text(item.speakerName, `chat messages[${index}].speakerName`, 120)
+    const content = text(item.content, `chat messages[${index}].content`, 32_000)
+    total += content.length
+    const speakerId = role === 'assistant'
+      ? state.characters.find(character => character.name === speakerName)?.id ?? binding.primaryCharacterId
+      : state.personas.find(persona => persona.name === speakerName)?.id ?? binding.personaId
+    return Object.freeze({
+      sourceSeq: startSeq + index,
+      currentSurfaceSeq: startSeq + index,
+      role,
+      speakerId,
+      speakerName,
+      synthetic: true,
+      editedContent: content,
+      editRevision: 0,
+      createdAt: now + index,
+      updatedAt: now + index,
+    })
+  })
+  if (total > 1_000_000) throw new Error('chat history exceeds 1,000,000 characters')
+  const transcript = state.transcripts[sessionId] ?? { sessionId, messages: [] }
+  return normalizeProductState({
+    ...state,
+    revision: state.revision + 1,
+    transcripts: { ...state.transcripts, [sessionId]: { sessionId, messages: [...transcript.messages, ...imported] } },
+  })
+}
+
 /** Commit one body edit and point its row at the replacement surface node. */
 export function editTranscriptMessage(
   state: ProductState, sessionId: string, sourceSeq: number, expectedEditRevision: number,

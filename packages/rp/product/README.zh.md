@@ -24,6 +24,8 @@
 
 用户与角色消息正文都可编辑。产品保留原始追加日志，并用包含完整 `sourceEventSeqs` 的 Session Surface replacement 更新后续模型上下文；界面显示编辑后的正文与修订号。DSH `0.1.0-rc.6` 只允许 `assistant/message` 在打开的模型 Step 内写入，因此空闲时编辑角色回复会使用 `plugin/recall` 的 user-role Surface 节点承载明确标注的“已编辑角色历史”，而 RP 视图继续呈现其原角色语义。该方式可审计且不会修改 AgentLoop。
 
+角色对话页可直接导入 SillyTavern Chat JSONL 或 JSON 数组，并导出当前可见对话为 JSONL。导入跳过 Metadata 与 System 行，角色消息以 `plugin/recall` 进入原生 Session，Persona 消息以 `plugin/notice` 进入，RP Transcript 保留原说话者、正文和顺序；单批限制 500 条、每条 32000 字符、总计 1000000 字符。导出保留 `name`、`is_user`、`mes` 等 ST 字段，并在 `extra` 中附带 DSH Source Seq 与编辑 Revision。
+
 ## 世界书与双运行模式
 
 Standalone World Info 与角色卡内嵌 Lore 会保留为逐条 World Entry，而不是只拼成一段正文。每条保留 ID、主关键词、次关键词、常驻标记、启用状态、优先级与正文；世界书编辑器提供搜索、逐条开关、增删和编辑。启用条目按优先级进入世界 Marker，关闭条目不会进入模型上下文。
@@ -56,6 +58,6 @@ dsh --profile web
 - Prompt 定义的原始 Role 会保留并显示，但 DSH `0.1.0-rc.6` 的公开扩展点把这些段落装配进一个系统 Prompt 字符串，不能在历史中间创建任意 system/user/assistant Message。
 - PNG 角色卡原图由产品作为本地头像资产保存；CHARX 内嵌 Asset 原始字节仍按兼容层策略省略，只保留惰性元数据。
 - 已被 Compaction 覆盖而不再位于当前 Surface 的消息不能局部替换；界面会保留正文，但编辑命令会明确失败。
-- Swipe/Regenerate、SillyTavern Chat JSONL 导入导出、自动群聊说话人调度、Regex/STscript 与 Kobold Text Completion 尚未进入本地产品层；多角色会话目前由用户显式切换主要角色。
+- Swipe/Regenerate、自动群聊轮次调度、Regex/STscript 与 Kobold Text Completion 尚未进入本地产品层；Multi-character Agent 已能通过受限 Tool 从配置阵容选择下一位说话者，但还不会自行安排完整群聊轮次表。
 - State Keeper 强制每轮至少推进一次 Ledger Revision，但当前只证明“发生了提交”，不会语义比较角色正文与状态 Patch 是否完整一致；更深的独立语义审计仍可作为后续 Provider 插件加入。
 - 产品数据原子写入 `$DSH_HOME/rp-product/product-state.json`，schema v2 不读取预发布的 schema v1；外部 Storage Provider 尚不可选。

@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { apply as applyAgent } from '../src/agent.ts'
+import { parseTavernChat, serializeTavernChat } from '../src/chat.ts'
 import { importProductFiles } from '../src/import.ts'
 import { apply as applyProduct } from '../src/index.ts'
 import {
@@ -13,6 +14,7 @@ import {
   currentRuntimeEffects,
   defaultProductState,
   mergeImportedEntities,
+  importTranscriptHistory,
   normalizeEntity,
   recordTranscriptMessage,
   recommendComposition,
@@ -263,6 +265,38 @@ describe('@dsh-rp/product', () => {
     })).toThrow(/Agent RP mode/u)
   })
 
+  it('imports Tavern history with separate character and persona attribution', () => {
+    const bound = bindSession(defaultProductState(), { sessionId: 'history-import', ...composition }, 0, 1)
+    const imported = importTranscriptHistory(bound, 'history-import', 10, [
+      { role: 'assistant', speakerName: '林遥', content: '雾正在变浓。' },
+      { role: 'user', speakerName: '远行者', content: '我去检查灯塔。' },
+    ], 2)
+    expect(imported.transcripts['history-import']?.messages).toMatchObject([
+      { sourceSeq: 10, role: 'assistant', speakerId: 'lin-yao', speakerName: '林遥', synthetic: true, editedContent: '雾正在变浓。' },
+      { sourceSeq: 11, role: 'user', speakerId: 'traveler', speakerName: '远行者', synthetic: true, editedContent: '我去检查灯塔。' },
+    ])
+  })
+
+  it('round-trips visible Tavern JSONL while omitting metadata and system rows', () => {
+    const source = [
+      JSON.stringify({ user_name: '远行者', character_name: '林遥', chat_metadata: {} }),
+      JSON.stringify({ name: '系统', is_system: true, mes: '不进入 RP Transcript' }),
+      JSON.stringify({ name: '林遥', is_user: false, mes: '雾正在变浓。' }),
+      JSON.stringify({ name: '远行者', is_user: true, mes: '我去检查灯塔。' }),
+    ].join('\n')
+    const parsed = parseTavernChat(source, '角色', 'User')
+    expect(parsed).toMatchObject({ skipped: 2, messages: [
+      { role: 'assistant', speakerName: '林遥', content: '雾正在变浓。' },
+      { role: 'user', speakerName: '远行者', content: '我去检查灯塔。' },
+    ] })
+    const exported = serializeTavernChat(parsed.messages, '林遥', '远行者', '2026-08-17T00:00:00.000Z')
+    expect(exported.split('\n').filter(Boolean).map(line => JSON.parse(line) as unknown)).toMatchObject([
+      { user_name: '远行者', character_name: '林遥', chat_metadata: { source: '@dsh-rp/product' } },
+      { name: '林遥', is_user: false, mes: '雾正在变浓。' },
+      { name: '远行者', is_user: true, mes: '我去检查灯塔。' },
+    ])
+  })
+
   it('atomically advances a multi-state world ledger and projects last values by stable key', () => {
     const base = bindSession(defaultProductState(), { sessionId: 'world-engine', ...composition, mode: 'agent' }, 0, 1)
     const first = commitRuntimeTurn(base, 'world-engine', 'turn-1', {
@@ -451,6 +485,7 @@ describe('@dsh-rp/product', () => {
     await applyProduct(context)
     const bind = commands.get('rp-studio-bind')!
     const edit = commands.get('rp-studio-edit')!
+    const chatImport = commands.get('rp-studio-chat-import')!
     const rawInput = Buffer.from(JSON.stringify({ sessionId: 'session-bind', baseRevision: 0, ...composition })).toString('base64url')
     expect((await bind({ agent: { id: 'session-bind', status: 'idle', ctx: {}, session }, rawInput })).kind).toBe('success')
     expect(events[0]).toMatchObject({ type: 'agent-preset/selected', data: { agentPreset: 'rp-tavern' } })
@@ -473,6 +508,19 @@ describe('@dsh-rp/product', () => {
     expect(readProductStateSync().transcripts['session-bind']?.messages[0]).toMatchObject({
       speakerName: '林遥', editedContent: '新正文', editRevision: 1, currentSurfaceSeq: events.length - 1,
     })
+    const importInput = Buffer.from(JSON.stringify({ sessionId: 'session-bind', messages: [
+      { role: 'assistant', speakerName: '林遥', content: '导入的角色历史' },
+      { role: 'user', speakerName: '远行者', content: '导入的用户历史' },
+    ] })).toString('base64url')
+    expect((await chatImport({ agent: { id: 'session-bind', status: 'idle', ctx: {}, session }, rawInput: importInput })).kind).toBe('success')
+    expect(events.slice(-2)).toMatchObject([
+      { type: 'user/message', surfaceOp: 'append', data: { role: 'user', source: { kind: 'plugin', form: 'recall' } } },
+      { type: 'user/message', surfaceOp: 'append', data: { role: 'user', source: { kind: 'plugin', form: 'notice' } } },
+    ])
+    expect(readProductStateSync().transcripts['session-bind']?.messages.slice(-2)).toMatchObject([
+      { role: 'assistant', speakerName: '林遥', editedContent: '导入的角色历史' },
+      { role: 'user', speakerName: '远行者', editedContent: '导入的用户历史' },
+    ])
   })
 })
 

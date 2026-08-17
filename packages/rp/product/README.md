@@ -24,6 +24,8 @@ The **RP Conversation** view labels each human message with the persona selected
 
 User and character message bodies are editable. The product preserves the original append-only log and adds a Session Surface replacement carrying complete `sourceEventSeqs`; later model calls consume the edited body and the view shows its revision. DSH `0.1.0-rc.6` permits `assistant/message` writes only while a model Step is open, so idle-time character edits use a `plugin/recall` user-role Surface node containing explicitly framed edited-assistant history. The RP view preserves the character semantics, the operation remains auditable, and AgentLoop is unchanged.
 
+RP Conversation directly imports SillyTavern Chat JSONL or JSON arrays and exports the current visible conversation as JSONL. Import omits metadata and system rows, writes character messages to the native Session as `plugin/recall`, writes persona messages as `plugin/notice`, and retains original speaker, body, and order in RP Transcript. One batch is bounded to 500 messages, 32,000 characters each, and 1,000,000 aggregate characters. Export retains ST `name`, `is_user`, and `mes` fields and adds DSH source sequence plus edit revision under `extra`.
+
 ## Lorebooks and two runtime modes
 
 Standalone World Info and Character Card lore retain individual World Entries instead of collapsing only into one prose field. Each entry keeps its id, primary and secondary keys, constant marker, enabled state, priority, and content. The lorebook editor supports search, per-entry toggles, creation, removal, and editing. Enabled entries enter the world marker in deterministic priority order; disabled entries remain stored but model-invisible.
@@ -56,6 +58,6 @@ Open **RP Studio** from the sidebar footer or Session header. The native DSH com
 - Source prompt roles are retained and displayed, but the public DSH `0.1.0-rc.6` extension assembles these sections into one system Prompt string; it cannot insert arbitrary system/user/assistant Messages into the middle of history.
 - PNG card images are persisted as local avatar assets; raw embedded CHARX asset bytes remain omitted according to the compatibility adapter policy, while their inert metadata is retained.
 - A message already shadowed by Compaction is no longer a current Surface node and cannot be replaced locally; the view retains it, while the edit command fails explicitly.
-- Swipe/regenerate, SillyTavern Chat JSONL import/export, automatic group-speaker scheduling, regex/STscript, and Kobold Text Completion are not yet product surfaces. Multi-character Sessions currently switch the primary speaker explicitly.
+- Swipe/regenerate, automatic group-turn scheduling, regex/STscript, and Kobold Text Completion are not yet product surfaces. The Multi-character Agent can select the next speaker from the configured cast through a bounded Tool, but it does not yet schedule a complete group-turn table by itself.
 - State Keeper enforces at least one Ledger revision per round, but it proves commit presence rather than semantic completeness between character prose and every state patch. A deeper semantic auditor can still arrive later as another Provider plugin.
 - Product data is written atomically to `$DSH_HOME/rp-product/product-state.json`. Schema v2 rejects the prerelease schema v1, and external Storage Providers are not yet selectable.

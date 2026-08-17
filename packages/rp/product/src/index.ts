@@ -28,6 +28,7 @@ const AGENT_PRESET_ID = 'rp-agent'
 const MAX_BODY_BYTES = 64 * 1024 * 1024
 const MAX_IMPORT_FILES = 32
 const MAX_IMPORT_FILE_BYTES = 32 * 1024 * 1024
+const MAX_COMMAND_PAYLOAD_CHARS = 2_000_000
 
 interface SurfaceEvent {
   readonly type: string
@@ -182,6 +183,26 @@ export async function apply(ctx: ProductContext): Promise<void> {
           })
         })
         return { kind: 'success', text: `已把${character.name}的开场白加入会话` }
+      } catch (error: unknown) { return { kind: 'error', text: publicError(error) } }
+    },
+  })
+
+  registerCommand(ctx, {
+    name: 'rp-studio-chat-import',
+    description: 'append a validated SillyTavern chat history as explicitly sourced RP transcript messages',
+    handler: async ({ agent, rawInput }) => {
+      try {
+        requireIdle(agent)
+        const request = decodeChatImport(rawInput)
+        if (request.sessionId !== agent.id) throw new Error('chat import Session must match the receiving Agent')
+        const startSeq = agent.session.events.length
+        await store.historyWithEffect(agent.id, startSeq, request.messages, () => {
+          for (const message of request.messages) {
+            const content = message.role === 'assistant' ? assistantHistory(message.speakerName, message.content) : message.content
+            agent.session.append('user/message', pluginMessage(randomUUID(), content, message.role, message.speakerName), { surfaceOp: 'append' })
+          }
+        })
+        return { kind: 'success', text: `已导入 ${String(request.messages.length)} 条酒馆历史；角色与 Persona 署名保持独立` }
       } catch (error: unknown) { return { kind: 'error', text: publicError(error) } }
     },
   })
@@ -361,9 +382,28 @@ function decodeOpening(rawInput: string): { readonly sessionId: string; readonly
   }
 }
 
+function decodeChatImport(rawInput: string): {
+  readonly sessionId: string
+  readonly messages: readonly { readonly role: TranscriptRole; readonly speakerName: string; readonly content: string }[]
+} {
+  const source = decodePayload(rawInput)
+  if (!Array.isArray(source.messages) || source.messages.length === 0 || source.messages.length > 500) throw new Error('chat import messages must contain 1-500 entries')
+  let total = 0
+  const messages = source.messages.map((value, index) => {
+    if (!isRecord(value)) throw new Error(`chat import messages[${String(index)}] must be an object`)
+    const role = value.role === 'user' || value.role === 'assistant' ? value.role : undefined
+    if (role === undefined) throw new Error(`chat import messages[${String(index)}].role must be user or assistant`)
+    const content = requiredString(value.content, `chat import messages[${String(index)}].content`, 32_000)
+    total += content.length
+    return Object.freeze({ role, speakerName: requiredString(value.speakerName, `chat import messages[${String(index)}].speakerName`, 120), content })
+  })
+  if (total > 1_000_000) throw new Error('chat import exceeds 1,000,000 characters')
+  return Object.freeze({ sessionId: requiredString(source.sessionId, 'sessionId', 512), messages: Object.freeze(messages) })
+}
+
 function decodePayload(rawInput: string): Record<string, unknown> {
   const encoded = rawInput.trim()
-  if (encoded === '' || encoded.length > 128_000) throw new Error('RP command payload is missing or too large')
+  if (encoded === '' || encoded.length > MAX_COMMAND_PAYLOAD_CHARS) throw new Error('RP command payload is missing or too large')
   let parsed: unknown
   try { parsed = JSON.parse(Buffer.from(encoded, 'base64url').toString('utf8')) as unknown }
   catch { throw new Error('RP command payload is not valid base64url JSON') }
