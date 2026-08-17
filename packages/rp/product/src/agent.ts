@@ -7,7 +7,7 @@ import type { ProductState, RuntimeLocation } from './model.ts'
 import { ProductStore, readProductStateSync } from './store.ts'
 
 export const name = 'dsh-rp-product/agent'
-export const inject = ['systemPrompt', 'agents', 'tools', 'llm']
+export const inject = ['systemPrompt', 'agents', 'tools', 'llm', 'rpMedia']
 
 interface ProductAgentContext {
   readonly systemPrompt: {
@@ -22,6 +22,21 @@ interface ProductAgentContext {
   readonly llm: {
     resolveModelInfo(provider: string, model: string, signal?: AbortSignal): Promise<{
       readonly reasoning?: { readonly efforts: readonly { readonly id: string }[] }
+    }>
+  }
+  readonly rpMedia: {
+    list(): readonly { readonly id: string; readonly title: string; readonly kinds: readonly ('image' | 'audio' | 'video' | 'document')[] }[]
+    generate(request: {
+      readonly kind: 'image' | 'audio' | 'video' | 'document'
+      readonly prompt: string
+      readonly provider?: string
+      readonly options?: Record<string, unknown>
+    }, signal?: AbortSignal): Promise<{
+      readonly id: string
+      readonly kind: 'image' | 'audio' | 'video' | 'document'
+      readonly mimeType: string
+      readonly uri: string
+      readonly metadata?: Record<string, unknown>
     }>
   }
   on(event: 'agent/request', listener: (
@@ -279,6 +294,65 @@ function registerAgentTools(ctx: ProductAgentContext): void {
       return { ...roll, reason: args.reason }
     },
   })), 'dsh-rp-product: logged dice tool')
+
+  ctx.effect(() => ctx.tools.register(defineTool({
+    name: 'rp_list_media_providers',
+    description: 'List currently installed RP media Providers and their supported artifact kinds. Read this before requesting audio or a pinned Provider; the built-in L0 svg-card Provider always supports deterministic scene-card images.',
+    parameters: {},
+    output: { schema: { type: 'json' }, render: (_args, value) => [{ type: 'text', text: JSON.stringify(value) }] },
+    async execute() {
+      return ctx.rpMedia.list().map(provider => ({ id: provider.id, title: provider.title, kinds: [...provider.kinds] }))
+    },
+  })), 'dsh-rp-product: media Provider catalog tool')
+
+  ctx.effect(() => ctx.tools.register(defineTool({
+    name: 'rp_generate_media',
+    description: 'Generate one validated image or audio artifact through the installed RP media Provider registry. Use only when the user asks for media or a concise scene card materially helps. Omit provider for deterministic routing. Audio requires an installed audio Provider; never claim success after a missing-Provider error.',
+    parameters: {
+      kind: { type: 'string', required: true, enum: ['image', 'audio'] },
+      prompt: { type: 'string', required: true, description: 'Bounded artifact prompt or TTS text.' },
+      title: { type: 'string', description: 'Visible artifact title; also passed to Providers which support it.' },
+      provider: { type: 'string', description: 'Optional exact Provider id from rp_list_media_providers.' },
+      options: { type: 'json', description: 'Optional Provider-specific JSON object.' },
+    },
+    output: { schema: { type: 'json' }, render: (_args, value) => [{ type: 'text', text: JSON.stringify(value) }] },
+    async execute(args, exec) {
+      if (exec.agent === undefined) throw new Error('rp_generate_media requires an Agent-owned call')
+      const sessionId = String(exec.agent.id)
+      const options = typeof args.options === 'object' && args.options !== null && !Array.isArray(args.options)
+        ? { ...(args.options as Record<string, unknown>) }
+        : {}
+      if (args.title !== undefined) options.title = args.title
+      const artifact = await ctx.rpMedia.generate({
+        kind: args.kind,
+        prompt: args.prompt,
+        ...(args.provider === undefined || args.provider === '' ? {} : { provider: args.provider }),
+        ...(Object.keys(options).length === 0 ? {} : { options }),
+      }, exec.signal)
+      const title = args.title?.trim() || (artifact.kind === 'image' ? '场景图' : '角色语音')
+      const state = await (await ProductStore.open()).runtimeEffect(sessionId, String(exec.callId), {
+        kind: 'media',
+        title,
+        summary: `${artifact.kind} · ${artifact.mimeType}`,
+        data: {
+          key: `media:${artifact.id}`,
+          artifact: {
+            id: artifact.id,
+            kind: artifact.kind,
+            mimeType: artifact.mimeType,
+            uri: artifact.uri,
+            ...(artifact.metadata === undefined ? {} : { metadata: artifact.metadata }),
+          },
+        },
+      }, toolLocation(exec))
+      return {
+        generated: true,
+        sessionId,
+        revision: state.runtimes[sessionId]?.revision ?? 0,
+        artifact: { id: artifact.id, kind: artifact.kind, mimeType: artifact.mimeType, uri: artifact.uri },
+      }
+    },
+  })), 'dsh-rp-product: media generation tool')
 
   ctx.effect(() => ctx.tools.register(defineTool({
     name: 'rp_read_state',

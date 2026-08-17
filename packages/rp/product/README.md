@@ -44,6 +44,8 @@ State Keeper records the Ledger revision when a turn's first input is claimed an
 
 Experience changes Agent behavior rather than merely storing a label. World Simulation emphasizes causal time, NPC, and objective progression. Multi-character builds a durable ordered queue through `rp_schedule_cast`, then consumes its head once per Turn through `rp_next_speaker`, which changes the real Primary Character; `rp_select_speaker` remains a manual override. Queue Round, previous speaker, and next speaker render in RP Conversation, and Transcript attribution follows the consumed character. TRPG can use logged `rp_roll` for bounded `NdM±K` checks and commits resulting objective, inventory, or world changes to the Ledger. Companion prioritizes relationship, memory, persona, and character continuity without forcing choices every round.
 
+The product Bundle contains an `@dsh-rp/product/media` subplugin which reuses the shared `@dsh-rp/media` Provider registry instead of copying media logic. Its built-in L0 `svg-card` Provider generates deterministic SVG scene cards without configuration. `rp_list_media_providers` discovers live capabilities and `rp_generate_media` routes image or audio requests. Artifacts enter the Gallery as source-addressed `media` Effects, while later model context retains only id, kind, and MIME rather than the Data URI. External plugins may register real image or audio Providers on the same `rpMedia` service. A missing audio Provider fails explicitly; each character message still offers browser-local **Read aloud** without uploading audio.
+
 ## Local installation
 
 ```sh
@@ -59,6 +61,7 @@ Open **RP Studio** from the sidebar footer or Session header. The native DSH com
 
 - Source prompt roles are retained and displayed, but the public DSH `0.1.0-rc.6` extension assembles these sections into one system Prompt string; it cannot insert arbitrary system/user/assistant Messages into the middle of history.
 - PNG card images are persisted as local avatar assets; raw embedded CHARX asset bytes remain omitted according to the compatibility adapter policy, while their inert metadata is retained.
+- The built-in media Provider only produces deterministic SVG scene cards. Raster images, durable TTS audio, video, and documents require separate Provider plugins. Browser-local read-aloud is not an exportable audio artifact.
 - A message already shadowed by Compaction is no longer a current Surface node and cannot be replaced locally; the view retains it, while the edit command fails explicitly.
 - Swipe/regenerate currently uses a native child Session rather than an in-bubble ST swipe array, and the first Turn has no forkable prefix. Multi-character rotation produces one character reply per DSH Turn across a durable queue; it does not batch several character bubbles into one Turn. Regex/STscript and Kobold Text Completion are not yet product surfaces.
 - State Keeper enforces at least one Ledger revision per round, but it proves commit presence rather than semantic completeness between character prose and every state patch. A deeper semantic auditor can still arrive later as another Provider plugin.

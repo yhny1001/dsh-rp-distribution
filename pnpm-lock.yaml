@@ -830,6 +830,12 @@ importers:
       '@dsh-rp/compat-sillytavern':
         specifier: workspace:^
         version: link:../compat-sillytavern
+      '@dsh-rp/contracts':
+        specifier: workspace:^
+        version: link:../contracts
+      '@dsh-rp/media':
+        specifier: workspace:^
+        version: link:../media
       react:
         specifier: ^18.2.0
         version: 18.3.1

@@ -20,7 +20,7 @@ State Keeper 通过已有事件扩展实现，不修改 AgentLoop。`agent/inbox
 
 聚焦测试证明推荐器从混合导入中选择 Harness 适配 Preset、导入角色与 Character Card Scenario；原子提交一次写入时间、场景、NPC 和选项，下一轮用相同稳定键推进时间后，当前 Projection 只保留新时间而履历保留两次提交；`rp_read_state` 的只读结果与写入 Projection 一致。
 
-工具测试还验证 `rp_select_speaker` 接受阵容内角色并拒绝阵容外 ID，`rp_roll` 的 `2d6+3` 结果始终位于 5–15。Agent RP Tool Roster 共有八项：原子提交、单条补交、独立选项、队列安排、队首消费、手动说话者、骰子与只读状态。
+工具测试还验证 `rp_select_speaker` 接受阵容内角色并拒绝阵容外 ID，`rp_roll` 的 `2d6+3` 结果始终位于 5–15。Agent RP Tool Roster 共有十项：原子提交、单条补交、独立选项、队列安排、队首消费、手动说话者、骰子、媒体 Provider 列表、媒体生成与只读状态。
 
 State Keeper 测试覆盖缺失提交时第一次 Steering、空更新提交后正常关闭，以及连续两次 Repair 仍无提交时第三次 Fail-closed；测试同时确认审计消息属于 Plugin Instructions，而不是 Persona 用户输入。
 

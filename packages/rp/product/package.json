@@ -22,6 +22,10 @@
       "types": "./lib/types/agent.d.ts",
       "default": "./lib/agent.js"
     },
+    "./media": {
+      "types": "./lib/types/media.d.ts",
+      "default": "./lib/media.js"
+    },
     "./client": {
       "types": "./lib/types/client/index.d.ts",
       "default": "./lib/client.cjs"
@@ -32,6 +36,7 @@
   "files": [
     "lib/index.js",
     "lib/agent.js",
+    "lib/media.js",
     "lib/client.cjs",
     "lib/types/**/*.d.ts",
     "agent-presets",
@@ -42,6 +47,8 @@
     "@deepseek-ai/cordis": "4.0.1",
     "@deepseek-ai/dsh-tools": "0.0.1-rc.1",
     "@dsh-rp/compat-sillytavern": "workspace:^",
+    "@dsh-rp/contracts": "workspace:^",
+    "@dsh-rp/media": "workspace:^",
     "react": "^18.2.0"
   },
   "dsh": {

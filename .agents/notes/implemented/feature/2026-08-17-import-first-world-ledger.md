@@ -20,7 +20,7 @@ State Keeper uses existing event extensions without changing AgentLoop. `agent/i
 
 Focused tests prove that the recommender selects the Harness adaptation, imported character, and Character Card Scenario from a mixed import. One atomic commit writes time, scene, NPC, and choices; a later update with the same stable clock key leaves only the new time in current Projection while both commits remain in history. `rp_read_state` returns the same current Projection that was committed.
 
-Tool tests additionally prove that `rp_select_speaker` accepts a configured cast member and rejects an outside id, while `rp_roll` keeps `2d6+3` within 5–15. The Agent RP Tool roster now contains eight entries: atomic commit, single-state correction, separate choices, queue scheduling, queue-head consumption, manual speaker selection, dice, and read-only state.
+Tool tests additionally prove that `rp_select_speaker` accepts a configured cast member and rejects an outside id, while `rp_roll` keeps `2d6+3` within 5–15. The Agent RP Tool roster now contains ten entries: atomic commit, single-state correction, separate choices, queue scheduling, queue-head consumption, manual speaker selection, dice, media Provider listing, media generation, and read-only state.
 
 State Keeper tests cover first steering on a missing commit, normal closure after an empty audit commit, and fail-closed behavior on the third stop after two ignored repairs. They also prove that the audit message is Plugin Instructions rather than persona-authored user input.
 

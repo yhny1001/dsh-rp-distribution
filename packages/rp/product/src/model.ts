@@ -176,7 +176,7 @@ export interface SessionTranscript {
   readonly messages: readonly TranscriptMessage[]
 }
 
-export type RuntimeEffectKind = 'world' | 'time' | 'scene' | 'character' | 'persona' | 'relationship' | 'memory' | 'npc' | 'objective' | 'inventory'
+export type RuntimeEffectKind = 'world' | 'time' | 'scene' | 'character' | 'persona' | 'relationship' | 'memory' | 'npc' | 'objective' | 'inventory' | 'media'
 
 export interface RuntimeEffect {
   readonly id: string
@@ -832,7 +832,15 @@ export function renderRuntimeContext(state: ProductState, sessionId: string): st
   const runtime = state.runtimes[sessionId]
   if (runtime === undefined || runtime.effects.length === 0) return ''
   return `<rp-dynamic-state revision="${String(runtime.revision)}">\n${currentRuntimeEffects(runtime).slice(-80).map(effect =>
-    `[${effect.kind}] ${effect.title}: ${effect.summary}\n${JSON.stringify(effect.data)}`).join('\n')}\n</rp-dynamic-state>`
+    `[${effect.kind}] ${effect.title}: ${effect.summary}\n${JSON.stringify(runtimeContextData(effect))}`).join('\n')}\n</rp-dynamic-state>`
+}
+
+function runtimeContextData(effect: RuntimeEffect): JsonObject {
+  if (effect.kind !== 'media') return effect.data
+  const artifact = effect.data.artifact
+  if (typeof artifact !== 'object' || artifact === null || Array.isArray(artifact)) return {}
+  return Object.fromEntries(Object.entries(artifact).filter(([key, value]) => key !== 'uri' && key !== 'metadata'
+    && (value === null || typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string'))) as JsonObject
 }
 
 /** Resolve the ordered, enabled Prompt Manager stack for one Session. */
@@ -1185,7 +1193,7 @@ function emptyRuntime(sessionId: string): SessionRuntimeState {
 function runtimeEffectKind(value: unknown): RuntimeEffectKind {
   if (value === 'world' || value === 'time' || value === 'scene' || value === 'character'
     || value === 'persona' || value === 'relationship' || value === 'memory' || value === 'npc'
-    || value === 'objective' || value === 'inventory') return value
+    || value === 'objective' || value === 'inventory' || value === 'media') return value
   throw new Error('runtime effect kind is invalid')
 }
 

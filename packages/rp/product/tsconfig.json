@@ -12,6 +12,9 @@
   "references": [
     {
       "path": "../compat-sillytavern"
+    },
+    {
+      "path": "../media"
     }
   ]
 }

@@ -44,6 +44,8 @@ State Keeper 在每轮第一次输入进入时记录 Ledger Revision，并在原
 
 Experience 会改变 Agent 行为，而不只是保存标签。World Simulation 强化时间、NPC 与目标的因果推进；Multi-character 通过 `rp_schedule_cast` 建立持久有序队列，再由 `rp_next_speaker` 逐 Turn 消费队首并切换真实 Primary Character，`rp_select_speaker` 只保留为手动覆盖。队列 Round、上一位和下一位会显示在角色对话页，Transcript 按真实角色署名。TRPG 可用已记录的 `rp_roll` 执行有界 `NdM±K` 检定，并把结果造成的目标、物品或世界变化提交到 Ledger；Companion 优先关系、记忆、Persona 与角色状态，并取消强制每轮给选项。
 
+产品 Bundle 内含 `@dsh-rp/product/media` 子插件，它复用共享 `@dsh-rp/media` Provider Registry，而不是复制媒体逻辑。内置 L0 `svg-card` Provider 零配置生成确定性 SVG 场景卡；`rp_list_media_providers` 列出当前能力，`rp_generate_media` 路由图片或音频请求。Artifact 作为带 Turn 来源的 `media` Effect 进入 Gallery，下一轮上下文只保留 ID、类型和 MIME，不注入 Data URI。外部插件可向同一 `rpMedia` Service 注册真实图片或 Audio Provider。没有 Audio Provider 时请求明确失败；每条角色正文仍可用浏览器本地“朗读”，不会上传音频。
+
 ## 本地安装
 
 ```sh
@@ -59,6 +61,7 @@ dsh --profile web
 
 - Prompt 定义的原始 Role 会保留并显示，但 DSH `0.1.0-rc.6` 的公开扩展点把这些段落装配进一个系统 Prompt 字符串，不能在历史中间创建任意 system/user/assistant Message。
 - PNG 角色卡原图由产品作为本地头像资产保存；CHARX 内嵌 Asset 原始字节仍按兼容层策略省略，只保留惰性元数据。
+- 内置媒体 Provider 只生成确定性 SVG Scene Card；Raster Image、持久 TTS Audio、Video 与 Document 需要独立 Provider 插件。浏览器本地“朗读”不是可导出的 Audio Artifact。
 - 已被 Compaction 覆盖而不再位于当前 Surface 的消息不能局部替换；界面会保留正文，但编辑命令会明确失败。
 - 当前 Swipe/Regenerate 采用原生子 Session 分支，而不是同一气泡内的 ST Swipe 数组；首轮因没有可裁切前缀暂不支持。Multi-character 队列按多个 DSH Turn 轮流产生一位角色正文，不会在一个 Turn 中批量生成多个角色气泡。Regex/STscript 与 Kobold Text Completion 尚未进入本地产品层。
 - State Keeper 强制每轮至少推进一次 Ledger Revision，但当前只证明“发生了提交”，不会语义比较角色正文与状态 Patch 是否完整一致；更深的独立语义审计仍可作为后续 Provider 插件加入。

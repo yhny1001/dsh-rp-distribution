@@ -1,4 +1,6 @@
 # Local-first RP product surface: Node API, native Agent preset, and Client UI.
 - insert:
+    - id: dsh-rp-product-media
+      name: '@dsh-rp/product/media'
     - id: dsh-rp-product
       name: '@dsh-rp/product'

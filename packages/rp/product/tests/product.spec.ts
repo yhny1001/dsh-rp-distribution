@@ -2,10 +2,12 @@ import { mkdtempSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { Context } from '@deepseek-ai/cordis'
 import { apply as applyAgent } from '../src/agent.ts'
 import { parseTavernChat, serializeTavernChat } from '../src/chat.ts'
 import { importProductFiles } from '../src/import.ts'
 import { apply as applyProduct } from '../src/index.ts'
+import { apply as applyProductMedia } from '../src/media.ts'
 import {
   adaptPresetToHarness,
   advanceCastSpeaker,
@@ -48,6 +50,16 @@ const composition = {
 }
 
 describe('@dsh-rp/product', () => {
+  it('mounts the shared media registry with a deterministic SVG scene-card Provider', async () => {
+    const ctx = new Context()
+    await applyProductMedia(ctx)
+    expect(ctx.rpMedia.list()).toMatchObject([{ id: 'svg-card', title: 'SVG Scene Card', kinds: ['image'] }])
+    const artifact = await ctx.rpMedia.generate({ kind: 'image', prompt: '黑海岸港口的警钟与栈桥', options: { title: '港口警报' } })
+    expect(artifact).toMatchObject({ kind: 'image', mimeType: 'image/svg+xml', metadata: { provider: 'svg-card', width: 1024, height: 576 } })
+    expect(artifact.uri).toMatch(/^data:image\/svg\+xml;base64,/u)
+    await expect(ctx.rpMedia.generate({ kind: 'audio', prompt: '晚安' })).rejects.toThrow(/No RP media Provider supports audio/u)
+  })
+
   it('resolves Tavern prompt order while preserving system, world, character, persona, scene, and history markers', () => {
     const state = bindSession(defaultProductState(), { sessionId: 'session-one', ...composition, updatedAt: 1 }, 0, 1)
     const layers = resolvePromptLayers(state, 'session-one')
@@ -481,12 +493,17 @@ describe('@dsh-rp/product', () => {
       systemPrompt: { section: () => () => {} },
       agents: { requireInitiator: () => ({ id: 'agent-tools' }) },
       tools: { register: (tool: { name: string; execute: (args: unknown, exec: unknown) => Promise<unknown> }) => { definitions.push(tool); return () => {} } },
+      rpMedia: {
+        list: () => [{ id: 'svg-card', title: 'SVG Scene Card', kinds: ['image'] as const }],
+        generate: async () => ({ id: 'svg-test', kind: 'image' as const, mimeType: 'image/svg+xml', uri: 'data:image/svg+xml;base64,PHN2Zy8+', metadata: { provider: 'svg-card' } }),
+      },
       on: () => () => {},
       effect: (factory: () => unknown) => factory(),
     }
     applyAgent(base, { mode: 'agent' })
     expect(definitions.map(tool => tool.name)).toEqual([
-      'rp_commit_turn', 'rp_update_state', 'rp_propose_choices', 'rp_schedule_cast', 'rp_next_speaker', 'rp_select_speaker', 'rp_roll', 'rp_read_state',
+      'rp_commit_turn', 'rp_update_state', 'rp_propose_choices', 'rp_schedule_cast', 'rp_next_speaker', 'rp_select_speaker', 'rp_roll',
+      'rp_list_media_providers', 'rp_generate_media', 'rp_read_state',
     ])
     const tools = new Map(definitions.map(tool => [tool.name, tool]))
     const execution = { agent: { id: 'agent-tools', session: { events: [
@@ -510,10 +527,19 @@ describe('@dsh-rp/product', () => {
     expect(roll.rolls).toHaveLength(2)
     expect(roll.total).toBeGreaterThanOrEqual(5)
     expect(roll.total).toBeLessThanOrEqual(15)
+    expect(await tools.get('rp_list_media_providers')!.execute({}, { ...execution, callId: 'call-media-list' }))
+      .toMatchObject([{ id: 'svg-card', kinds: ['image'] }])
+    expect(await tools.get('rp_generate_media')!.execute({ kind: 'image', prompt: '港口', title: '场景卡' }, { ...execution, callId: 'call-media' }))
+      .toMatchObject({ generated: true, artifact: { id: 'svg-test', kind: 'image' } })
     await tools.get('rp_update_state')!.execute({ kind: 'memory', title: '守卫口供', summary: '旧船昨夜靠港', data: { key: 'guard-testimony' } }, { ...execution, callId: 'call-2' })
     expect(store.snapshot().runtimes['agent-tools']).toMatchObject({
-      effects: [{ kind: 'scene', title: '场景变化', turn: 1, step: 1, sourceSeq: 5 }, { kind: 'memory', title: '守卫口供' }], choicesTitle: '下一步', choices: [{ id: 'ask' }],
+      effects: [
+        { kind: 'scene', title: '场景变化', turn: 1, step: 1, sourceSeq: 5 },
+        { kind: 'media', title: '场景卡', data: { artifact: { id: 'svg-test' } } },
+        { kind: 'memory', title: '守卫口供' },
+      ], choicesTitle: '下一步', choices: [{ id: 'ask' }],
     })
+    expect(renderRuntimeContext(store.snapshot(), 'agent-tools')).not.toContain('data:image')
     const tavernTools: unknown[] = []
     applyAgent({ ...base, tools: { register: (tool: unknown) => { tavernTools.push(tool); return () => {} } } }, { mode: 'tavern' })
     expect(tavernTools).toEqual([])
