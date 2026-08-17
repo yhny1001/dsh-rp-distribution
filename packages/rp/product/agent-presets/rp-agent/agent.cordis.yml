@@ -1,0 +1,4 @@
+- id: rp-product-agent-context
+  name: '@dsh-rp/product/agent'
+  config:
+    mode: agent

@@ -40,6 +40,8 @@
   "license": "MIT",
   "devDependencies": {
     "@deepseek-ai/cordis": "4.0.1",
+    "@deepseek-ai/dsh-tools": "0.0.1-rc.1",
+    "@dsh-rp/compat-sillytavern": "workspace:^",
     "react": "^18.2.0"
   },
   "dsh": {

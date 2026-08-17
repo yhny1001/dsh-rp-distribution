@@ -1,0 +1,4 @@
+- id: rp-product-tavern-context
+  name: '@dsh-rp/product/agent'
+  config:
+    mode: tavern

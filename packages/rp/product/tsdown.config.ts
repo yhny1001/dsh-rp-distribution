@@ -7,10 +7,18 @@ export default defineConfig([
   {
     entry: ['lib/types/index.js'], outDir: 'lib', format: ['esm'], platform: 'node', target: 'es2024',
     fixedExtension: false, outputOptions: { codeSplitting: false }, dts: false, clean: false,
+    deps: {
+      alwaysBundle: (moduleId: string) => moduleId.startsWith('@dsh-rp/compat-sillytavern')
+        || ['fflate', 'png-chunk-text', 'png-chunks-extract'].includes(moduleId),
+    },
   },
   {
     entry: ['lib/types/agent.js'], outDir: 'lib', format: ['esm'], platform: 'node', target: 'es2024',
     fixedExtension: false, outputOptions: { codeSplitting: false }, dts: false, clean: false,
+    deps: {
+      alwaysBundle: (moduleId: string) => moduleId === '@deepseek-ai/dsh-tools'
+        || moduleId === '@deepseek-ai/schemastery',
+    },
   },
   {
     entry: { client: 'lib/types/client/index.js' },

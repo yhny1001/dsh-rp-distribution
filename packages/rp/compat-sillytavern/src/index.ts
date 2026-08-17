@@ -101,6 +101,12 @@ export interface SillyTavernPresetPromptDefinition {
   readonly role: 'system' | 'user' | 'assistant'
   readonly content: string
   readonly marker: boolean
+  readonly systemPrompt: boolean
+  readonly forbidOverrides: boolean
+  readonly injectionPosition?: number
+  readonly injectionDepth?: number
+  readonly injectionOrder?: number
+  readonly injectionTrigger?: readonly string[]
 }
 
 /** One enabled/disabled reference inside a Prompt Manager ordering profile. */
@@ -307,6 +313,12 @@ export function importPreset(source: string, options: SillyTavernImportOptions =
       role: prompt.role === 'user' || prompt.role === 'assistant' ? prompt.role : 'system',
       content: typeof prompt.content === 'string' ? prompt.content : '',
       marker: prompt.marker === true,
+      systemPrompt: prompt.system_prompt === true,
+      forbidOverrides: prompt.forbid_overrides === true,
+      ...(typeof prompt.injection_position === 'number' ? { injectionPosition: finiteNumber(prompt.injection_position, `prompts[${index}].injection_position`) } : {}),
+      ...(typeof prompt.injection_depth === 'number' ? { injectionDepth: nonNegativeInteger(prompt.injection_depth, `prompts[${index}].injection_depth`) } : {}),
+      ...(typeof prompt.injection_order === 'number' ? { injectionOrder: nonNegativeInteger(prompt.injection_order, `prompts[${index}].injection_order`) } : {}),
+      ...(Array.isArray(prompt.injection_trigger) ? { injectionTrigger: Object.freeze(stringArray(prompt.injection_trigger, `prompts[${index}].injection_trigger`)) } : {}),
     }))
   }
   const promptOrders: SillyTavernPresetPromptOrder[] = []

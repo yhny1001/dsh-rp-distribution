@@ -37,11 +37,20 @@ describe('@dsh-rp/compat-sillytavern', () => {
         compatibility: { lossReport: { losslessData: true, executableBehaviorDisabled: true } },
       })
     const preset = importPreset(JSON.stringify({
-      prompts: [{ identifier: 'main', role: 'system', content: 'Act' }],
+      prompts: [{
+        identifier: 'main', role: 'system', content: 'Act', system_prompt: true, forbid_overrides: true,
+        injection_position: 0, injection_depth: 4, injection_order: 2, injection_trigger: ['continue'],
+      }],
       prompt_order: [{ order: [{ identifier: 'main', enabled: true }] }], temperature: 0.8,
       extensions: { tavern_helper: { scripts: [{ name: 'unsafe' }] } },
     }), options)
-    expect(preset).toMatchObject({ prompts: [{ id: 'main', content: 'Act' }], generation: { temperature: 0.8 } })
+    expect(preset).toMatchObject({
+      promptDefinitions: [{
+        id: 'main', content: 'Act', systemPrompt: true, forbidOverrides: true,
+        injectionPosition: 0, injectionDepth: 4, injectionOrder: 2, injectionTrigger: ['continue'],
+      }],
+      prompts: [{ id: 'main', content: 'Act' }], generation: { temperature: 0.8 },
+    })
     expect(importPersona(JSON.stringify({ name: 'Visitor', description: 'An astronomer.', custom: true }), options))
       .toMatchObject({ name: 'Visitor', description: 'An astronomer.', compatibility: { unknownFields: { custom: true } } })
     const chat = importChat([
