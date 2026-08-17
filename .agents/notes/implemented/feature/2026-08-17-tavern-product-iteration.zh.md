@@ -30,4 +30,4 @@ Preset 导入明确采用双轨。无损源文档挂在立即可选的 `sillytav
 
 Agent RP 浏览器验收选择 `rp-adaptive`、真实角色卡与 Harness 适配 Izumi Preset。模型实际调用三次状态工具（时间、场景、记忆）、一次选项工具，再生成角色回复；RP 视图显示 TIME、SCENE、MEMORY 卡片和三个按钮。点击“调查港口”会把保存的 Prompt 作为下一条原生用户消息提交，并产生第二轮模型回复。另一次 World Info 导入验证三条 Entry、两条启用、搜索与逐条编辑。
 
-空白首页验收分别选择 Tavern Chat 与 Agent RP：两者都显示 Prompt Preset、角色卡、Persona、世界书和场景，Tavern 不显示 Experience，Agent 显示五个 Experience 选项，模式标签和应用按钮随选择同步。随后选择真实的 Izumi Harness Preset、卡提希娅、`user` Persona、黎那汐塔世界书和场景文本并应用；Workspace Runtime 建立空白 Session，界面改为 Prompt Stack，完整编排重新读取到相同的模式与五项资源。
+空白首页验收分别选择 Tavern Chat 与 Agent RP：两者都显示 Prompt Preset、角色卡、Persona、世界书和场景，Tavern 不显示 Experience，Agent 显示五个 Experience 选项，模式标签和应用按钮随选择同步。随后选择真实的 Izumi Harness Preset、卡提希娅、`user` Persona、黎那汐塔世界书和场景文本并应用；Workspace Runtime 建立空白 Session，界面收起为紧凑的“已选”配置摘要，完整编排重新读取到相同的模式与五项资源。内部 Prompt Seat 只留在管理界面，不占用聊天入口宽度。

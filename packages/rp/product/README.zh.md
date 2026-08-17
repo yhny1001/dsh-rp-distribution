@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-面向已安装 DSH `0.1.0-rc.6` Web Profile 的本地优先 RP 产品插件。一个自包含 Bundle 同时注册 Node API、`rp-tavern`/`rp-agent` 两个原生 Agent Preset、中文优先的创作工作区、角色专属对话页、会话标题栏入口和 Composer 上方的 Prompt Stack。升级会移除旧 `rp-studio` Agent Preset；“RP 创作室”只保留为管理界面名称。
+面向已安装 DSH `0.1.0-rc.6` Web Profile 的本地优先 RP 产品插件。一个自包含 Bundle 同时注册 Node API、`rp-tavern`/`rp-agent` 两个原生 Agent Preset、中文优先的创作工作区、角色专属对话页、会话标题栏入口和 Composer 上方的紧凑已选配置入口。升级会移除旧 `rp-studio` Agent Preset；“RP 创作室”只保留为管理界面名称。
 
 ## 酒馆式产品模型
 
@@ -29,6 +29,8 @@ Standalone World Info 与角色卡内嵌 Lore 会保留为逐条 World Entry，�
 每个 Session 明确选择 `Tavern Chat` 或 `Agent RP`。Tavern Chat 使用独立的 `rp-tavern` Agent Preset，底层仍复用 DSH AgentLoop，但不注册 RP 状态工具，用户体验保持传统酒馆单次生成。Agent RP 使用 `rp-agent` Agent Preset，在同一个导入 Prompt Preset、角色卡、Persona 和世界书之上注册领域工具；Experience 字段保留 `rp-adaptive`、world simulation、multi-character、TRPG 与 companion 等产品意图。
 
 新会话首页的 Agent Preset 选择器与 Composer 上方的 RP 快速设置共享同一选择状态。选择 Tavern Chat 会立即显示 Prompt Preset、角色卡、Persona、世界书与当前场景；选择 Agent RP 会在相同资源项之外增加 Experience。若首页还没有 Session，点击应用会通过 DSH Workspace Runtime 复用或建立空白 Session，先落实所选 Agent Preset，再绑定整套 RP 资源；标准编码 Preset 不显示 RP 快速设置。
+
+应用后，Composer 上方只保留一枚“已选”配置按钮，摘要仅显示运行模式、主要角色和 Prompt Preset；Persona、世界书与场景折叠为附加项计数，点击即可重新打开完整设置。内部 Prompt Seat 顺序不再横向铺在聊天入口上，只在 Prompt Manager 与完整编排中维护。
 
 Agent RP 当前提供 `rp_update_state` 与 `rp_propose_choices`。前者提交世界、时间、场景、角色、Persona、关系或记忆 Effect；后者提交 1–8 个带稳定 ID、显示文本与实际 Prompt 的选项。工具调用和结果由原生 Session 记录，产品状态保存可重建 Projection，下一步请求通过 `<rp-dynamic-state>` 读取已提交事实。角色对话页同时显示角色气泡、世界/时间/场景/关系/记忆卡片与可点击选项；点击选项会把其 Prompt 送入同一个原生 Agent Session。
 
