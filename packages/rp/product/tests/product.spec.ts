@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { apply as applyAgent } from '../src/agent.ts'
-import { parseTavernChat, serializeTavernChat } from '../src/chat.ts'
+import { parseTavernChat, serializeTavernChat, visibleRoleplayText } from '../src/chat.ts'
 import { importProductFiles } from '../src/import.ts'
 import { apply as applyProduct } from '../src/index.ts'
 import { apply as applyProductMedia } from '../src/media.ts'
@@ -351,6 +351,14 @@ describe('@dsh-rp/product', () => {
       { name: '林遥', is_user: false, mes: '雾正在变浓。' },
       { name: '远行者', is_user: true, mes: '我去检查灯塔。' },
     ])
+  })
+
+  it('removes complete and malformed private planning blocks from visible RP prose', () => {
+    expect(visibleRoleplayText('<konatan_planning~>\n私有规划\n</konatan_planning~>\n“我是卡提希娅。”')).toBe('“我是卡提希娅。”')
+    expect(visibleRoleplayText('开场\n<thinking>私有\n</thinking>\n正文\n<reasoning_content>第二段私有</reasoning_content>')).toBe('开场\n\n正文')
+    expect(visibleRoleplayText('<analysis>未闭合的私有规划')).toBe('')
+    expect(visibleRoleplayText('</scratchpad>角色正文')).toBe('角色正文')
+    expect(visibleRoleplayText('<current_event>公开结构化内容</current_event>')).toBe('<current_event>公开结构化内容</current_event>')
   })
 
   it('atomically advances a multi-state world ledger and projects last values by stable key', () => {

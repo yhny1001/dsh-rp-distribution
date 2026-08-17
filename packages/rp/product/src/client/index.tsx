@@ -27,7 +27,7 @@ import type {
   WorldProfile,
 } from '../model.ts'
 import { currentRuntimeEffects, PRODUCT_PROMPT_SEAT_COUNT, recommendComposition, resolvePromptLayers } from '../model.ts'
-import { parseTavernChat, serializeTavernChat } from '../chat.ts'
+import { parseTavernChat, serializeTavernChat, visibleRoleplayText } from '../chat.ts'
 
 export const name = '@dsh-rp/product'
 export const inject = ['slots', 'sessions', 'connection', 'workspaces']
@@ -746,6 +746,7 @@ function RpConversationView({ sessionId, useSession }: { readonly sessionId: str
   const world = response?.state.worlds.find(item => item.id === binding?.worldId)
   const runtime = response?.runtime
   const messages = storyMessages(nodes, response?.transcript, character?.name ?? '角色', persona?.name ?? '你')
+  const partialContent = partial === null || partial === undefined ? '' : visibleRoleplayText(blocksText(partial.blocks))
   const [editing, setEditing] = useState<number | undefined>()
   const [body, setBody] = useState('')
   const greetings = character === undefined ? [] : [character.openingMessage, ...character.alternateGreetings].filter(value => value.trim() !== '')
@@ -789,7 +790,7 @@ function RpConversationView({ sessionId, useSession }: { readonly sessionId: str
         {runtime === undefined ? null : <RuntimeProjection runtime={runtime} sessionId={sessionId} running={running} characters={response?.state.characters ?? []} />}
         {partial === null || partial === undefined ? null : <article className="rpp-message rpp-message-assistant rpp-message-streaming">
           <div className="rpp-message-head"><AvatarFace character={character} className="rpp-message-avatar" fallback={character?.name.slice(0, 1) ?? '角'} />
-            <span><b>{character?.name ?? '角色'}</b><small>正在回复</small></span></div><div className="rpp-message-body">{blocksText(partial.blocks)}<i className="rpp-caret" /></div></article>}
+            <span><b>{character?.name ?? '角色'}</b><small>正在回复</small></span></div><div className="rpp-message-body">{partialContent}<i className="rpp-caret" /></div></article>}
       </div>
       <footer className="rpp-story-foot"><span>正文编辑会追加可审计的 Surface replacement；原始日志不会被覆盖。</span><button type="button" onClick={() => openProduct('presets', sessionId)}>Prompt Manager</button></footer>
     </>}
@@ -908,7 +909,8 @@ function storyMessages(nodes: readonly ViewNode[], transcript: SessionTranscript
     const ordinaryRole = node.kind === 'assistant' ? 'assistant' : node.kind === 'user' ? 'user' : node.kind === 'steering' ? record?.role : undefined
     const role = record?.role ?? ordinaryRole
     if (role === undefined || ordinaryRole === undefined && record?.synthetic !== true) continue
-    const content = record?.editedContent ?? blocksText(node.kind === 'assistant' ? node.blocks ?? [] : node.content ?? [])
+    const sourceContent = record?.editedContent ?? blocksText(node.kind === 'assistant' ? node.blocks ?? [] : node.content ?? [])
+    const content = role === 'assistant' ? visibleRoleplayText(sourceContent) : sourceContent
     if (content.trim() === '') continue
     if (role === 'assistant' && node.turn !== undefined) {
       if (visibleAssistantTurns.has(node.turn)) continue

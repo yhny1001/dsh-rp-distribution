@@ -8,7 +8,7 @@
 
 每个会话选择一套 Prompt Preset，再组合系统规则、世界书、角色阵容、用户 Persona 与当前场景。Preset 保存全部 Prompt 定义、Role、Marker、ST 注入元数据、完整顺序配置、逐项启停与生成参数；当前顺序会在下一次原生 AgentLoop 请求时重新装配。产品最多保留 1024 个定义，每套顺序最多容纳 256 个可开关项；未编排定义也会显示并可加入顺序。管理器提供搜索、仅看已启用、启用计数与逐项上下移动。`temperature` 和 `openai_max_tokens` 分别映射到 DSH 的 `temperature` 与 `maxTokens`。ST `reasoning_effort=min` 在资源中规范化为 DSH `minimal`，请求阶段会先读取当前精确 provider/model 路由声明的档位：支持时才覆盖，不支持时保留当前模型选择或 Provider 默认值。其余已导入参数作为惰性数据保留。
 
-内置 Marker 解析 `worldInfoBefore`/`worldInfoAfter`、`personaDescription`、`charDescription`、`charPersonality`、`scenario`、`dialogueExamples` 与 `chatHistory` 等常用标识。聊天历史仍由 DSH Session 原生位置承载；Marker 只决定结构化资源在 Prompt Stack 中的位置，不把世界观、角色、Persona 或场景合成一个不可编辑的大文本。安全宏组装支持 `{{user}}`、`{{char}}`、按启用顺序执行的纯文本 `setvar/getvar`、注释移除，并从 Agent 已领取但尚未写入 Session 的当前用户消息展开首步真实 `{{lastUserMessage}}`，后续步骤回退到最新原生 `user/message`。导入 Preset 的 User/Assistant Role 分别保留为 `<st-user-message>` 与 `<st-assistant-prefill>` 语义边界；固定 ST Role Protocol 声明作者人格只管理内部创作过程，可见回复必须属于当前角色。Role Protocol 排在 Host 基础段之后，导入 Seat 从顺序 1000 开始；当顺序以 Assistant Prefill 结尾时，该 Prefill 固定占用最后一个 Seat，Agent RP 运行规则紧挨其前，因此 Preset 的生成起点仍是模型读取的最后一组 System 内容，同时保留 DSH 工具约束。包含未闭合 `planning`/`thinking`/`reasoning` 标记的 Prefill 会保留转义后的源文本并声明为 `private-reasoning`，让 Provider 在 Reasoning Channel 中应用而不把规划块泄漏到可见角色正文。不执行 TavernHelper 或 Regex 脚本。
+内置 Marker 解析 `worldInfoBefore`/`worldInfoAfter`、`personaDescription`、`charDescription`、`charPersonality`、`scenario`、`dialogueExamples` 与 `chatHistory` 等常用标识。聊天历史仍由 DSH Session 原生位置承载；Marker 只决定结构化资源在 Prompt Stack 中的位置，不把世界观、角色、Persona 或场景合成一个不可编辑的大文本。安全宏组装支持 `{{user}}`、`{{char}}`、按启用顺序执行的纯文本 `setvar/getvar`、注释移除，并从 Agent 已领取但尚未写入 Session 的当前用户消息展开首步真实 `{{lastUserMessage}}`，后续步骤回退到最新原生 `user/message`。导入 Preset 的 User/Assistant Role 分别保留为 `<st-user-message>` 与 `<st-assistant-prefill>` 语义边界；固定 ST Role Protocol 声明作者人格只管理内部创作过程，可见回复必须属于当前角色。Role Protocol 排在 Host 基础段之后，导入 Seat 从顺序 1000 开始；当顺序以 Assistant Prefill 结尾时，该 Prefill 固定占用最后一个 Seat，Agent RP 运行规则紧挨其前，因此 Preset 的生成起点仍是模型读取的最后一组 System 内容，同时保留 DSH 工具约束。包含未闭合 `planning`/`thinking`/`reasoning` 标记的 Prefill 会保留转义后的源文本并声明为 `private-reasoning`；如果 Provider 仍把规划写进普通 Text Block，角色对话投影会确定性移除完整或未闭合的私有规划区块。不执行 TavernHelper 或 Regex 脚本。
 
 全部非 History Prompt 层通过 `@deepseek-ai/dsh-system-prompt` Registry 进入持久 `request/header.header.system`，最终发送为 Provider 的 `request.system`。产品界面在快速设置、会话已选入口、完整编排和 Prompt Manager 中显示 `Preset → @deepseek-ai/dsh-system-prompt → request.system` 注入路径；应用回执也明确记录该路径。原生会话中显示的“上下文注入 `@deepseek-ai/dsh-system-prompt`”只代表权限与沙箱等动态 Context Snapshot，不代表完整 System Prompt，产品不会把 Preset 复制到该 user-role Snapshot。角色卡 `first_mes` 与聊天记录继续留在 Session History。
 
@@ -25,6 +25,8 @@
 “角色对话”视图为每条用户消息显示生成当时的 Persona 名，为每条模型回复显示生成当时的主要角色名。切换主要角色不会重新标记旧消息，因此同一会话可清楚区分洛弥、沈灯等不同说话者。
 
 用户与角色消息正文都可编辑。产品保留原始追加日志，并用包含完整 `sourceEventSeqs` 的 Session Surface replacement 更新后续模型上下文；界面显示编辑后的正文与修订号。DSH `0.1.0-rc.6` 只允许 `assistant/message` 在打开的模型 Step 内写入，因此空闲时编辑角色回复会使用 `plugin/recall` 的 user-role Surface 节点承载明确标注的“已编辑角色历史”，而 RP 视图继续呈现其原角色语义。该方式可审计且不会修改 AgentLoop。
+
+角色正文投影只过滤明确命名为 planning、thinking、reasoning、analysis、scratchpad 或 chain-of-thought 的标签区块；`current_event`、`progress` 等公开结构化内容保持不变。过滤同时覆盖流式角色气泡、最终角色气泡、本地朗读、编辑器初始正文和酒馆聊天导出。原始 `assistant/message` 仍完整保留在 Session 日志中用于审计，因此历史消息无需迁移即可在插件升级后立即恢复干净显示。
 
 角色对话页可直接导入 SillyTavern Chat JSONL 或 JSON 数组，并导出当前可见对话为 JSONL。导入跳过 Metadata 与 System 行，角色消息以 `plugin/recall` 进入原生 Session，Persona 消息以 `plugin/notice` 进入，RP Transcript 保留原说话者、正文和顺序；单批限制 500 条、每条 32000 字符、总计 1000000 字符。导出保留 `name`、`is_user`、`mes` 等 ST 字段，并在 `extra` 中附带 DSH Source Seq 与编辑 Revision。
 

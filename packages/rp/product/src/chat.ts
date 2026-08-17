@@ -15,6 +15,32 @@ export interface TavernChatParseResult {
   readonly skipped: number
 }
 
+const PRIVATE_ROLEPLAY_TAG = /(?:^|[-_.:~])(?:planning|thinking|reasoning|analysis|scratchpad|chain[-_]?of[-_]?thought)(?:$|[-_.:~])/iu
+const ROLEPLAY_TAG_OPEN = /<\s*([a-z][a-z0-9_.:~-]*)(?=[\s>])[^>]*>/giu
+const ROLEPLAY_TAG_CLOSE = /<\s*\/\s*([a-z][a-z0-9_.:~-]*)\s*>/giu
+
+/** Remove model-leaked private planning blocks from user-visible RP prose without changing the durable source message. */
+export function visibleRoleplayText(value: string): string {
+  let cursor = 0
+  let output = ''
+  ROLEPLAY_TAG_OPEN.lastIndex = 0
+  for (let match = ROLEPLAY_TAG_OPEN.exec(value); match !== null; match = ROLEPLAY_TAG_OPEN.exec(value)) {
+    const name = match[1]!
+    if (!PRIVATE_ROLEPLAY_TAG.test(name)) continue
+    output += value.slice(cursor, match.index)
+    const close = new RegExp(`<\\s*\\/\\s*${escapeRegExp(name)}\\s*>`, 'iu').exec(value.slice(ROLEPLAY_TAG_OPEN.lastIndex))
+    if (close === null) {
+      cursor = value.length
+      break
+    }
+    cursor = ROLEPLAY_TAG_OPEN.lastIndex + close.index + close[0].length
+    ROLEPLAY_TAG_OPEN.lastIndex = cursor
+  }
+  output += value.slice(cursor)
+  ROLEPLAY_TAG_CLOSE.lastIndex = 0
+  return output.replace(ROLEPLAY_TAG_CLOSE, (tag, name: string) => PRIVATE_ROLEPLAY_TAG.test(name) ? '' : tag).trim()
+}
+
 /** Parse SillyTavern JSONL or a JSON array while omitting metadata and system rows. */
 export function parseTavernChat(value: string, fallbackCharacter: string, fallbackPersona: string): TavernChatParseResult {
   const text = value.replace(/^\uFEFF/u, '').trim()
@@ -75,4 +101,8 @@ export function serializeTavernChat(
     },
   })
   return `${rows.map(row => JSON.stringify(row)).join('\n')}\n`
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&')
 }
