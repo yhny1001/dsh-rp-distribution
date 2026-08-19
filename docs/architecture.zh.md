@@ -2,7 +2,7 @@
 
 [English](architecture.md) | 中文
 
-本仓库只包含一个 Cordis 插件发行族，不提供 DSH 应用入口，也不私有复制 Host 服务。
+`dsh-rp-distribution` 是建立在 DeepSeek Harness 之上的开放式 RP 基础设施、插件框架与公共契约。本仓库只包含它的 Cordis 插件发行族，不提供 DSH 应用入口，也不私有复制 Host 服务。ST 兼容层和 `@dsh-rp/product` 是第一方适配与参考产品，不定义基础设施唯一的数据来源或 UI。
 
 ## 包分层
 

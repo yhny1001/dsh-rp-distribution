@@ -1,14 +1,118 @@
-# DSH RP plugins
+# dsh-rp-distribution
 
 [中文](README.md) | English
 
-`dsh-rp-distribution` is an independent RP plugin repository rebuilt on the DeepSeek Harness plugin model. DSH is the external Host; this repository maintains only installable plugins, plugin bundles, compatibility adapters, RP package tools, and related examples. It does not distribute or maintain another DSH implementation.
+> Open RP infrastructure, plugin framework, and shared contracts for DeepSeek Harness.
 
-## Install
+`dsh-rp-distribution` is open role-playing (RP) infrastructure, a plugin framework, and a shared contract layer built on DeepSeek Harness. Its primary output is not one Tavern UI: it is reusable domain IR, Cordis services, execution and authority boundaries, package lifecycle, Registry infrastructure, compatibility adapters, and aggregate Bundles. It reuses DSH's native AgentLoop, sessions, models, tools, and Web Host and does not distribute or maintain another DSH implementation.
 
-### Local RP product
+`@dsh-rp/compat-sillytavern` and `@dsh-rp/product` are first-party SillyTavern compatibility and reference-product surfaces. They prove that Character Cards, personas, World Info, Prompt Presets, and Tavern Chat can enter the same infrastructure with retained provenance and explicit compatibility-loss reporting; they are not the only data source, interaction model, or product UI the framework permits.
 
-The repository's `@dsh-rp/product` is a self-contained product Bundle that can be installed directly into a DSH `0.1.0-rc.6` Web profile:
+## Project boundary
+
+This repository owns:
+
+- Versioned public contracts for characters, personas, lore, scenes, memory, state, media, packages, and experiences.
+- Reversible Cordis services, Providers, Pipelines, and UI Slots registered through `ctx.effect()` or a disposer.
+- Composition boundaries for turns, workflows, sidecars, capabilities, policy, journals, projections, and outboxes.
+- Validation, authorization, activation, and cleanup for declarative L0, sandboxed L1, and explicitly trusted native L2 packages.
+- Registry Sources, Artifact Stores, signatures, SBOMs, deterministic archives, the CLI, and release evidence.
+- Adapters for the DSH Host, Web Slots, Agent Providers, and external content formats.
+
+This repository does not own:
+
+- A DSH application entry, AgentLoop, model Provider, browser shell, native launcher, or Python SDK.
+- Copies or mutations of installed DSH/Cordis sources, Host Bundles, or `node_modules`.
+- A reimplementation of the SillyTavern UI, script runtime, regex executor, or private TavernHelper behavior as a Host.
+- One mandatory RP product shape. Third-party products may reuse the public contracts with completely different UIs and workflows.
+- A Host-independent wire standard; the current shared contracts serve the DSH plugin ecosystem.
+
+## Architecture layers
+
+| Layer | Representative packages | Ownership and extension model |
+|---|---|---|
+| Public contracts | `@dsh-rp/contracts` | Client-safe versioned IR only; no storage, execution, or defaults. Breaking changes require a new schema and migration adapter. |
+| Domain services | `character`, `persona`, `lore`, `memory-*`, `state`, `scene`, `relationship`, `media` | Bounded, deterministic, reversible Services or Provider registries. Stores, retrievers, and generators remain replaceable. |
+| Execution and orchestration | `capability-catalog`, `agent-runtime`, `pipeline-runtime`, `turn-runtime`, `workflow-*`, `sidecar-jobs` | Freeze execution plans, compute least authority, route backends, and commit evidence at Turn or Workflow boundaries. |
+| Packages and trust | `sdk`, `package-runtime`, `registry*`, `lifecycle-l0/l1/l2`, `cli` | Validate untrusted packages, bind integrity and SBOMs, and activate or uninstall capabilities by trust level. RP package code never receives Cordis `ctx`. |
+| Host integration | `harness-bridge`, `agent-provider-harness`, `ui-slot-runtime`, `web` | Integrate only through published DSH Peers, events, services, and Slots. Compatibility fails closed and never patches an older Host. |
+| First-party adapters and references | `compat-sillytavern`, `compat-stscript`, `first-party`, `product` | Prove the infrastructure with real formats and a product without freezing ST or the current UI into public contracts. |
+| Aggregate distribution | `distribution-core`, `distribution-web`, `distribution` | Declare default membership and mount order only; leaf plugins remain independently installable, replaceable, and testable. |
+
+See [architecture](docs/architecture.md) and [Host compatibility](docs/compatibility.md) for the complete ownership and mount rules.
+
+## Choose a development surface
+
+Before writing code, decide which artifact you are building:
+
+1. **Infrastructure Cordis plugin**: lives under `packages/rp/*`, receives Host-provided `ctx`, and publishes as an `@dsh-rp/*` npm package. Use this for domain Services, Provider registries, executors, storage adapters, Host bridges, and aggregate Bundles.
+2. **Installable RP package**: lives in a separate project or under `examples/rp-package-authoring/*` and consists of `rp.package.json`, `rp.runtime.json`, assets, and an SBOM. Package code receives no `ctx`; it may use only Manifest-declared L0/L1/L2 capabilities authorized by Policy.
+3. **Compatibility adapter or product plugin**: an importer converts external formats into public IR while retaining provenance and a loss report; a product owns UI and workflow. Products may change their interaction freely but must not silently rewrite source semantics or mutate the Host.
+
+The complete workflows, checklists, and commands are in the [development guide](docs/development.md). Executable installable-package examples are in [RP package authoring](examples/rp-package-authoring/README.md).
+
+## Repository development
+
+Node `^22.19.0 || >=24.0.0` and pnpm 11 are required:
+
+```sh
+corepack enable
+pnpm install
+pnpm run host:sdk
+```
+
+`pnpm run host:sdk` reads exact `@deepseek-ai/*` Peer versions from plugin Manifests, downloads their npm Tarballs into the ignored `.cache/host-sdk`, and creates temporary links only for type checking and unit tests. It does not install, start, or validate a complete DSH application.
+
+Run the smallest affected checks while modifying an existing package:
+
+```sh
+pnpm exec vitest run packages/rp/character/tests/character.spec.ts
+pnpm exec tsc -b packages/rp/character --pretty false
+```
+
+Run the complete gate before handing off a release-bound change:
+
+```sh
+pnpm run check
+```
+
+`check` validates Workspace policy, lint, unit tests, declaration/runtime builds, and publication payloads. Unit tests and `tests/host` doubles do not replace real DSH integration evidence. A change to Host events, public Slots, Bundle Patches, Agent Presets, or Session behavior must also be tested with a real Tarball and disposable `DSH_HOME` against the target Profile.
+
+## Install aggregate distributions
+
+Install the complete Web distribution into a compatible DSH Profile:
+
+```sh
+dsh plugin --profile web add @dsh-rp/distribution
+dsh --profile web
+```
+
+For a Headless deployment, install only presentation-neutral infrastructure:
+
+```sh
+dsh plugin --profile headless add @dsh-rp/distribution-core
+dsh --profile headless
+```
+
+Aggregate packages use DSH's public `dsh.bundle.patch` Manifest. Installation and removal use the normal DSH Profile lifecycle and never rewrite Host files or `node_modules`.
+
+## Entry packages
+
+| Package | Responsibility |
+|---|---|
+| `@dsh-rp/contracts` | Client-safe RP IR shared by Hosts, Web clients, package tooling, and adapters. |
+| `@dsh-rp/sdk` / `@dsh-rp/cli` | RP package initialization, validation, build, test, pack, signing, SBOM, installation, and publication. |
+| `@dsh-rp/package-runtime` | Integrity-bound `dsh-rp-runtime-v1` archives and executable-descriptor boundary. |
+| `@dsh-rp/distribution-core` | Presentation-neutral composition of domain services, execution, policy, Registry, and package lifecycle. |
+| `@dsh-rp/distribution-web` | RP Studio, conversation routing, Session resources, and trusted UI Slot integration. |
+| `@dsh-rp/distribution` | Thin full-Web aggregate over Core and Web. |
+| `@dsh-rp/registry-server` | Standalone RP Package Registry HTTP service. |
+| `@dsh-rp/compat-sillytavern` | Clean-room, non-executing compatibility adapter for ST characters, personas, lore, and presets. |
+| `@dsh-rp/product` | First-party ST-compatible reference Product Bundle, not the framework's only UI. |
+
+## First-party ST compatibility reference product
+
+`@dsh-rp/product` installs directly into a DSH `0.1.0-rc.6` Web Profile and verifies ST import, Prompt ordering, five-layer resource composition, and native AgentLoop integration:
 
 ```sh
 pnpm run build
@@ -17,54 +121,13 @@ dsh plugin --profile web add /tmp/dsh-rp-product/dsh-rp-product-0.1.0-rc.5.tgz
 dsh --profile web
 ```
 
-Open **RP Studio** from the sidebar footer or Settings. It keeps system rules, world facts, multiple characters, multiple user personas, and the current scene separate, then binds those five layers to the current blank Session. Conversation execution remains on the native DSH AgentLoop, composer, model selector, streaming, cancellation, persistence, and statistics.
+It retains ST source resources and creates a separate Harness adaptation only after an explicit user action; scripts, regexes, remote resources, and unknown extensions remain inert. It is an integration and product-design reference, but new infrastructure capabilities should not model only its private UI or default content.
 
-### Complete plugin family
+## Testing and maturity
 
-After the packages are published, install the complete Web bundle into a compatible DSH profile:
+The current checks cover the internal logic, lifecycle rollback, policy, persistence adapters, package compatibility, builds, and publication payloads of 56 independently published packages. Browser component tests use minimal Host contracts under `tests/host`; these implementations are unit-test-only and never published.
 
-```sh
-dsh plugin --profile web add @dsh-rp/distribution
-dsh --profile web
-```
-
-For a Headless deployment, install only the presentation-neutral bundle:
-
-```sh
-dsh plugin --profile headless add @dsh-rp/distribution-core
-dsh --profile headless
-```
-
-The standalone RP package-authoring CLI is `@dsh-rp/cli` and exposes `dsh-rp`.
-
-## Entry packages
-
-| Package | Responsibility |
-|---|---|
-| `@dsh-rp/product` | Locally installable Chinese-first RP product UI and five-layer native AgentLoop composition for system, world, characters, user persona, and scene. |
-| `@dsh-rp/distribution-core` | Character, Persona, Lore, Memory, Policy, Pipeline, Registry, Outbox, package lifecycle, and other Headless RP services. |
-| `@dsh-rp/distribution-web` | RP Studio, conversation routing, Session resources, and trusted UI Slot integration. |
-| `@dsh-rp/distribution` | Thin full-Web aggregate over Core and Web. |
-| `@dsh-rp/cli` | RP package initialization, validation, build, unit test, pack, install, update, uninstall, SBOM, and publication operations. |
-| `@dsh-rp/registry-server` | Standalone RP package Registry HTTP service. |
-
-The aggregate packages use DSH's public `dsh.bundle.patch` Manifest. Installing or removing a bundle uses the ordinary DSH Profile lifecycle and does not rewrite Host files or `node_modules`.
-
-## Development
-
-```sh
-corepack enable
-pnpm install
-pnpm run check
-```
-
-The repository does not install a DSH application graph. `pnpm run host:sdk` reads exact `@deepseek-ai/*` Peer versions from plugin Manifests, downloads only their npm Tarballs into `.cache/host-sdk`, and creates temporary development links. This cache supports plugin type checking and package-level tests; it does not start or validate an assembled Harness.
-
-The existing checks cover the internal logic, builds, and publication payloads of 56 plugin packages. Browser component tests use minimal Host interfaces under `tests/host`; those implementations are unit-test-only, are never published, and do not replace real DSH integration tests. See [architecture](docs/architecture.md) and [Host compatibility](docs/compatibility.md).
-
-## Harness integration testing
-
-`@dsh-rp/product` has been verified against a local DSH `0.1.0-rc.6` using a disposable Harness home and its actual npm Tarball: profile initialization, Bundle Patch, Node API, Client ModuleLoader, official Web Slots, Agent Preset recomposition, Session events, the five-layer context strip, the native AgentLoop, and a real streaming model reply all passed. The complete `distribution-core` / `distribution-web` family still needs a separate Host assembly test for its 55 foundation packages; declaration caches and test doubles do not substitute for that evidence.
+`@dsh-rp/product` has been verified against a real DSH `0.1.0-rc.6` Web Profile using a disposable Home and actual Tarball, including Profile initialization, Bundle Patch, Node API, Client ModuleLoader, official Web Slots, Agent Presets, Session events, the native AgentLoop, and a streaming model reply. The complete `distribution-core` / `distribution-web` family still needs a separate Host assembly acceptance run for its 55 foundation packages; SDK caches and test doubles are not substitutes for that evidence.
 
 ## Release
 
@@ -76,6 +139,6 @@ git tag rp-v0.1.0
 git push origin main rp-v0.1.0
 ```
 
-The RP release workflow builds, tests, packs, installs the exact Tarballs in a throwaway consumer, generates SHA-256 checksums, an SPDX SBOM, and a source-bound release Manifest, then publishes only `@dsh-rp/*` packages.
+The RP release workflow builds, tests, packs, installs exact Tarballs in a throwaway consumer, generates SHA-256 checksums, an SPDX SBOM, and a source-bound release Manifest, and publishes only `@dsh-rp/*` packages.
 
 MIT licensed. See [LICENSE](LICENSE).

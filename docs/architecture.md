@@ -2,7 +2,7 @@
 
 English | [中文](architecture.zh.md)
 
-This repository is one release family of Cordis plugins. It has no DSH application entry and no private copy of Host services.
+`dsh-rp-distribution` is open RP infrastructure, a plugin framework, and a shared contract layer built on DeepSeek Harness. This repository contains its Cordis plugin release family; it has no DSH application entry and no private copy of Host services. ST compatibility and `@dsh-rp/product` are first-party adapters and references rather than the infrastructure's only data source or UI.
 
 ## Package layers
 

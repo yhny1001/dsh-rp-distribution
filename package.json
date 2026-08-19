@@ -1,7 +1,7 @@
 {
   "name": "@dsh-rp/workspace",
   "version": "0.1.0-rc.5",
-  "description": "Independent RP plugin family for DeepSeek Harness",
+  "description": "Open contract-driven RP infrastructure and plugin framework for DeepSeek Harness",
   "private": true,
   "type": "module",
   "license": "MIT",
