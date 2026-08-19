@@ -41,7 +41,7 @@
     "@vitest/coverage-v8": "^4.1.8",
     "execa": "^10.0.0",
     "jsdom": "29.1.1",
-    "oxlint": "1.76.0",
+    "oxlint": "1.78.0",
     "publint": "^0.3.21",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
