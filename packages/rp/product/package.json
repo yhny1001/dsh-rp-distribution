@@ -49,7 +49,7 @@
     "@dsh-rp/compat-sillytavern": "workspace:^",
     "@dsh-rp/contracts": "workspace:^",
     "@dsh-rp/media": "workspace:^",
-    "react": "^18.2.0"
+    "react": "^19.2.8"
   },
   "dsh": {
     "bundle": {
